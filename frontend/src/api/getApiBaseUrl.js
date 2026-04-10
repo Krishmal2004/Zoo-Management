@@ -1,0 +1,172 @@
+import Constants from 'expo-constants';
+import { NativeModules, Platform } from 'react-native';
+
+const DEFAULT_PORT = Number(process.env.EXPO_PUBLIC_API_PORT) || 5000;
+const API_SUFFIX = '/api';
+
+let didLogTunnelApiHint = false;
+
+function parseHostFromDevUri(hostUri) {
+  if (!hostUri || typeof hostUri !== 'string') return null;
+  const withoutQuery = hostUri.split('?')[0];
+  const hostPort = withoutQuery.includes('://')
+    ? withoutQuery.split('://')[1]
+    : withoutQuery;
+  const host = hostPort?.split(':')[0]?.split('/')[0]?.trim();
+  return host || null;
+}
+
+/** Metro serves the JS bundle from this URL in dev — often the most reliable host for the PC. */
+function getHostFromScriptUrl() {
+  const scriptURL = NativeModules?.SourceCode?.scriptURL;
+  if (!scriptURL || typeof scriptURL !== 'string') return null;
+  const ipv6 = scriptURL.match(/^https?:\/\/\[([^\]]+)\](?::\d+)?/i);
+  if (ipv6) return ipv6[1];
+  const m = scriptURL.match(/^https?:\/\/([^/:?[\]]+)(?::\d+)?/i);
+  return m ? m[1].trim() : null;
+}
+
+function isTunnelLikeHost(host) {
+  if (!host) return false;
+  const h = host.toLowerCase();
+  return (
+    h.includes('exp.direct') ||
+    h.includes('ngrok') ||
+    h.includes('ngrok-free') ||
+    h.endsWith('.loca.lt') ||
+    h.endsWith('.exp.host') ||
+    h === 'expo.dev' ||
+    h.endsWith('.expo.dev')
+  );
+}
+
+function hostFromUrl(raw) {
+  if (!raw || typeof raw !== 'string') return null;
+  try {
+    return new URL(raw).hostname?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackHost(host) {
+  if (!host) return false;
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]';
+}
+
+/** True for localhost, emulator bridge, typical private LAN IPv4, or Bonjour .local (dev machine). */
+function isLikelyReachableDevHost(host) {
+  if (!host) return false;
+  if (host === '10.0.2.2') return true;
+  if (host === 'localhost' || host === '127.0.0.1') return true;
+  if (/\.local$/i.test(host)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) return true;
+  return /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host);
+}
+
+function collectDevHostCandidates() {
+  const out = [];
+  const push = (h) => {
+    if (h && !out.includes(h)) out.push(h);
+  };
+  push(getHostFromScriptUrl());
+  push(parseHostFromDevUri(Constants.expoConfig?.hostUri));
+  push(parseHostFromDevUri(Constants.expoGoConfig?.debuggerHost));
+  push(parseHostFromDevUri(Constants.manifest2?.extra?.expoGo?.debuggerHost));
+  push(parseHostFromDevUri(Constants.manifest?.debuggerHost));
+  return out;
+}
+
+function pickDevApiHost() {
+  const candidates = collectDevHostCandidates();
+  const hadTunnelCandidate = candidates.some((h) => h && isTunnelLikeHost(h));
+
+  for (const parsed of candidates) {
+    if (!parsed || isTunnelLikeHost(parsed)) continue;
+    if (isLikelyReachableDevHost(parsed)) {
+      if (Platform.OS === 'android' && (parsed === 'localhost' || parsed === '127.0.0.1')) {
+        return '10.0.2.2';
+      }
+      return parsed;
+    }
+  }
+
+  if (hadTunnelCandidate) {
+    if (!didLogTunnelApiHint) {
+      didLogTunnelApiHint = true;
+      console.warn(
+        '[api] Metro is on a tunnel; set EXPO_PUBLIC_API_URL to a tunneled API URL (backend: npm run tunnel). See frontend/README.md.'
+      );
+    }
+    return null;
+  }
+
+  if (Platform.OS === 'android') {
+    return '10.0.2.2';
+  }
+
+  return null;
+}
+
+/**
+ * When true, user is in dev with localhost-style API env while Metro host is tunnel-only.
+ * Registration/login should show setup instructions instead of a generic "Network Error".
+ */
+export function getTunnelModeApiMisconfigMessage() {
+  if (!__DEV__) return null;
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const wantsAutoLocalhost =
+    !fromEnv ||
+    /\blocalhost\b/i.test(fromEnv) ||
+    /\b127\.0\.0\.1\b/.test(fromEnv);
+  if (!wantsAutoLocalhost) return null;
+
+  const candidates = collectDevHostCandidates();
+  if (!candidates.some((h) => h && isTunnelLikeHost(h))) return null;
+
+  const host = pickDevApiHost();
+  if (host !== null) return null;
+
+  return [
+    'Expo tunnel only forwards Metro (port 8081), not your API (port 5000).',
+    '',
+    '1. In backend/: npm run tunnel — copy the https://… URL.',
+    '2. In frontend/.env set: EXPO_PUBLIC_API_URL=<that-url>/api',
+    '3. Restart Metro (npx expo start --tunnel -c).',
+  ].join('\n');
+}
+
+/**
+ * Resolves API base URL. In __DEV__, if EXPO_PUBLIC_API_URL is missing or uses
+ * localhost/127.0.0.1, uses the Metro/dev machine host (script URL + Expo constants).
+ */
+export function getApiBaseUrl() {
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim();
+  const envHost = hostFromUrl(fromEnv);
+
+  const wantsAutoLocalhost =
+    !fromEnv ||
+    /\blocalhost\b/i.test(fromEnv) ||
+    /\b127\.0\.0\.1\b/.test(fromEnv);
+
+  // For Expo Web on the same machine, tunnel URLs often fail CORS preflight.
+  // Prefer localhost API when running from localhost in browser dev.
+  if (__DEV__ && Platform.OS === 'web' && isTunnelLikeHost(envHost)) {
+    const browserHost = typeof window !== 'undefined' ? window.location?.hostname : null;
+    if (isLoopbackHost(browserHost)) {
+      return `http://localhost:${DEFAULT_PORT}${API_SUFFIX}`;
+    }
+  }
+
+  if (__DEV__ && wantsAutoLocalhost) {
+    const host = pickDevApiHost();
+    if (host) {
+      const url = `http://${host}:${DEFAULT_PORT}${API_SUFFIX}`;
+      return url;
+    }
+  }
+
+  const fallback = `http://localhost:${DEFAULT_PORT}${API_SUFFIX}`;
+  return fromEnv || fallback;
+}
