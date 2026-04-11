@@ -50,13 +50,16 @@ export default function ProfileScreen({ navigation }) {
         <Row label="Name" value={user?.fullName} />
         <Row label="Email" value={user?.email} />
         <Row label="Phone" value={user?.phone} />
-        <Row label="Role" value={user?.role} />
       </View>
 
-      <Text style={styles.sectionTitle}>{firstName}, choose a module</Text>
-      <Text style={styles.sectionSub}>
-        Pick where you want to work next. Full workflows will roll out in later phases.
-      </Text>
+      <View style={styles.adventureHeading}>
+        <Text style={styles.adventureLeaf} accessible={false} importantForAccessibility="no">
+          🌿
+        </Text>
+        <Text style={styles.adventureTitle}>
+          {firstName}, Start your adventure here
+        </Text>
+      </View>
 
       <View>
         {FEATURE_MODULES.map((m) => (
@@ -149,13 +152,25 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.title,
     fontWeight: '700',
     color: theme.colors.primaryText,
-    marginBottom: theme.spacing.xs,
-  },
-  sectionSub: {
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.primaryText,
-    opacity: 0.75,
     marginBottom: theme.spacing.md,
+  },
+  adventureHeading: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.md,
+  },
+  adventureLeaf: {
+    fontSize: 28,
+    lineHeight: 32,
+    marginRight: theme.spacing.sm,
+    marginTop: 2,
+  },
+  adventureTitle: {
+    flex: 1,
+    fontSize: theme.fontSize.title,
+    fontWeight: '700',
+    color: theme.colors.primaryText,
+    lineHeight: theme.fontSize.title * 1.25,
   },
   moduleRow: {
     marginBottom: theme.spacing.sm,
