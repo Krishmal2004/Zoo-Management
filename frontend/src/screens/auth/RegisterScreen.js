@@ -67,7 +67,7 @@ export default function RegisterScreen({ navigation }) {
         label="Phone"
         value={phone}
         onChangeText={setPhone}
-        placeholder="+94 xx xxx xxxx"
+        placeholder="Up to 10 digits"
         keyboardType="phone-pad"
         error={errors.phone}
       />

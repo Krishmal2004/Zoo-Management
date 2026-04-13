@@ -17,6 +17,7 @@ import ModuleCard from '../../components/ui/ModuleCard';
 import { FEATURE_MODULES } from '../../constants/modules';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
+import { validatePassword, validateProfileFields } from '../../utils/validation';
 
 function avatarLetter(fullName) {
   const c = fullName?.trim()?.[0];
@@ -127,8 +128,9 @@ export default function ProfileScreen({ navigation }) {
 
   const handleSavePassword = useCallback(async () => {
     setPasswordError(null);
-    if (draftNewPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters');
+    const pwErr = validatePassword(draftNewPassword);
+    if (pwErr) {
+      setPasswordError(pwErr.replace(/^Password/, 'New password'));
       return;
     }
     if (draftNewPassword !== draftConfirmPassword) {
@@ -159,8 +161,18 @@ export default function ProfileScreen({ navigation }) {
   }, [changePassword, draftConfirmPassword, draftCurrentPassword, draftNewPassword]);
 
   const handleSaveProfile = useCallback(async () => {
-    setSavingProfile(true);
     setSaveError(null);
+    const fieldErrors = validateProfileFields({
+      fullName: draftFullName,
+      email: draftEmail,
+      phone: draftPhone,
+    });
+    const msgs = Object.values(fieldErrors).filter(Boolean);
+    if (msgs.length > 0) {
+      setSaveError(msgs.join(' '));
+      return;
+    }
+    setSavingProfile(true);
     try {
       await updateProfile({
         fullName: draftFullName.trim(),
