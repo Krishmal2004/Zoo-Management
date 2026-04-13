@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
+import AccountDrawerLayout, { useAccountDrawerActions } from '../../components/profile/AccountDrawerLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
 
@@ -12,6 +12,64 @@ const drawerTitleStyle = {
 function avatarLetter(fullName) {
   const c = fullName?.trim()?.[0];
   return c ? c.toUpperCase() : '?';
+}
+
+function AdminHomeBody({ navigation, user, displayName, roleLabel }) {
+  const actions = useAccountDrawerActions();
+
+  return (
+    <View style={styles.profileBlock}>
+      <View style={styles.avatarRing}>
+        <View style={styles.avatarFill}>
+          <Text style={styles.avatarLetter}>{avatarLetter(user?.fullName)}</Text>
+        </View>
+      </View>
+
+      <Text style={styles.helloLine}>Hello {displayName}</Text>
+      <Text style={styles.emailLine}>{user?.email?.trim() || '—'}</Text>
+
+      {actions ? (
+        <View style={styles.accountLinks}>
+          <Pressable
+            onPress={actions.openEditInDrawer}
+            style={styles.accountLinkBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Edit account details"
+          >
+            <Text style={styles.accountLinkText}>Edit account</Text>
+          </Pressable>
+          <Pressable
+            onPress={actions.openPasswordInDrawer}
+            style={styles.accountLinkBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Change password"
+          >
+            <Text style={styles.accountLinkText}>Change password</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <View style={styles.badge}>
+        <Text style={styles.badgeIcon} accessible={false}>
+          🛡
+        </Text>
+        <Text style={styles.badgeText}>{roleLabel}</Text>
+      </View>
+
+      <Pressable
+        style={styles.manageCard}
+        onPress={() => navigation.navigate('UserManagement')}
+        accessibilityRole="button"
+        accessibilityLabel="User management"
+      >
+        <Text style={styles.manageTitle}>User Management</Text>
+        <Text style={styles.manageChevron} accessible={false}>
+          ›
+        </Text>
+      </Pressable>
+      <Text style={styles.manageHint}>View and edit visitor and admin accounts</Text>
+    </View>
+  );
 }
 
 export default function AdminHomeScreen({ navigation }) {
@@ -42,37 +100,13 @@ export default function AdminHomeScreen({ navigation }) {
   const roleLabel = user?.role === 'admin' ? 'ADMINISTRATOR' : (user?.role || 'USER').toUpperCase();
 
   return (
-    <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
-      <View style={styles.profileBlock}>
-        <View style={styles.avatarRing}>
-          <View style={styles.avatarFill}>
-            <Text style={styles.avatarLetter}>{avatarLetter(user?.fullName)}</Text>
-          </View>
-        </View>
-
-        <Text style={styles.helloLine}>Hello {displayName}</Text>
-        <Text style={styles.emailLine}>{user?.email?.trim() || '—'}</Text>
-
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon} accessible={false}>
-            🛡
-          </Text>
-          <Text style={styles.badgeText}>{roleLabel}</Text>
-        </View>
-
-        <Pressable
-          style={styles.manageCard}
-          onPress={() => navigation.navigate('UserManagement')}
-          accessibilityRole="button"
-          accessibilityLabel="User management"
-        >
-          <Text style={styles.manageTitle}>User Management</Text>
-          <Text style={styles.manageChevron} accessible={false}>
-            ›
-          </Text>
-        </Pressable>
-        <Text style={styles.manageHint}>View and edit visitor and admin accounts</Text>
-      </View>
+    <AccountDrawerLayout
+      headerTitle="Explore"
+      drawerMenuItems={drawerMenuItems}
+      accountActionsPlacement="main"
+      accountActionsInline
+    >
+      <AdminHomeBody navigation={navigation} user={user} displayName={displayName} roleLabel={roleLabel} />
     </AccountDrawerLayout>
   );
 }
@@ -123,10 +157,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: theme.spacing.md,
   },
+  accountLinks: {
+    alignSelf: 'stretch',
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.xs,
+    gap: theme.spacing.sm,
+  },
+  accountLinkBtn: {
+    alignSelf: 'stretch',
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.accentGreen,
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  accountLinkText: {
+    fontSize: theme.fontSize.body,
+    fontWeight: '700',
+    color: theme.colors.linkGreen,
+    letterSpacing: 0.2,
+  },
   badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: theme.radii.pill,

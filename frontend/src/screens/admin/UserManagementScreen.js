@@ -25,6 +25,7 @@ export default function UserManagementScreen({ navigation }) {
   const [draftPhone, setDraftPhone] = useState('');
   const [draftRole, setDraftRole] = useState('visitor');
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -67,6 +68,21 @@ export default function UserManagementScreen({ navigation }) {
     () => users.find((u) => String(u._id) === String(selectedId)) ?? null,
     [users, selectedId]
   );
+
+  const filteredUsers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return users;
+    return users.filter((u) => {
+      const matches = (s) => (s ?? '').toString().toLowerCase().includes(q);
+      return (
+        matches(u.fullName) ||
+        matches(u.email) ||
+        matches(u.phone) ||
+        matches(u.role) ||
+        matches(String(u._id))
+      );
+    });
+  }, [users, searchQuery]);
 
   const startEdit = (u) => {
     setSelectedId(u._id);
@@ -166,7 +182,22 @@ export default function UserManagementScreen({ navigation }) {
       ) : null}
 
       <Text style={styles.sectionTitle}>Users</Text>
-      {users.map((u) => (
+      {!loading ? (
+        <TextField
+          label="Search users"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Name, email, phone, or role"
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+      ) : null}
+
+      {!loading && users.length > 0 && filteredUsers.length === 0 ? (
+        <Text style={styles.emptySearch}>No users match your search.</Text>
+      ) : null}
+
+      {filteredUsers.map((u) => (
         <View key={u._id} style={styles.userCard}>
           <View style={styles.userTop}>
             <Text style={styles.userName}>{u.fullName}</Text>
@@ -236,6 +267,13 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.title,
     fontWeight: '700',
     color: theme.colors.primaryText,
+  },
+  emptySearch: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primaryText,
+    opacity: 0.75,
+    marginBottom: theme.spacing.md,
+    fontStyle: 'italic',
   },
   editCard: {
     backgroundColor: theme.colors.white,

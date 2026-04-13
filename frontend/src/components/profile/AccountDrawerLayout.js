@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   TextInput,
   BackHandler,
   useWindowDimensions,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ScreenContainer from '../ui/ScreenContainer';
@@ -16,6 +19,13 @@ import PrimaryButton from '../ui/PrimaryButton';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
 import { validatePassword, validateProfileFields } from '../../utils/validation';
+
+const AccountDrawerActionsContext = createContext(null);
+
+/** Call from descendants of {@link AccountDrawerLayout} when `accountActionsPlacement="main"` and `accountActionsInline`. */
+export function useAccountDrawerActions() {
+  return useContext(AccountDrawerActionsContext);
+}
 
 function avatarLetter(fullName) {
   const c = fullName?.trim()?.[0];
@@ -57,8 +67,17 @@ function AccountField({
  * @param {{ key: string; label: string; onPress: () => void; accessibilityLabel?: string; subtitle?: string; emoji?: string; titleStyle?: object }[]} [drawerMenuItems]
  *        Optional entries shown at the top of the drawer (e.g. admin shortcuts), above account actions.
  * @param {React.ReactNode} [headerRight] Optional control shown on the right of the top bar (e.g. admin FAB).
+ * @param {'drawer' | 'main'} [accountActionsPlacement] Layout variant for main-area account shortcuts (drawer = default; main = profile body + modal for edits).
+ * @param {boolean} [accountActionsInline] When placement is main, parent renders links via {@link useAccountDrawerActions} (hides default bottom block).
  */
-export default function AccountDrawerLayout({ children, headerTitle = 'Explore', drawerMenuItems, headerRight }) {
+export default function AccountDrawerLayout({
+  children,
+  headerTitle = 'Explore',
+  drawerMenuItems,
+  headerRight,
+  accountActionsPlacement = 'drawer',
+  accountActionsInline = false,
+}) {
   const { user, logout, updateProfile, changePassword } = useAuth();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -80,7 +99,9 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
   const [draftConfirmPassword, setDraftConfirmPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+  const [accountModalVisible, setAccountModalVisible] = useState(false);
   const drawerWidthRef = useRef(drawerWidth);
+  const drawerWasOpenRef = useRef(false);
 
   useEffect(() => {
     if (drawerWidthRef.current !== drawerWidth && !drawerOpen) {
@@ -111,6 +132,14 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
   );
 
   const openDrawer = useCallback(() => {
+    setAccountModalVisible(false);
+    setAccountEditing(false);
+    setPasswordEditing(false);
+    setSaveError(null);
+    setPasswordError(null);
+    setDraftCurrentPassword('');
+    setDraftNewPassword('');
+    setDraftConfirmPassword('');
     setDrawerOpen(true);
     animateTo(true);
   }, [animateTo]);
@@ -129,7 +158,7 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
   }, [drawerOpen, closeDrawer]);
 
   useEffect(() => {
-    if (!drawerOpen) {
+    if (drawerWasOpenRef.current && !drawerOpen) {
       setAccountEditing(false);
       setPasswordEditing(false);
       setSaveError(null);
@@ -138,6 +167,7 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
       setDraftNewPassword('');
       setDraftConfirmPassword('');
     }
+    drawerWasOpenRef.current = drawerOpen;
   }, [drawerOpen]);
 
   const openAccountEdit = useCallback(() => {
@@ -160,6 +190,27 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
     setPasswordEditing(true);
   }, []);
 
+  const openAccountEditInDrawer = useCallback(() => {
+    openAccountEdit();
+    setAccountModalVisible(true);
+  }, [openAccountEdit]);
+
+  const openPasswordChangeInDrawer = useCallback(() => {
+    openPasswordChange();
+    setAccountModalVisible(true);
+  }, [openPasswordChange]);
+
+  const closeAccountModal = useCallback(() => {
+    setAccountModalVisible(false);
+    setAccountEditing(false);
+    setPasswordEditing(false);
+    setSaveError(null);
+    setPasswordError(null);
+    setDraftCurrentPassword('');
+    setDraftNewPassword('');
+    setDraftConfirmPassword('');
+  }, []);
+
   const handleSavePassword = useCallback(async () => {
     setPasswordError(null);
     const pwErr = validatePassword(draftNewPassword);
@@ -178,6 +229,7 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
         newPassword: draftNewPassword,
       });
       setPasswordEditing(false);
+      setAccountModalVisible(false);
       setDraftCurrentPassword('');
       setDraftNewPassword('');
       setDraftConfirmPassword('');
@@ -214,6 +266,7 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
         phone: draftPhone.trim(),
       });
       setAccountEditing(false);
+      setAccountModalVisible(false);
     } catch (e) {
       const data = e?.response?.data;
       const msg =
@@ -267,7 +320,38 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {children}
+          <AccountDrawerActionsContext.Provider
+            value={
+              accountActionsPlacement === 'main'
+                ? {
+                    openEditInDrawer: openAccountEditInDrawer,
+                    openPasswordInDrawer: openPasswordChangeInDrawer,
+                  }
+                : null
+            }
+          >
+            {children}
+            {accountActionsPlacement === 'main' && !accountActionsInline ? (
+              <View style={styles.mainAccountActions}>
+                <Pressable
+                  onPress={openAccountEditInDrawer}
+                  style={styles.editAccountBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit account details"
+                >
+                  <Text style={styles.editAccountText}>Edit account</Text>
+                </Pressable>
+                <Pressable
+                  onPress={openPasswordChangeInDrawer}
+                  style={styles.editAccountBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Change password"
+                >
+                  <Text style={styles.editAccountText}>Change password</Text>
+                </Pressable>
+              </View>
+            ) : null}
+          </AccountDrawerActionsContext.Provider>
         </ScrollView>
 
         <View
@@ -362,30 +446,38 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
                 </View>
               ) : null}
 
-              {!accountEditing && !passwordEditing ? (
-                <>
-                  <Pressable
-                    onPress={openAccountEdit}
-                    style={styles.editAccountBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Edit account details"
-                  >
-                    <Text style={styles.editAccountText}>Edit account</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={openPasswordChange}
-                    style={styles.editAccountBtn}
-                    accessibilityRole="button"
-                    accessibilityLabel="Change password"
-                  >
-                    <Text style={styles.editAccountText}>Change password</Text>
-                  </Pressable>
-                </>
-              ) : null}
+              <PrimaryButton title="Log out" variant="secondary" onPress={handleLogout} style={styles.btn} />
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </View>
+
+      <Modal
+        visible={accountModalVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={closeAccountModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.accountModalRoot}
+        >
+          <View style={styles.accountModalCenter}>
+            <Pressable
+              style={styles.accountModalBackdrop}
+              onPress={closeAccountModal}
+              accessibilityRole="button"
+              accessibilityLabel="Close dialog"
+            />
+            <View style={styles.accountModalCard}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.accountModalScroll}
+            >
               {accountEditing ? (
                 <>
-                  <Text style={styles.sectionTitle}>Account</Text>
-                  <View style={styles.card}>
+                  <Text style={styles.accountModalTitle}>Account</Text>
                   <AccountField
                     label="Name"
                     value={draftFullName}
@@ -415,16 +507,14 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
                   <PrimaryButton
                     title="Cancel"
                     variant="secondary"
-                    onPress={() => setAccountEditing(false)}
+                    onPress={closeAccountModal}
                     disabled={savingProfile}
                   />
-                </View>
                 </>
               ) : null}
               {passwordEditing ? (
                 <>
-                  <Text style={styles.sectionTitle}>Change password</Text>
-                  <View style={styles.card}>
+                  <Text style={styles.accountModalTitle}>Change password</Text>
                   <AccountField
                     label="Current password"
                     value={draftCurrentPassword}
@@ -459,18 +549,16 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
                   <PrimaryButton
                     title="Cancel"
                     variant="secondary"
-                    onPress={() => setPasswordEditing(false)}
+                    onPress={closeAccountModal}
                     disabled={savingPassword}
                   />
-                </View>
                 </>
               ) : null}
-
-              <PrimaryButton title="Log out" variant="secondary" onPress={handleLogout} style={styles.btn} />
             </ScrollView>
-          </Animated.View>
-        </View>
-      </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -625,6 +713,13 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: theme.colors.border,
   },
+  mainAccountActions: {
+    marginTop: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: theme.colors.border,
+    alignSelf: 'stretch',
+  },
   editAccountBtn: {
     alignSelf: 'flex-start',
     marginBottom: theme.spacing.md,
@@ -695,4 +790,41 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   btn: { marginTop: theme.spacing.sm },
+  accountModalRoot: { flex: 1 },
+  accountModalCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    position: 'relative',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+  },
+  accountModalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  accountModalCard: {
+    zIndex: 1,
+    width: '100%',
+    maxHeight: '88%',
+    alignSelf: 'center',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.md,
+    padding: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  accountModalScroll: {
+    paddingBottom: theme.spacing.sm,
+  },
+  accountModalTitle: {
+    fontSize: theme.fontSize.title,
+    fontWeight: '700',
+    color: theme.colors.primaryText,
+    marginBottom: theme.spacing.sm,
+  },
 });
