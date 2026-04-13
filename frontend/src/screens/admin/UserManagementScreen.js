@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import ScreenContainer from '../../components/ui/ScreenContainer';
+import { StatusBar } from 'expo-status-bar';
+import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import TextField from '../../components/ui/TextField';
 import { theme } from '../../constants/theme';
@@ -8,7 +9,12 @@ import { deleteUser, getUsers, updateUser } from '../../api/admin.api';
 import { useAuth } from '../../hooks/useAuth';
 import { validateProfileFields } from '../../utils/validation';
 
-export default function UserManagementScreen() {
+const drawerTitleStyle = {
+  fontSize: theme.fontSize.lg,
+  lineHeight: Math.round(theme.fontSize.lg * 1.35),
+};
+
+export default function UserManagementScreen({ navigation }) {
   const { user: me } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +42,26 @@ export default function UserManagementScreen() {
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
+
+  const drawerMenuItems = useMemo(
+    () => [
+      {
+        key: 'explore-home',
+        label: 'My Profile',
+        accessibilityLabel: 'My profile: go to workspace home',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'user-management',
+        label: 'User Management',
+        accessibilityLabel: 'User management: view and edit accounts',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('UserManagement'),
+      },
+    ],
+    [navigation]
+  );
 
   const selectedUser = useMemo(
     () => users.find((u) => String(u._id) === String(selectedId)) ?? null,
@@ -105,13 +131,12 @@ export default function UserManagementScreen() {
   };
 
   return (
-    <ScreenContainer scroll backgroundColor={theme.colors.backgroundAlt}>
+    <>
+      <StatusBar style="dark" />
+      <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
       <View style={styles.heroCard}>
-        <View style={styles.heroAccent} />
-        <View style={styles.heroCardBody}>
-          <Text style={styles.title}>User Management</Text>
-          <Text style={styles.sub}>Manage visitor and admin accounts.</Text>
-        </View>
+        <Text style={styles.title}>User Management</Text>
+        <Text style={styles.sub}>Manage visitor and admin accounts.</Text>
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -167,50 +192,41 @@ export default function UserManagementScreen() {
           </View>
         </View>
       ))}
-    </ScreenContainer>
+    </AccountDrawerLayout>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   heroCard: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.welcomeBackground,
     borderRadius: theme.radii.md,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.sage,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.accentGreen,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
     marginTop: theme.spacing.sm,
     marginBottom: theme.spacing.md,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
+    shadowColor: theme.colors.accentGreen,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
     elevation: 2,
   },
-  heroAccent: {
-    width: 5,
-    backgroundColor: theme.colors.accentGreen,
-  },
-  heroCardBody: {
-    flex: 1,
-    paddingVertical: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.lg,
-    paddingLeft: theme.spacing.md,
-    backgroundColor: 'rgba(255, 193, 7, 0.14)',
-  },
   title: {
-    fontSize: theme.fontSize.hero,
+    fontSize: theme.fontSize.title,
     fontWeight: '700',
-    color: theme.colors.primaryText,
-    letterSpacing: -0.3,
+    color: theme.colors.linkGreen,
+    letterSpacing: -0.2,
   },
   sub: {
-    marginTop: theme.spacing.sm,
-    fontSize: theme.fontSize.body,
-    lineHeight: Math.round(theme.fontSize.body * 1.45),
-    color: theme.colors.primaryText,
-    opacity: 0.75,
+    marginTop: theme.spacing.xs,
+    fontSize: theme.fontSize.sm,
+    lineHeight: Math.round(theme.fontSize.sm * 1.45),
+    color: theme.colors.accentGreen,
+    opacity: 0.92,
   },
   error: { color: theme.colors.error, marginTop: theme.spacing.sm, marginBottom: theme.spacing.sm },
   loading: { marginTop: theme.spacing.md, color: theme.colors.primaryText, opacity: 0.8 },

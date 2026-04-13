@@ -6,6 +6,11 @@ import { FEATURE_MODULES } from '../../constants/modules';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
 
+const drawerTitleStyle = {
+  fontSize: theme.fontSize.lg,
+  lineHeight: Math.round(theme.fontSize.lg * 1.35),
+};
+
 export default function ProfileScreen({ navigation }) {
   const { user } = useAuth();
 
@@ -22,8 +27,21 @@ export default function ProfileScreen({ navigation }) {
     return rows;
   }, []);
 
+  const drawerMenuItems = useMemo(
+    () => [
+      {
+        key: 'my-profile',
+        label: 'My Profile',
+        accessibilityLabel: 'My profile: Explore home',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('Profile'),
+      },
+    ],
+    [navigation]
+  );
+
   return (
-    <AccountDrawerLayout headerTitle="Explore">
+    <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
       <View style={styles.adventureHeading}>
         <Text style={styles.adventureLeaf} accessible={false} importantForAccessibility="no">
           🌿

@@ -56,8 +56,9 @@ function AccountField({
  *
  * @param {{ key: string; label: string; onPress: () => void; accessibilityLabel?: string; subtitle?: string; emoji?: string; titleStyle?: object }[]} [drawerMenuItems]
  *        Optional entries shown at the top of the drawer (e.g. admin shortcuts), above account actions.
+ * @param {React.ReactNode} [headerRight] Optional control shown on the right of the top bar (e.g. admin FAB).
  */
-export default function AccountDrawerLayout({ children, headerTitle = 'Explore', drawerMenuItems }) {
+export default function AccountDrawerLayout({ children, headerTitle = 'Explore', drawerMenuItems, headerRight }) {
   const { user, logout, updateProfile, changePassword } = useAuth();
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -257,6 +258,7 @@ export default function AccountDrawerLayout({ children, headerTitle = 'Explore',
           <Text style={styles.headerTitle} numberOfLines={1}>
             {headerTitle}
           </Text>
+          {headerRight != null ? <View style={styles.headerRightSlot}>{headerRight}</View> : null}
         </View>
 
         <ScrollView
@@ -514,6 +516,11 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.title,
     fontWeight: '700',
     color: theme.colors.primaryText,
+  },
+  headerRightSlot: {
+    marginLeft: theme.spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scroll: { flex: 1 },
   scrollContent: {
