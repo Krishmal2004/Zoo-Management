@@ -85,11 +85,19 @@ export default function ProfileScreen({ navigation }) {
     return parts?.[0] || 'there';
   }, [user?.fullName]);
 
+  const horizontalPad = theme.spacing.md;
+
+  const moduleRows = useMemo(() => {
+    const rows = [];
+    for (let i = 0; i < FEATURE_MODULES.length; i += 2) {
+      rows.push(FEATURE_MODULES.slice(i, i + 2));
+    }
+    return rows;
+  }, []);
+
   const handleLogout = async () => {
     await logout();
   };
-
-  const horizontalPad = theme.spacing.md;
 
   return (
     <ScreenContainer scroll={false} backgroundColor={theme.colors.backgroundAlt}>
@@ -128,19 +136,24 @@ export default function ProfileScreen({ navigation }) {
             </Text>
           </View>
 
-          <View>
-            {FEATURE_MODULES.map((m) => (
-              <View key={m.route} style={styles.moduleRow}>
-                <ModuleCard
-                  title={m.title}
-                  description={m.description}
-                  emoji={m.emoji}
-                  image={m.image}
-                  onPress={() => navigation.navigate(m.route)}
-                />
+          <>
+            {moduleRows.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.moduleRow}>
+                {row.map((m) => (
+                  <View key={m.route} style={styles.moduleCell}>
+                    <ModuleCard
+                      variant="grid"
+                      title={m.title}
+                      description={m.description}
+                      emoji={m.emoji}
+                      image={m.image}
+                      onPress={() => navigation.navigate(m.route)}
+                    />
+                  </View>
+                ))}
               </View>
             ))}
-          </View>
+          </>
         </ScrollView>
 
         <View
@@ -350,7 +363,13 @@ const styles = StyleSheet.create({
     lineHeight: theme.fontSize.title * 1.25,
   },
   moduleRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.sm,
+  },
+  moduleCell: {
+    flex: 1,
+    minWidth: 0,
   },
   card: {
     backgroundColor: theme.colors.backgroundAlt,
