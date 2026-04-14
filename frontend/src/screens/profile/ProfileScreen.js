@@ -64,9 +64,16 @@ export default function ProfileScreen({ navigation }) {
   const drawerMenuItems = useMemo(
     () => [
       {
-        key: 'my-profile',
+        key: 'explore-home',
         label: 'Explore',
         accessibilityLabel: 'Explore home',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('Profile'),
+      },
+      {
+        key: 'my-profile',
+        label: 'My Profile',
+        accessibilityLabel: 'My profile',
         titleStyle: drawerTitleStyle,
         onPress: () => navigation.navigate('Profile'),
       },
