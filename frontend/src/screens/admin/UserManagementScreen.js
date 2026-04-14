@@ -60,6 +60,48 @@ export default function UserManagementScreen({ navigation }) {
         titleStyle: drawerTitleStyle,
         onPress: () => navigation.navigate('UserManagement'),
       },
+      {
+        key: 'entry-tickets-show-management',
+        label: 'Entry Tickets & Show Booking Management',
+        accessibilityLabel: 'Entry tickets and show booking management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'event-management',
+        label: 'Event Management',
+        accessibilityLabel: 'Event management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'encounter-photography-management',
+        label: 'Animal Encounter & Photography Management',
+        accessibilityLabel: 'Animal encounter and photography management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'education-information-management',
+        label: 'Animal Information & Education Management',
+        accessibilityLabel: 'Animal information and education management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'online-store-management',
+        label: 'Online Store Management',
+        accessibilityLabel: 'Online store management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
+      {
+        key: 'feedback-inquiery-review-management',
+        label: 'Feedback, Inquiery & Review Management',
+        accessibilityLabel: 'Feedback inquiery and review management',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('AdminHome'),
+      },
     ],
     [navigation]
   );
