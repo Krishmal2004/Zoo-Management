@@ -16,6 +16,50 @@ function avatarLetter(fullName) {
 
 function AdminHomeBody({ navigation, user, displayName, roleLabel }) {
   const actions = useAccountDrawerActions();
+  const moduleCards = [
+    {
+      key: 'user-management',
+      title: 'User Management',
+      onPress: () => navigation.navigate('UserManagement'),
+      accessibilityLabel: 'User management',
+    },
+    {
+      key: 'entry-tickets-show-booking-management',
+      title: 'Entry Tickets & Show Booking Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Entry tickets and show booking management',
+    },
+    {
+      key: 'event-management',
+      title: 'Event Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Event management',
+    },
+    {
+      key: 'animal-encounter-photography-management',
+      title: 'Animal Encounter & Photography Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Animal encounter and photography management',
+    },
+    {
+      key: 'animal-information-education-management',
+      title: 'Animal Information & Education Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Animal information and education management',
+    },
+    {
+      key: 'online-store-management',
+      title: 'Online Store Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Online store management',
+    },
+    {
+      key: 'feedback-inquiery-review-management',
+      title: 'Feedback, Inquiery & Review Management',
+      onPress: () => navigation.navigate('AdminHome'),
+      accessibilityLabel: 'Feedback inquiery and review management',
+    },
+  ];
 
   return (
     <View style={styles.profileBlock}>
@@ -56,18 +100,23 @@ function AdminHomeBody({ navigation, user, displayName, roleLabel }) {
         <Text style={styles.badgeText}>{roleLabel}</Text>
       </View>
 
-      <Pressable
-        style={styles.manageCard}
-        onPress={() => navigation.navigate('UserManagement')}
-        accessibilityRole="button"
-        accessibilityLabel="User management"
-      >
-        <Text style={styles.manageTitle}>User Management</Text>
-        <Text style={styles.manageChevron} accessible={false}>
-          ›
-        </Text>
-      </Pressable>
-      <Text style={styles.manageHint}>View and edit visitor and admin accounts</Text>
+      <View style={styles.manageCardsWrap}>
+        {moduleCards.map((card) => (
+          <View key={card.key} style={styles.manageCardBlock}>
+            <Pressable
+              style={styles.manageCard}
+              onPress={card.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={card.accessibilityLabel}
+            >
+              <Text style={styles.manageTitle}>{card.title}</Text>
+              <Text style={styles.manageChevron} accessible={false}>
+                ›
+              </Text>
+            </Pressable>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -254,7 +303,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: theme.spacing.xl,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.md,
@@ -267,6 +315,13 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
+  manageCardsWrap: {
+    alignSelf: 'stretch',
+    marginTop: theme.spacing.xl,
+  },
+  manageCardBlock: {
+    marginBottom: 6,
+  },
   manageTitle: {
     fontSize: theme.fontSize.body,
     fontWeight: '700',
@@ -276,13 +331,5 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: theme.colors.accentGreen,
     fontWeight: '300',
-  },
-  manageHint: {
-    alignSelf: 'stretch',
-    marginTop: theme.spacing.sm,
-    fontSize: theme.fontSize.sm,
-    color: theme.colors.primaryText,
-    opacity: 0.72,
-    textAlign: 'center',
   },
 });
