@@ -25,7 +25,7 @@ function AdminHomeBody({ navigation, user, displayName, roleLabel }) {
         </View>
       </View>
 
-      <Text style={styles.helloLine}>Hello {displayName}</Text>
+      <Text style={styles.helloLine}>Hello, {displayName}</Text>
       <Text style={styles.emailLine}>{user?.email?.trim() || '—'}</Text>
 
       {actions ? (
