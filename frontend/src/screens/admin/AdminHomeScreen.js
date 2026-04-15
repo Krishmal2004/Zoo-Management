@@ -3,11 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import AccountDrawerLayout, { useAccountDrawerActions } from '../../components/profile/AccountDrawerLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
-
-const drawerTitleStyle = {
-  fontSize: theme.fontSize.lg,
-  lineHeight: Math.round(theme.fontSize.lg * 1.35),
-};
+import { getAdminDrawerMenuItems, getAdminModuleCards } from './adminNavigation';
 
 function avatarLetter(fullName) {
   const c = fullName?.trim()?.[0];
@@ -16,50 +12,7 @@ function avatarLetter(fullName) {
 
 function AdminHomeBody({ navigation, user, displayName, roleLabel }) {
   const actions = useAccountDrawerActions();
-  const moduleCards = [
-    {
-      key: 'user-management',
-      title: 'User Management',
-      onPress: () => navigation.navigate('UserManagement'),
-      accessibilityLabel: 'User management',
-    },
-    {
-      key: 'entry-tickets-show-booking-management',
-      title: 'Entry Tickets & Show Booking Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Entry tickets and show booking management',
-    },
-    {
-      key: 'event-management',
-      title: 'Event Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Event management',
-    },
-    {
-      key: 'animal-encounter-photography-management',
-      title: 'Animal Encounter & Photography Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Animal encounter and photography management',
-    },
-    {
-      key: 'animal-information-education-management',
-      title: 'Animal Information & Education Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Animal information and education management',
-    },
-    {
-      key: 'online-store-management',
-      title: 'Online Store Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Online store management',
-    },
-    {
-      key: 'feedback-inquiery-review-management',
-      title: 'Feedback, Inquiery & Review Management',
-      onPress: () => navigation.navigate('AdminHome'),
-      accessibilityLabel: 'Feedback inquiery and review management',
-    },
-  ];
+  const moduleCards = useMemo(() => getAdminModuleCards(navigation), [navigation]);
 
   return (
     <View style={styles.profileBlock}>
@@ -126,67 +79,7 @@ export default function AdminHomeScreen({ navigation }) {
 
   const displayName = useMemo(() => user?.fullName?.trim() || 'Admin', [user?.fullName]);
 
-  const drawerMenuItems = useMemo(
-    () => [
-      {
-        key: 'my-profile',
-        label: 'My Profile',
-        accessibilityLabel: 'My profile: workspace home',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'user-management',
-        label: 'User Management',
-        accessibilityLabel: 'User management: view and edit accounts',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('UserManagement'),
-      },
-      {
-        key: 'entry-tickets-show-management',
-        label: 'Entry Tickets & Show Booking Management',
-        accessibilityLabel: 'Entry tickets and show booking management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'event-management',
-        label: 'Event Management',
-        accessibilityLabel: 'Event management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'encounter-photography-management',
-        label: 'Animal Encounter & Photography Management',
-        accessibilityLabel: 'Animal encounter and photography management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'education-information-management',
-        label: 'Animal Information & Education Management',
-        accessibilityLabel: 'Animal information and education management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'online-store-management',
-        label: 'Online Store Management',
-        accessibilityLabel: 'Online store management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'feedback-inquiery-review-management',
-        label: 'Feedback, Inquiery & Review Management',
-        accessibilityLabel: 'Feedback inquiery and review management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-    ],
-    [navigation]
-  );
+  const drawerMenuItems = useMemo(() => getAdminDrawerMenuItems(navigation), [navigation]);
 
   const roleLabel = user?.role === 'admin' ? 'ADMINISTRATOR' : (user?.role || 'USER').toUpperCase();
 

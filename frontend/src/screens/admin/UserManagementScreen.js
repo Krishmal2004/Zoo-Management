@@ -8,11 +8,7 @@ import { theme } from '../../constants/theme';
 import { createUser, deleteUser, getUsers, updateUser } from '../../api/admin.api';
 import { useAuth } from '../../hooks/useAuth';
 import { validatePassword, validateProfileFields, validateRequired } from '../../utils/validation';
-
-const drawerTitleStyle = {
-  fontSize: theme.fontSize.lg,
-  lineHeight: Math.round(theme.fontSize.lg * 1.35),
-};
+import { getAdminDrawerMenuItems } from './adminNavigation';
 
 export default function UserManagementScreen({ navigation }) {
   const { user: me, logout } = useAuth();
@@ -53,67 +49,7 @@ export default function UserManagementScreen({ navigation }) {
     loadUsers();
   }, [loadUsers]);
 
-  const drawerMenuItems = useMemo(
-    () => [
-      {
-        key: 'explore-home',
-        label: 'My Profile',
-        accessibilityLabel: 'My profile: go to workspace home',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'user-management',
-        label: 'User Management',
-        accessibilityLabel: 'User management: view and edit accounts',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('UserManagement'),
-      },
-      {
-        key: 'entry-tickets-show-management',
-        label: 'Entry Tickets & Show Booking Management',
-        accessibilityLabel: 'Entry tickets and show booking management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'event-management',
-        label: 'Event Management',
-        accessibilityLabel: 'Event management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'encounter-photography-management',
-        label: 'Animal Encounter & Photography Management',
-        accessibilityLabel: 'Animal encounter and photography management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'education-information-management',
-        label: 'Animal Information & Education Management',
-        accessibilityLabel: 'Animal information and education management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'online-store-management',
-        label: 'Online Store Management',
-        accessibilityLabel: 'Online store management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-      {
-        key: 'feedback-inquiery-review-management',
-        label: 'Feedback, Inquiery & Review Management',
-        accessibilityLabel: 'Feedback inquiery and review management',
-        titleStyle: drawerTitleStyle,
-        onPress: () => navigation.navigate('AdminHome'),
-      },
-    ],
-    [navigation]
-  );
+  const drawerMenuItems = useMemo(() => getAdminDrawerMenuItems(navigation), [navigation]);
 
   const selectedUser = useMemo(
     () => users.find((u) => String(u._id) === String(selectedId)) ?? null,
