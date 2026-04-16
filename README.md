@@ -1,4 +1,4 @@
-# 🦓 Zoo Management System
+# 🦓 Zoo & Visitor Management System
 
 A comprehensive, full-stack solution for managing zoo operations, visitor engagement, and animal welfare. This project features a robust **Node.js REST API** and a modern **React Native (Expo)** mobile application.
 
