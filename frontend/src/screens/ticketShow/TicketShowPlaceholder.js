@@ -104,7 +104,7 @@ export default function TicketShowPlaceholder() {
         </View>
 
         <Text style={styles.intro}>
-          Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
+          Use this guide for day admission and add-on show tickets.
         </Text>
 
         <InstructionSection title="Entry ticket prices (per person)" accent="green">
