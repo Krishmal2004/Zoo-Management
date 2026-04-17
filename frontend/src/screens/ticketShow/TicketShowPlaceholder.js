@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
   },
   intro: {
     fontSize: theme.fontSize.body,
-    fontWeight: '700',
     lineHeight: Math.round(theme.fontSize.body * 1.45),
     color: theme.colors.primaryText,
     textAlign: 'center',
