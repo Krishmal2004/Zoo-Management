@@ -74,11 +74,9 @@ export default function TicketShowPlaceholder() {
           <View style={styles.titleUnderline} />
         </View>
 
-        <View style={styles.introCard}>
-          <Text style={styles.intro}>
-            Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
-          </Text>
-        </View>
+        <Text style={styles.intro}>
+          Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
+        </Text>
 
         <InstructionSection title="Entry ticket prices (per person)" accent="green">
           <View style={styles.rowsPanel}>
@@ -153,27 +151,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.accentGreen,
     opacity: 0.85,
   },
-  introCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: theme.radii.md,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.signInLink,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    shadowColor: '#0D2D1D',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
   intro: {
-    fontSize: theme.fontSize.sm,
-    lineHeight: Math.round(theme.fontSize.sm * 1.5),
+    fontSize: theme.fontSize.body,
+    fontWeight: '700',
+    lineHeight: Math.round(theme.fontSize.body * 1.45),
     color: theme.colors.primaryText,
-    opacity: 0.88,
     textAlign: 'center',
+    marginBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.sm,
   },
   section: {
     position: 'relative',
