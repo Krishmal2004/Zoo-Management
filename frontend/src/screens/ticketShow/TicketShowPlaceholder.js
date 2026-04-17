@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { theme } from '../../constants/theme';
+
+const TICKET_ROTATE = '-38deg';
 
 /** Wide zoo entrance banner; file lives at `frontend/assets/images/ticket-zoo-hero.png`. */
 const TICKET_HERO = require('../../../assets/images/ticket-zoo-hero.png');
@@ -58,6 +61,32 @@ function ShowRow({ name, time, price, isLast, zebra }) {
   );
 }
 
+function BookNowButton({ onPress }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.bookNowOuter, pressed && styles.bookNowPressed]}
+      accessibilityRole="button"
+      accessibilityLabel="Book now"
+    >
+      <View style={styles.bookNowIconWrap}>
+        <View style={styles.bookNowIconTilt}>
+          <MaterialCommunityIcons name="ticket-confirmation" size={30} color={theme.colors.primaryText} />
+        </View>
+      </View>
+      <View style={styles.bookNowTextCol}>
+        <Text style={styles.bookNowLine1}>book</Text>
+        <Text style={styles.bookNowLine2}>Now</Text>
+      </View>
+      <View style={styles.bookNowIconWrap}>
+        <View style={styles.bookNowIconTilt}>
+          <MaterialCommunityIcons name="ticket-confirmation" size={30} color={theme.colors.primaryText} />
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 export default function TicketShowPlaceholder() {
   return (
     <ScreenContainer scroll backgroundColor={theme.colors.backgroundAlt}>
@@ -106,6 +135,10 @@ export default function TicketShowPlaceholder() {
             ))}
           </View>
         </InstructionSection>
+
+        <View style={styles.bookNowSlot}>
+          <BookNowButton onPress={() => {}} />
+        </View>
       </View>
     </ScreenContainer>
   );
@@ -294,5 +327,55 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.accentGreen,
     marginTop: 2,
+  },
+  bookNowSlot: {
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  bookNowOuter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.yellow,
+    borderRadius: 26,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    minHeight: 72,
+    shadowColor: '#0D2D1D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  bookNowPressed: {
+    opacity: 0.92,
+  },
+  bookNowIconWrap: {
+    width: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookNowIconTilt: {
+    transform: [{ rotate: TICKET_ROTATE }],
+  },
+  bookNowTextCol: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  bookNowLine1: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.primaryText,
+    lineHeight: 22,
+    letterSpacing: 0.5,
+  },
+  bookNowLine2: {
+    marginTop: 2,
+    fontSize: 20,
+    fontWeight: '800',
+    color: theme.colors.primaryText,
+    lineHeight: 22,
+    letterSpacing: 0.5,
   },
 });
