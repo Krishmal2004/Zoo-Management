@@ -21,18 +21,11 @@ const SHOW_ROWS = [
   { name: 'Reptile encounter', time: '11:30 AM', price: 'LKR 150' },
 ];
 
-function InstructionSection({ title, emoji, accent, children }) {
+function InstructionSection({ title, accent, children }) {
   return (
     <View style={[styles.section, accent === 'amber' && styles.sectionCardAmber]}>
       <View style={[styles.sectionTopBar, accent === 'amber' && styles.sectionTopBarAmber]} />
       <View style={styles.sectionHeader}>
-        {emoji ? (
-          <View style={styles.sectionEmojiWrap}>
-            <Text style={styles.sectionEmoji} accessible={false}>
-              {emoji}
-            </Text>
-          </View>
-        ) : null}
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       {children}
@@ -82,15 +75,12 @@ export default function TicketShowPlaceholder() {
         </View>
 
         <View style={styles.introCard}>
-          <Text style={styles.introIcon} accessible={false}>
-            ℹ️
-          </Text>
           <Text style={styles.intro}>
             Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
           </Text>
         </View>
 
-        <InstructionSection title="Entry ticket prices (per person)" emoji="🎟️" accent="green">
+        <InstructionSection title="Entry ticket prices (per person)" accent="green">
           <View style={styles.rowsPanel}>
             {ENTRY_TICKET_ROWS.map((row, i) => (
               <PriceRow
@@ -104,7 +94,7 @@ export default function TicketShowPlaceholder() {
           </View>
         </InstructionSection>
 
-        <InstructionSection title="Animal shows (per seat)" emoji="🎭" accent="amber">
+        <InstructionSection title="Animal shows (per seat)" accent="amber">
           <Text style={styles.sectionHint}>Times are typical — check the board at the gate on your visit.</Text>
           <View style={styles.rowsPanel}>
             {SHOW_ROWS.map((row, i) => (
@@ -164,8 +154,6 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   introCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     backgroundColor: theme.colors.white,
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
@@ -180,17 +168,12 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  introIcon: {
-    fontSize: 18,
-    marginRight: theme.spacing.sm,
-    marginTop: 1,
-  },
   intro: {
-    flex: 1,
     fontSize: theme.fontSize.sm,
     lineHeight: Math.round(theme.fontSize.sm * 1.5),
     color: theme.colors.primaryText,
     opacity: 0.88,
+    textAlign: 'center',
   },
   section: {
     position: 'relative',
@@ -226,27 +209,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFDF8',
   },
   sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: theme.spacing.md,
     paddingTop: theme.spacing.xs,
   },
-  sectionEmojiWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radii.sm,
-    backgroundColor: theme.colors.backgroundAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  sectionEmoji: {
-    fontSize: 22,
-  },
   sectionTitle: {
-    flex: 1,
     fontSize: theme.fontSize.lg,
     fontWeight: '700',
     color: theme.colors.linkGreen,
