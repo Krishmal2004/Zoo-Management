@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
   priceLabel: {
     flex: 1,
     fontSize: theme.fontSize.body,
+    fontWeight: '700',
     color: theme.colors.primaryText,
     paddingRight: theme.spacing.sm,
   },
