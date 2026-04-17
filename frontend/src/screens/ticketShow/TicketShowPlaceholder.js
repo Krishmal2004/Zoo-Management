@@ -8,10 +8,10 @@ const TICKET_HERO = require('../../../assets/images/ticket-zoo-hero.png');
 
 /** Display-only sample rates — replace when booking API is wired. */
 const ENTRY_TICKET_ROWS = [
-  { label: 'Local — Child', price: 'LKR 450' },
-  { label: 'Local — Adult', price: 'LKR 900' },
-  { label: 'Foreign — Child', price: 'LKR 1,800' },
-  { label: 'Foreign — Adult', price: 'LKR 3,500' },
+  { label: 'Local Child', price: 'LKR 450' },
+  { label: 'Local Adult', price: 'LKR 900' },
+  { label: 'Foreign Child', price: 'LKR 1,800' },
+  { label: 'Foreign Adult', price: 'LKR 3,500' },
 ];
 
 const SHOW_ROWS = [
@@ -93,7 +93,6 @@ export default function TicketShowPlaceholder() {
         </InstructionSection>
 
         <InstructionSection title="Animal shows (per seat)" accent="amber">
-          <Text style={styles.sectionHint}>Times are typical — check the board at the gate on your visit.</Text>
           <View style={styles.rowsPanel}>
             {SHOW_ROWS.map((row, i) => (
               <ShowRow
