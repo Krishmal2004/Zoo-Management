@@ -21,30 +21,44 @@ const SHOW_ROWS = [
   { name: 'Reptile encounter', time: '11:30 AM', price: 'LKR 150' },
 ];
 
-function InstructionSection({ title, children }) {
+function InstructionSection({ title, emoji, accent, children }) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={[styles.section, accent === 'amber' && styles.sectionCardAmber]}>
+      <View style={[styles.sectionTopBar, accent === 'amber' && styles.sectionTopBarAmber]} />
+      <View style={styles.sectionHeader}>
+        {emoji ? (
+          <View style={styles.sectionEmojiWrap}>
+            <Text style={styles.sectionEmoji} accessible={false}>
+              {emoji}
+            </Text>
+          </View>
+        ) : null}
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
       {children}
     </View>
   );
 }
 
-function PriceRow({ label, value, isLast }) {
+function PriceRow({ label, value, isLast, zebra }) {
   return (
-    <View style={[styles.priceRow, isLast && styles.rowLast]}>
+    <View style={[styles.priceRow, zebra && styles.rowZebra, isLast && styles.rowLast]}>
       <Text style={styles.priceLabel}>{label}</Text>
-      <Text style={styles.priceValue}>{value}</Text>
+      <View style={styles.priceValueWrap}>
+        <Text style={styles.priceValue}>{value}</Text>
+      </View>
     </View>
   );
 }
 
-function ShowRow({ name, time, price, isLast }) {
+function ShowRow({ name, time, price, isLast, zebra }) {
   return (
-    <View style={[styles.showRow, isLast && styles.rowLast]}>
+    <View style={[styles.showRow, zebra && styles.rowZebraShow, isLast && styles.rowLast]}>
       <View style={styles.showRowMain}>
         <Text style={styles.showName}>{name}</Text>
-        <Text style={styles.showTime}>{time}</Text>
+        <View style={styles.timeChip}>
+          <Text style={styles.timeChipText}>{time}</Text>
+        </View>
       </View>
       <Text style={styles.showPrice}>{price}</Text>
     </View>
@@ -62,33 +76,48 @@ export default function TicketShowPlaceholder() {
           accessibilityRole="image"
           accessibilityLabel="Zoo entrance illustration"
         />
-        <Text style={styles.title}>Entry Tickets and Show Booking</Text>
-        <Text style={styles.intro}>
-          Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
-        </Text>
+        <View style={styles.titleBlock}>
+          <Text style={styles.title}>Entry Tickets and Show Booking</Text>
+          <View style={styles.titleUnderline} />
+        </View>
 
-        <InstructionSection title="Entry ticket prices (per person)">
-          {ENTRY_TICKET_ROWS.map((row, i) => (
-            <PriceRow
-              key={row.label}
-              label={row.label}
-              value={row.price}
-              isLast={i === ENTRY_TICKET_ROWS.length - 1}
-            />
-          ))}
+        <View style={styles.introCard}>
+          <Text style={styles.introIcon} accessible={false}>
+            ℹ️
+          </Text>
+          <Text style={styles.intro}>
+            Use this guide for day admission and add-on show tickets. Final prices are confirmed at checkout.
+          </Text>
+        </View>
+
+        <InstructionSection title="Entry ticket prices (per person)" emoji="🎟️" accent="green">
+          <View style={styles.rowsPanel}>
+            {ENTRY_TICKET_ROWS.map((row, i) => (
+              <PriceRow
+                key={row.label}
+                label={row.label}
+                value={row.price}
+                isLast={i === ENTRY_TICKET_ROWS.length - 1}
+                zebra={i % 2 === 1}
+              />
+            ))}
+          </View>
         </InstructionSection>
 
-        <InstructionSection title="Animal shows (per seat)">
+        <InstructionSection title="Animal shows (per seat)" emoji="🎭" accent="amber">
           <Text style={styles.sectionHint}>Times are typical — check the board at the gate on your visit.</Text>
-          {SHOW_ROWS.map((row, i) => (
-            <ShowRow
-              key={row.name}
-              name={row.name}
-              time={row.time}
-              price={row.price}
-              isLast={i === SHOW_ROWS.length - 1}
-            />
-          ))}
+          <View style={styles.rowsPanel}>
+            {SHOW_ROWS.map((row, i) => (
+              <ShowRow
+                key={row.name}
+                name={row.name}
+                time={row.time}
+                price={row.price}
+                isLast={i === SHOW_ROWS.length - 1}
+                zebra={i % 2 === 1}
+              />
+            ))}
+          </View>
         </InstructionSection>
       </View>
     </ScreenContainer>
@@ -98,64 +127,161 @@ export default function TicketShowPlaceholder() {
 const styles = StyleSheet.create({
   inner: {
     paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.xs,
   },
   hero: {
     width: '100%',
-    height: 176,
-    borderRadius: theme.radii.md,
-    marginBottom: theme.spacing.lg,
+    height: 188,
+    borderRadius: theme.radii.lg,
+    marginBottom: theme.spacing.sm,
     backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.sage,
+    shadowColor: '#0D2D1D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  titleBlock: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
   title: {
     fontSize: theme.fontSize.title,
     fontWeight: '700',
     color: theme.colors.linkGreen,
     textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+    letterSpacing: 0.2,
   },
-  intro: {
-    fontSize: theme.fontSize.sm,
-    lineHeight: Math.round(theme.fontSize.sm * 1.45),
-    color: theme.colors.primaryText,
+  titleUnderline: {
+    marginTop: theme.spacing.sm,
+    width: 56,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: theme.colors.accentGreen,
     opacity: 0.85,
-    textAlign: 'center',
-    marginBottom: theme.spacing.lg,
-    paddingHorizontal: theme.spacing.xs,
   },
-  section: {
+  introCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     backgroundColor: theme.colors.white,
     borderRadius: theme.radii.md,
     padding: theme.spacing.md,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.signInLink,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#0D2D1D',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
-    shadowRadius: 3,
+    shadowRadius: 6,
     elevation: 2,
   },
+  introIcon: {
+    fontSize: 18,
+    marginRight: theme.spacing.sm,
+    marginTop: 1,
+  },
+  intro: {
+    flex: 1,
+    fontSize: theme.fontSize.sm,
+    lineHeight: Math.round(theme.fontSize.sm * 1.5),
+    color: theme.colors.primaryText,
+    opacity: 0.88,
+  },
+  section: {
+    position: 'relative',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.lg,
+    paddingTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    overflow: 'hidden',
+    shadowColor: '#0D2D1D',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sectionTopBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    backgroundColor: theme.colors.accentGreen,
+    opacity: 0.95,
+  },
+  sectionTopBarAmber: {
+    backgroundColor: theme.colors.yellowAlt,
+    opacity: 1,
+  },
+  sectionCardAmber: {
+    backgroundColor: '#FAFDF8',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    paddingTop: theme.spacing.xs,
+  },
+  sectionEmojiWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radii.sm,
+    backgroundColor: theme.colors.backgroundAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  sectionEmoji: {
+    fontSize: 22,
+  },
   sectionTitle: {
+    flex: 1,
     fontSize: theme.fontSize.lg,
     fontWeight: '700',
     color: theme.colors.linkGreen,
-    marginBottom: theme.spacing.sm,
+    lineHeight: Math.round(theme.fontSize.lg * 1.25),
   },
   sectionHint: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.primaryText,
-    opacity: 0.75,
+    opacity: 0.78,
     marginBottom: theme.spacing.md,
-    lineHeight: Math.round(theme.fontSize.sm * 1.4),
+    lineHeight: Math.round(theme.fontSize.sm * 1.45),
+    fontStyle: 'italic',
+    paddingHorizontal: theme.spacing.xs,
+  },
+  rowsPanel: {
+    borderRadius: theme.radii.sm,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.white,
+  },
+  rowZebra: {
+    backgroundColor: theme.colors.backgroundAlt,
+  },
+  rowZebraShow: {
+    backgroundColor: 'rgba(236, 243, 236, 0.85)',
   },
   rowLast: {
     borderBottomWidth: 0,
@@ -166,34 +292,57 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     paddingRight: theme.spacing.sm,
   },
+  priceValueWrap: {
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.radii.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.sage,
+  },
   priceValue: {
     fontSize: theme.fontSize.body,
-    fontWeight: '600',
-    color: theme.colors.accentGreen,
+    fontWeight: '700',
+    color: theme.colors.linkGreen,
+    letterSpacing: 0.3,
   },
   showRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.white,
   },
   showRowMain: { flex: 1, paddingRight: theme.spacing.sm },
   showName: {
     fontSize: theme.fontSize.body,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.primaryText,
+    letterSpacing: 0.15,
   },
-  showTime: {
-    marginTop: 4,
+  timeChip: {
+    alignSelf: 'flex-start',
+    marginTop: theme.spacing.sm,
+    backgroundColor: theme.colors.yellowAlt,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    borderRadius: theme.radii.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(13, 45, 29, 0.12)',
+  },
+  timeChipText: {
     fontSize: theme.fontSize.sm,
+    fontWeight: '700',
     color: theme.colors.primaryText,
-    opacity: 0.78,
+    letterSpacing: 0.2,
   },
   showPrice: {
     fontSize: theme.fontSize.body,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.accentGreen,
+    marginTop: 2,
   },
 });
