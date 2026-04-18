@@ -120,6 +120,14 @@ export default function TicketBookingScreen() {
   return (
     <ScreenContainer scroll backgroundColor={theme.colors.backgroundAlt}>
       <View style={styles.inner}>
+        <Image
+          source={TICKET_BOOKING_HERO}
+          style={styles.hero}
+          resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel="Zentra Zoo admission ticket illustration"
+        />
+
         <View style={styles.calendarBlock}>
           <VisitDateCalendar
             visibleYear={visibleYear}
@@ -133,14 +141,6 @@ export default function TicketBookingScreen() {
             onClose={() => navigation.goBack()}
           />
         </View>
-
-        <Image
-          source={TICKET_BOOKING_HERO}
-          style={styles.hero}
-          resizeMode="contain"
-          accessibilityRole="image"
-          accessibilityLabel="Zentra Zoo admission ticket illustration"
-        />
 
         <View style={styles.section}>
           <View style={styles.sectionTopBar} />
