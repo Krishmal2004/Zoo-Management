@@ -58,10 +58,7 @@ function ShowSelectionRow({ show, quantity, onChangeQuantity }) {
         <View style={styles.tileBody}>
           <Text style={styles.tileTitle}>{name}</Text>
           <View style={styles.tileTimesWrap} accessible={false}>
-            <Text style={styles.tileTimes}>
-              <Text style={styles.tileTimesLabel}>Show time </Text>
-              {timeLabel}
-            </Text>
+            <Text style={styles.tileTimes}>{timeLabel}</Text>
           </View>
           <Text style={styles.tilePrice}>{formatLkr(priceLkr)} each</Text>
           <View style={styles.qtyRow}>
@@ -177,9 +174,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.primaryText,
     lineHeight: Math.round(theme.fontSize.body * 1.35),
-  },
-  tileTimesLabel: {
-    fontWeight: '800',
   },
   tilePrice: {
     fontSize: theme.fontSize.sm,
