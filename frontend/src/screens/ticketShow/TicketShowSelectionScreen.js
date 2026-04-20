@@ -57,10 +57,12 @@ function ShowSelectionRow({ show, quantity, onChangeQuantity }) {
         />
         <View style={styles.tileBody}>
           <Text style={styles.tileTitle}>{name}</Text>
-          <Text style={styles.tileTimes}>
-            <Text style={styles.tileTimesLabel}>Show time </Text>
-            {timeLabel}
-          </Text>
+          <View style={styles.tileTimesWrap} accessible={false}>
+            <Text style={styles.tileTimes}>
+              <Text style={styles.tileTimesLabel}>Show time </Text>
+              {timeLabel}
+            </Text>
+          </View>
           <Text style={styles.tilePrice}>{formatLkr(priceLkr)} each</Text>
           <View style={styles.qtyRow}>
             <Text style={styles.qtyHint}>Tickets</Text>
@@ -160,21 +162,30 @@ const styles = StyleSheet.create({
     color: theme.colors.linkGreen,
     marginBottom: 2,
   },
+  tileTimesWrap: {
+    alignSelf: 'flex-start',
+    backgroundColor: theme.colors.yellow,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radii.sm,
+    marginBottom: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: theme.colors.yellowAlt,
+  },
   tileTimes: {
-    fontSize: theme.fontSize.sm,
+    fontSize: theme.fontSize.body,
+    fontWeight: '600',
     color: theme.colors.primaryText,
-    opacity: 0.88,
-    lineHeight: Math.round(theme.fontSize.sm * 1.4),
-    marginBottom: 2,
+    lineHeight: Math.round(theme.fontSize.body * 1.35),
   },
   tileTimesLabel: {
-    fontWeight: '600',
-    opacity: 0.95,
+    fontWeight: '800',
   },
   tilePrice: {
-    fontSize: theme.fontSize.sm,
-    fontWeight: '600',
-    color: theme.colors.linkGreen,
+    fontSize: theme.fontSize.lg,
+    fontWeight: '800',
+    color: theme.colors.primaryText,
+    letterSpacing: 0.2,
     marginBottom: theme.spacing.xs,
   },
   qtyRow: {
