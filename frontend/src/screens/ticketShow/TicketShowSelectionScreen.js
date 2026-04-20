@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   tileTimes: {
     fontSize: theme.fontSize.body,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.primaryText,
     lineHeight: Math.round(theme.fontSize.body * 1.35),
   },
