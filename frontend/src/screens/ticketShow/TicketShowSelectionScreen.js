@@ -261,7 +261,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radii.lg,
-    backgroundColor: theme.colors.linkGreen,
+    backgroundColor: theme.colors.yellow,
+    borderWidth: 1,
+    borderColor: theme.colors.yellowAlt,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   ctaButtonText: {
     fontSize: theme.fontSize.lg,
     fontWeight: '700',
-    color: theme.colors.white,
+    color: theme.colors.primaryText,
     letterSpacing: 0.3,
   },
 });
