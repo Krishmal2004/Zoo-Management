@@ -10,6 +10,9 @@ export default function TicketPaymentSuccessScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const totalLkr = route.params?.totalLkr ?? 0;
+  const confirmationCode = route.params?.confirmationCode ?? 'Pending';
+  const bookingId = route.params?.bookingId ?? 'N/A';
+  const visitDate = route.params?.visitDate ?? 'N/A';
 
   return (
     <ScreenContainer backgroundColor={theme.colors.backgroundAlt}>
@@ -20,6 +23,11 @@ export default function TicketPaymentSuccessScreen() {
           <Text style={styles.body}>
             Your payment of {formatLkr(totalLkr)} has been received. Your booking is now confirmed.
           </Text>
+          <View style={styles.metaBlock}>
+            <Text style={styles.metaText}>Confirmation: {confirmationCode}</Text>
+            <Text style={styles.metaText}>Visit date: {visitDate}</Text>
+            <Text style={styles.metaText}>Booking ID: {bookingId}</Text>
+          </View>
           <PrimaryButton
             title="Back to tickets"
             onPress={() => navigation.navigate('TicketShow')}
@@ -63,6 +71,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     opacity: 0.85,
+  },
+  metaBlock: {
+    marginTop: theme.spacing.md,
+    width: '100%',
+    backgroundColor: theme.colors.backgroundAlt,
+    borderRadius: theme.radii.sm,
+    padding: theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 4,
+  },
+  metaText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primaryText,
+    fontWeight: '600',
   },
   button: {
     width: '100%',
