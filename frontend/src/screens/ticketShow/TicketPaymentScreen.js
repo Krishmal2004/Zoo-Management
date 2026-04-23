@@ -6,6 +6,7 @@ import TextField from '../../components/ui/TextField';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import { formatLkr } from '../../constants/entryTickets';
+import { createBooking } from '../../api/booking.api';
 
 function isValidExpiry(expiry) {
   const trimmed = expiry.trim();
@@ -36,6 +37,7 @@ export default function TicketPaymentScreen() {
     expiryDate: '',
     cvv: '',
   });
+  const [submitting, setSubmitting] = useState(false);
 
   const entrySubtotalLkr = route.params?.entrySubtotalLkr ?? 0;
   const showsSubtotalLkr = route.params?.showsSubtotalLkr ?? 0;
@@ -43,8 +45,11 @@ export default function TicketPaymentScreen() {
     () => route.params?.totalLkr ?? entrySubtotalLkr + showsSubtotalLkr,
     [route.params?.totalLkr, entrySubtotalLkr, showsSubtotalLkr]
   );
+  const entryItems = route.params?.entryItems ?? [];
+  const showItems = route.params?.showItems ?? [];
+  const visitDate = route.params?.visitDate;
 
-  const onPayNow = () => {
+  const onPayNow = async () => {
     const nextErrors = {
       cardholderName: '',
       cardNumber: '',
@@ -76,7 +81,37 @@ export default function TicketPaymentScreen() {
       return;
     }
 
-    navigation.navigate('PaymentSuccess', { totalLkr });
+    if (!visitDate) {
+      Alert.alert('Booking', 'Visit date is missing. Please restart the booking flow.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const response = await createBooking({
+        visitDate,
+        entryItems,
+        showItems,
+        payment: {
+          cardholderName: cardholderNameTrimmed,
+          cardNumber: cardDigits,
+          expiryDate: expiryDate.trim(),
+          cvv: cvvDigits,
+        },
+      });
+      const booking = response?.data?.booking;
+      navigation.navigate('PaymentSuccess', {
+        totalLkr: booking?.totalLkr ?? totalLkr,
+        confirmationCode: booking?.confirmationCode,
+        bookingId: booking?._id,
+        visitDate: booking?.visitDate ?? visitDate,
+      });
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Payment failed. Please try again.';
+      Alert.alert('Payment', message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -156,7 +191,7 @@ export default function TicketPaymentScreen() {
             </View>
           </View>
 
-          <PrimaryButton title="Pay now" onPress={onPayNow} style={styles.payButton} />
+          <PrimaryButton title="Pay now" onPress={onPayNow} style={styles.payButton} loading={submitting} />
         </View>
       </View>
     </ScreenContainer>
