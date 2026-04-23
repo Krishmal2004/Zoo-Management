@@ -1,16 +1,31 @@
-import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, Pressable, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import PlaceholderScreen from '../shared/PlaceholderScreen';
 import { theme } from '../../constants/theme';
 import { formatLkr } from '../../constants/entryTickets';
-import {
-  TICKET_SHOW_CATALOG,
-  TICKET_SHOW_MAX_PER_SHOW,
-  initialTicketShowQuantities,
-} from '../../constants/ticketShowCatalog';
+import { TICKET_SHOW_MAX_PER_SHOW } from '../../constants/ticketShowCatalog';
+import { getTicketCatalog } from '../../api/booking.api';
 
 const SHOW_SELECTION_HERO = require('../../../assets/images/ticket-show-selection-hero.png');
+const SHOW_IMAGES = {
+  birds_of_prey: {
+    image: require('../../../assets/images/show-birds-of-prey.png'),
+    imageAccessibilityLabel: 'Zoo presenter with a large red and blue macaw',
+  },
+  elephant_care_bath: {
+    image: require('../../../assets/images/show-elephant-care-bath.png'),
+    imageAccessibilityLabel: 'Ceremonial elephant bath with people in traditional dress holding silver bowls',
+  },
+  sea_lion_splash: {
+    image: require('../../../assets/images/show-sea-lion-splash.png'),
+    imageAccessibilityLabel: 'Sea lion balancing a volleyball on its nose above blue water',
+  },
+  reptile_encounter: {
+    image: require('../../../assets/images/show-reptile-encounter.png'),
+    imageAccessibilityLabel: 'Zookeeper presenting a large patterned snake outdoors',
+  },
+};
 
 function ShowQuantityStepper({ quantity, onDecrement, onIncrement, label }) {
   return (
@@ -39,11 +54,12 @@ function ShowQuantityStepper({ quantity, onDecrement, onIncrement, label }) {
 }
 
 function ShowSelectionRow({ show, quantity, onChangeQuantity }) {
-  const { id, name, timeLabel, priceLkr, image, imageAccessibilityLabel } = show;
+  const { code, name, priceLkr, image, imageAccessibilityLabel } = show;
+  const timeLabel = show.meta?.timeLabel || '-';
 
   const setQty = (next) => {
     const clamped = Math.max(0, Math.min(TICKET_SHOW_MAX_PER_SHOW, next));
-    onChangeQuantity(id, clamped);
+    onChangeQuantity(code, clamped);
   };
 
   return (
@@ -81,16 +97,52 @@ function ShowSelectionRow({ show, quantity, onChangeQuantity }) {
 export default function TicketShowSelectionScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const [quantities, setQuantities] = useState(() => initialTicketShowQuantities());
+  const [showCatalog, setShowCatalog] = useState([]);
+  const [quantities, setQuantities] = useState({});
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const entryBooking = route.params?.entryBooking;
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setCatalogLoading(true);
+      try {
+        const data = await getTicketCatalog();
+        const shows = (data?.data?.shows ?? []).map((show) => ({
+          ...show,
+          ...(SHOW_IMAGES[show.code] || {}),
+        }));
+        if (!mounted) return;
+        setShowCatalog(shows);
+        setQuantities(Object.fromEntries(shows.map((item) => [item.code, 0])));
+      } catch (error) {
+        if (!mounted) return;
+        Alert.alert('Shows', 'Unable to load show catalog. Please try again.');
+      } finally {
+        if (mounted) setCatalogLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const setShowQty = useCallback((id, value) => {
     setQuantities((q) => ({ ...q, [id]: value }));
   }, []);
 
   const showsSubtotalLkr = useMemo(() => {
-    return TICKET_SHOW_CATALOG.reduce((sum, s) => sum + (quantities[s.id] || 0) * s.priceLkr, 0);
-  }, [quantities]);
+    return showCatalog.reduce((sum, s) => sum + (quantities[s.code] || 0) * s.priceLkr, 0);
+  }, [showCatalog, quantities]);
+
+  const showItems = useMemo(
+    () =>
+      showCatalog
+        .map((show) => ({ itemCode: show.code, quantity: quantities[show.code] || 0 }))
+        .filter((item) => item.quantity > 0),
+    [showCatalog, quantities]
+  );
 
   const entrySubtotalLkr = entryBooking?.subtotalLkr ?? 0;
   const totalLkr = entrySubtotalLkr + showsSubtotalLkr;
@@ -101,16 +153,23 @@ export default function TicketShowSelectionScreen() {
       imageSource={SHOW_SELECTION_HERO}
       imageAccessibilityLabel="Large outdoor show arena with tiered seating and performance lawn"
     >
-      <View style={styles.showList}>
-        {TICKET_SHOW_CATALOG.map((show) => (
-          <ShowSelectionRow
-            key={show.id}
-            show={show}
-            quantity={quantities[show.id] ?? 0}
-            onChangeQuantity={setShowQty}
-          />
-        ))}
-      </View>
+      {catalogLoading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator />
+          <Text style={styles.loadingText}>Loading shows...</Text>
+        </View>
+      ) : (
+        <View style={styles.showList}>
+          {showCatalog.map((show) => (
+            <ShowSelectionRow
+              key={show.code}
+              show={show}
+              quantity={quantities[show.code] ?? 0}
+              onChangeQuantity={setShowQty}
+            />
+          ))}
+        </View>
+      )}
 
       <View style={styles.subtotalBlock}>
         <View style={styles.subtotalRow}>
@@ -125,10 +184,12 @@ export default function TicketShowSelectionScreen() {
         accessibilityLabel="Proceed to checkout"
         onPress={() =>
           navigation.navigate('Payment', {
+            visitDate: entryBooking?.visitDate,
+            entryItems: entryBooking?.entryItems ?? [],
+            showItems,
             entrySubtotalLkr,
             showsSubtotalLkr,
             totalLkr,
-            visitDate: entryBooking?.visitDate,
           })
         }
       >
@@ -145,6 +206,16 @@ const styles = StyleSheet.create({
   showList: {
     marginTop: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  loadingWrap: {
+    marginTop: theme.spacing.lg,
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  loadingText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primaryText,
+    opacity: 0.75,
   },
   tile: {
     borderRadius: theme.radii.lg,
