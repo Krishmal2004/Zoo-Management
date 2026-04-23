@@ -6,6 +6,8 @@ import { getProductById } from '../../api/store.api';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
 
+import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+
 export default function ProductDetailsScreen({ route, navigation }) {
   const { productId } = route.params;
   const [product, setProduct] = useState(null);
@@ -45,6 +47,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
     );
   };
 
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/300';
+    if (url.startsWith('/')) return `${getApiBaseUrl().replace('/api', '')}${url}`;
+    return url;
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -59,7 +67,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
     <ScreenContainer>
       <ScrollView>
         <Image
-          source={{ uri: product.images?.[0] || 'https://via.placeholder.com/300' }}
+          source={{ uri: getImageUrl(product.images?.[0]) }}
           style={styles.image}
         />
         <View style={styles.infoContainer}>

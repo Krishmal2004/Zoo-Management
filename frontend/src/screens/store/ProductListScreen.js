@@ -4,6 +4,8 @@ import ScreenContainer from '../../components/ui/ScreenContainer';
 import { getProducts } from '../../api/store.api';
 import { Ionicons } from '@expo/vector-icons';
 
+import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+
 export default function ProductListScreen({ route, navigation }) {
   const { categoryId, categoryName } = route.params;
   const [products, setProducts] = useState([]);
@@ -24,13 +26,19 @@ export default function ProductListScreen({ route, navigation }) {
     }
   };
 
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/150';
+    if (url.startsWith('/')) return `${getApiBaseUrl().replace('/api', '')}${url}`;
+    return url;
+  };
+
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => navigation.navigate('ProductDetails', { productId: item._id })}
     >
       <Image
-        source={{ uri: item.images?.[0] || 'https://via.placeholder.com/150' }}
+        source={{ uri: getImageUrl(item.images?.[0]) }}
         style={styles.productImage}
       />
       <View style={styles.productInfo}>

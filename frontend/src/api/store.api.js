@@ -7,6 +7,18 @@ export const deleteCategory = (id) => client.delete(`/store/categories/${id}`);
 
 export const getProducts = (params) => client.get('/store/products', { params });
 export const getProductById = (id) => client.get(`/store/products/${id}`);
-export const createProduct = (data) => client.post('/store/products', data);
-export const updateProduct = (id, data) => client.put(`/store/products/${id}`, data);
+export const createProduct = (data) => {
+  const isFormData = data instanceof FormData;
+  return client.post('/store/products', data, {
+    headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+  });
+};
+
+export const updateProduct = (id, data) => {
+  const isFormData = data instanceof FormData;
+  return client.put(`/store/products/${id}`, data, {
+    headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : {}
+  });
+};
+
 export const deleteProduct = (id) => client.delete(`/store/products/${id}`);

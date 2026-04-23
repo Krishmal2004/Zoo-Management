@@ -41,11 +41,24 @@ exports.getProductById = asyncHandler(async (req, res) => {
 });
 
 exports.createProduct = asyncHandler(async (req, res) => {
+  if (req.file) {
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    req.body.images = [imageUrl];
+  } else if (req.body.images && typeof req.body.images === 'string') {
+    // Fallback if images sent as string or empty
+    req.body.images = req.body.images ? [req.body.images] : [];
+  }
   const product = await storeService.createProduct(req.body);
   res.status(201).json({ success: true, data: product });
 });
 
 exports.updateProduct = asyncHandler(async (req, res) => {
+  if (req.file) {
+    const imageUrl = `/uploads/products/${req.file.filename}`;
+    req.body.images = [imageUrl];
+  } else if (req.body.images && typeof req.body.images === 'string') {
+    req.body.images = req.body.images ? [req.body.images] : [];
+  }
   const product = await storeService.updateProduct(req.params.id, req.body);
   res.status(200).json({ success: true, data: product });
 });

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, ActivityIndicator, Image } from 'react-native';
 import ScreenContainer from '../../../components/ui/ScreenContainer';
 import PrimaryButton from '../../../components/ui/PrimaryButton';
 import TextField from '../../../components/ui/TextField';
 import { getProducts, getCategories, createProduct, updateProduct, deleteProduct } from '../../../api/store.api';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { getApiBaseUrl } from '../../../api/getApiBaseUrl';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -39,26 +41,48 @@ export default function ManageProducts() {
     }
   };
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
   const handleSave = async () => {
     if (!name || !price || !category) {
       Alert.alert('Error', 'Please fill in required fields');
       return;
     }
 
-    const productData = {
-      name,
-      description,
-      price: parseFloat(price),
-      stock: parseInt(stock) || 0,
-      category,
-      images: image ? [image] : []
-    };
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('price', price.toString());
+    formData.append('stock', stock.toString() || '0');
+    formData.append('category', category);
+
+    if (image && !image.startsWith('http') && !image.startsWith('/')) {
+      // It's a local URI picked from image picker
+      const filename = image.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : `image`;
+      formData.append('image', { uri: image, name: filename, type });
+    } else if (image) {
+      // Keep existing image URL if not changed
+      formData.append('images', image);
+    }
 
     try {
       if (isEditing) {
-        await updateProduct(selectedProduct._id, productData);
+        await updateProduct(selectedProduct._id, formData);
       } else {
-        await createProduct(productData);
+        await createProduct(formData);
       }
       setModalVisible(false);
       fetchData();
@@ -164,7 +188,20 @@ export default function ManageProducts() {
               </ScrollView>
             )}
 
-            <TextField label="Image URL" value={image} onChangeText={setImage} />
+            <Text style={styles.label}>Product Image</Text>
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              {image ? (
+                <Image 
+                  source={{ uri: image.startsWith('/') ? `${getApiBaseUrl().replace('/api', '')}${image}` : image }} 
+                  style={styles.previewImage} 
+                />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="camera" size={40} color="#999" />
+                  <Text style={styles.imagePlaceholderText}>Tap to select image</Text>
+                </View>
+              )}
+            </TouchableOpacity>
             
             <View style={styles.modalButtons}>
               <PrimaryButton title="Cancel" onPress={() => setModalVisible(false)} style={styles.modalBtnCancel} />
@@ -234,6 +271,31 @@ const styles = StyleSheet.create({
   selectedDropdownItemText: {
     color: '#4CAF50',
     fontFamily: 'Dosis_700Bold',
+  },
+  imagePicker: {
+    marginTop: 8,
+    marginBottom: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+    overflow: 'hidden',
+    backgroundColor: '#F9F9F9',
+  },
+  previewImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    marginTop: 8,
+    color: '#666',
+    fontFamily: 'Dosis_500Medium',
   },
   modalButtons: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: 40 },
   modalBtnCancel: { flex: 1, backgroundColor: '#9E9E9E' },
