@@ -17,7 +17,7 @@ import {
   ENTRY_TICKET_MAX_PER_TYPE,
 } from '../../constants/entryTickets';
 import { theme } from '../../constants/theme';
-import { getTicketCatalog } from '../../api/booking.api';
+import { getTicketCatalog } from '../../api/ticketBooking.api';
 import {
   getBookingDateBounds,
   isDateInBookingWindow,
