@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import QRCode from 'react-native-qrcode-svg';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import { formatLkr } from '../../constants/entryTickets';
+import { verifyBookingEntry } from '../../api/ticketBooking.api';
 
 export default function TicketPaymentSuccessScreen() {
   const navigation = useNavigation();
@@ -13,6 +15,34 @@ export default function TicketPaymentSuccessScreen() {
   const confirmationCode = route.params?.confirmationCode ?? 'Pending';
   const bookingId = route.params?.bookingId ?? 'N/A';
   const visitDate = route.params?.visitDate ?? 'N/A';
+  const [verifying, setVerifying] = useState(false);
+
+  const qrPayload = useMemo(
+    () => JSON.stringify({ bookingId, confirmationCode, visitDate }),
+    [bookingId, confirmationCode, visitDate]
+  );
+
+  const onSimulateGateCheck = async () => {
+    if (!bookingId || bookingId === 'N/A' || !confirmationCode || confirmationCode === 'Pending') {
+      Alert.alert('Gate check', 'This pass is missing booking details.');
+      return;
+    }
+
+    try {
+      setVerifying(true);
+      const res = await verifyBookingEntry({ bookingId, confirmationCode });
+      if (res?.data?.alreadyUsed) {
+        Alert.alert('Gate result', 'This pass has already been used.');
+        return;
+      }
+      Alert.alert('Gate result', 'Pass is valid. Entry approved.');
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Unable to verify pass.';
+      Alert.alert('Gate result', message);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   return (
     <ScreenContainer backgroundColor={theme.colors.backgroundAlt}>
@@ -28,6 +58,16 @@ export default function TicketPaymentSuccessScreen() {
             <Text style={styles.metaText}>Visit date: {visitDate}</Text>
             <Text style={styles.metaText}>Booking ID: {bookingId}</Text>
           </View>
+          <View style={styles.qrWrap}>
+            <QRCode value={qrPayload} size={170} />
+            <Text style={styles.qrHint}>Show this QR at the gate</Text>
+          </View>
+          <PrimaryButton
+            title="Simulate gate check"
+            onPress={onSimulateGateCheck}
+            style={styles.gateButton}
+            loading={verifying}
+          />
           <PrimaryButton
             title="Back to tickets"
             onPress={() => navigation.navigate('TicketShow')}
@@ -87,8 +127,22 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     fontWeight: '600',
   },
+  qrWrap: {
+    marginTop: theme.spacing.md,
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  qrHint: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primaryText,
+    opacity: 0.75,
+  },
+  gateButton: {
+    width: '100%',
+    marginTop: theme.spacing.md,
+  },
   button: {
     width: '100%',
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
   },
 });
