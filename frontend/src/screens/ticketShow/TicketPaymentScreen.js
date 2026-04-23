@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import TextField from '../../components/ui/TextField';
 import PrimaryButton from '../../components/ui/PrimaryButton';
@@ -24,6 +24,7 @@ function isValidExpiry(expiry) {
 }
 
 export default function TicketPaymentScreen() {
+  const navigation = useNavigation();
   const route = useRoute();
   const [cardholderName, setCardholderName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -75,7 +76,7 @@ export default function TicketPaymentScreen() {
       return;
     }
 
-    Alert.alert('Payment successful', `Payment of ${formatLkr(totalLkr)} completed.`);
+    navigation.navigate('PaymentSuccess', { totalLkr });
   };
 
   return (
