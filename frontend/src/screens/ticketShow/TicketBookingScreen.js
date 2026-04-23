@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,18 +6,18 @@ import {
   StyleSheet,
   Pressable,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import VisitDateCalendar from '../../components/booking/VisitDateCalendar';
 import {
-  ENTRY_TICKET_TYPES,
-  ENTRY_TICKET_MAX_PER_TYPE,
   formatLkr,
-  initialEntryQuantities,
+  ENTRY_TICKET_MAX_PER_TYPE,
 } from '../../constants/entryTickets';
 import { theme } from '../../constants/theme';
+import { getTicketCatalog } from '../../api/booking.api';
 import {
   getBookingDateBounds,
   isDateInBookingWindow,
@@ -68,7 +68,33 @@ export default function TicketBookingScreen() {
   const [visibleYear, setVisibleYear] = useState(() => new Date().getFullYear());
   const [visibleMonthIndex, setVisibleMonthIndex] = useState(() => new Date().getMonth());
 
-  const [quantities, setQuantities] = useState(() => initialEntryQuantities());
+  const [entryCatalog, setEntryCatalog] = useState([]);
+  const [quantities, setQuantities] = useState({});
+  const [catalogLoading, setCatalogLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      setCatalogLoading(true);
+      try {
+        const data = await getTicketCatalog();
+        const entries = data?.data?.entryTickets ?? [];
+        if (!mounted) return;
+        setEntryCatalog(entries);
+        setQuantities(Object.fromEntries(entries.map((item) => [item.code, 0])));
+      } catch (error) {
+        if (!mounted) return;
+        Alert.alert('Tickets', 'Unable to load ticket catalog. Please try again.');
+      } finally {
+        if (mounted) setCatalogLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const canGoPrevMonth = monthStartTs(visibleYear, visibleMonthIndex) > monthStartTs(min.getFullYear(), min.getMonth());
   const canGoNextMonth = monthStartTs(visibleYear, visibleMonthIndex) < monthStartTs(max.getFullYear(), max.getMonth());
@@ -90,8 +116,8 @@ export default function TicketBookingScreen() {
   }, [visibleYear, visibleMonthIndex, canGoNextMonth]);
 
   const subtotalLkr = useMemo(() => {
-    return ENTRY_TICKET_TYPES.reduce((sum, t) => sum + (quantities[t.id] || 0) * t.priceLkr, 0);
-  }, [quantities]);
+    return entryCatalog.reduce((sum, item) => sum + (quantities[item.code] || 0) * item.priceLkr, 0);
+  }, [entryCatalog, quantities]);
 
   const setQty = (id, next) => {
     const clamped = Math.max(0, Math.min(ENTRY_TICKET_MAX_PER_TYPE, next));
@@ -99,7 +125,11 @@ export default function TicketBookingScreen() {
   };
 
   const onContinueToShows = () => {
-    const any = ENTRY_TICKET_TYPES.some((t) => (quantities[t.id] || 0) > 0);
+    const entryItems = entryCatalog
+      .map((item) => ({ itemCode: item.code, quantity: quantities[item.code] || 0 }))
+      .filter((item) => item.quantity > 0);
+    const any = entryItems.length > 0;
+
     if (!any) {
       Alert.alert('Entry tickets', 'Choose at least one entry ticket.');
       return;
@@ -110,7 +140,7 @@ export default function TicketBookingScreen() {
     }
     navigation.navigate('TicketShowSelection', {
       entryBooking: {
-        quantities,
+        entryItems,
         subtotalLkr,
         visitDate: toLocalDateKey(selectedDate),
       },
@@ -147,19 +177,26 @@ export default function TicketBookingScreen() {
           <Text style={styles.sectionTitle}>Entry tickets</Text>
           <Text style={styles.sectionHint}>Choose how many of each admission type you need.</Text>
 
-          <View style={styles.rowsPanel}>
-            {ENTRY_TICKET_TYPES.map((t, i) => (
-              <QuantityRow
-                key={t.id}
-                label={t.label}
-                unitPriceLabel={formatLkr(t.priceLkr)}
-                quantity={quantities[t.id] ?? 0}
-                onDecrement={() => setQty(t.id, (quantities[t.id] ?? 0) - 1)}
-                onIncrement={() => setQty(t.id, (quantities[t.id] ?? 0) + 1)}
-                isLast={i === ENTRY_TICKET_TYPES.length - 1}
-              />
-            ))}
-          </View>
+          {catalogLoading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator />
+              <Text style={styles.loadingText}>Loading tickets...</Text>
+            </View>
+          ) : (
+            <View style={styles.rowsPanel}>
+              {entryCatalog.map((item, i) => (
+                <QuantityRow
+                  key={item.code}
+                  label={item.name}
+                  unitPriceLabel={formatLkr(item.priceLkr)}
+                  quantity={quantities[item.code] ?? 0}
+                  onDecrement={() => setQty(item.code, (quantities[item.code] ?? 0) - 1)}
+                  onIncrement={() => setQty(item.code, (quantities[item.code] ?? 0) + 1)}
+                  isLast={i === entryCatalog.length - 1}
+                />
+              ))}
+            </View>
+          )}
 
           <View style={styles.subtotalRow}>
             <Text style={styles.subtotalLabel}>Subtotal</Text>
@@ -167,7 +204,12 @@ export default function TicketBookingScreen() {
           </View>
         </View>
 
-        <PrimaryButton title="Select shows" onPress={onContinueToShows} style={styles.cta} />
+        <PrimaryButton
+          title="Select shows"
+          onPress={onContinueToShows}
+          style={styles.cta}
+          disabled={catalogLoading || !entryCatalog.length}
+        />
       </View>
     </ScreenContainer>
   );
@@ -242,6 +284,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     marginBottom: theme.spacing.md,
+  },
+  loadingWrap: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
+  },
+  loadingText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primaryText,
+    opacity: 0.75,
   },
   ticketRow: {
     flexDirection: 'row',
