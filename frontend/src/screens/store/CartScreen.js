@@ -5,13 +5,21 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
 
+import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+
 export default function CartScreen({ navigation }) {
   const { cart, removeFromCart, updateQuantity, totalAmount } = useCart();
+
+  const getImageUrl = (url) => {
+    if (!url) return 'https://via.placeholder.com/100';
+    if (url.startsWith('/')) return `${getApiBaseUrl().replace('/api', '')}${url}`;
+    return url;
+  };
 
   const renderCartItem = ({ item }) => (
     <View style={styles.cartItem}>
       <Image
-        source={{ uri: item.product.images?.[0] || 'https://via.placeholder.com/100' }}
+        source={{ uri: getImageUrl(item.product.images?.[0]) }}
         style={styles.itemImage}
       />
       <View style={styles.itemInfo}>

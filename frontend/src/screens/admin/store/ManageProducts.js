@@ -24,6 +24,7 @@ export default function ManageProducts() {
   const [stock, setStock] = useState('');
   const [category, setCategory] = useState('');
   const [image, setImage] = useState('');
+  const [sizes, setSizes] = useState({ XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
 
   useEffect(() => {
     fetchData();
@@ -66,6 +67,10 @@ export default function ManageProducts() {
     formData.append('price', price.toString());
     formData.append('stock', stock.toString() || '0');
     formData.append('category', category);
+    
+    if (category === 'Merchandise') {
+      formData.append('sizes', JSON.stringify(sizes));
+    }
 
     if (image && !image.startsWith('http') && !image.startsWith('/')) {
       // It's a local URI picked from image picker
@@ -111,6 +116,7 @@ export default function ManageProducts() {
       setStock(product.stock.toString());
       setCategory(product.category);
       setImage(product.images?.[0] || '');
+      setSizes(product.sizes || { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
     } else {
       setIsEditing(false);
       setSelectedProduct(null);
@@ -120,6 +126,7 @@ export default function ManageProducts() {
       setStock('');
       setCategory(Array.isArray(categories) && categories.length > 0 ? categories[0]._id : '');
       setImage('');
+      setSizes({ XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0 });
     }
     setDropdownVisible(false);
     setModalVisible(true);
@@ -156,7 +163,6 @@ export default function ManageProducts() {
             <TextField label="Product Name" value={name} onChangeText={setName} />
             <TextField label="Description" value={description} onChangeText={setDescription} multiline />
             <TextField label="Price" value={price} onChangeText={setPrice} keyboardType="numeric" />
-            <TextField label="Stock" value={stock} onChangeText={setStock} keyboardType="numeric" />
             
             <Text style={styles.label}>Category</Text>
               <TouchableOpacity 
@@ -186,6 +192,28 @@ export default function ManageProducts() {
                   </TouchableOpacity>
                 ))}
               </ScrollView>
+            )}
+
+            {category !== 'Merchandise' && (
+              <TextField label="Stock" value={stock} onChangeText={setStock} keyboardType="numeric" />
+            )}
+
+            {category === 'Merchandise' && (
+              <View style={styles.sizesContainer}>
+                <Text style={styles.label}>Sizes Stock</Text>
+                <View style={styles.sizesGrid}>
+                  {Object.keys(sizes).map((size) => (
+                    <View key={size} style={styles.sizeInputContainer}>
+                      <Text style={styles.sizeLabel}>{size}</Text>
+                      <TextField 
+                        value={sizes[size].toString()} 
+                        onChangeText={(val) => setSizes({ ...sizes, [size]: parseInt(val) || 0 })} 
+                        keyboardType="numeric" 
+                      />
+                    </View>
+                  ))}
+                </View>
+              </View>
             )}
 
             <Text style={styles.label}>Product Image</Text>
@@ -300,4 +328,23 @@ const styles = StyleSheet.create({
   modalButtons: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: 40 },
   modalBtnCancel: { flex: 1, backgroundColor: '#9E9E9E' },
   modalBtnSave: { flex: 1 },
+  sizesContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  sizesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  sizeInputContainer: {
+    width: '30%',
+    marginBottom: 10,
+  },
+  sizeLabel: {
+    fontSize: 14,
+    fontFamily: 'Dosis_600SemiBold',
+    marginBottom: 4,
+    color: '#333',
+  },
 });

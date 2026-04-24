@@ -48,6 +48,13 @@ exports.createProduct = asyncHandler(async (req, res) => {
     // Fallback if images sent as string or empty
     req.body.images = req.body.images ? [req.body.images] : [];
   }
+  if (req.body.sizes && typeof req.body.sizes === 'string') {
+    try {
+      req.body.sizes = JSON.parse(req.body.sizes);
+    } catch (e) {
+      console.error('Failed to parse sizes', e);
+    }
+  }
   const product = await storeService.createProduct(req.body);
   res.status(201).json({ success: true, data: product });
 });
@@ -58,6 +65,13 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     req.body.images = [imageUrl];
   } else if (req.body.images && typeof req.body.images === 'string') {
     req.body.images = req.body.images ? [req.body.images] : [];
+  }
+  if (req.body.sizes && typeof req.body.sizes === 'string') {
+    try {
+      req.body.sizes = JSON.parse(req.body.sizes);
+    } catch (e) {
+      console.error('Failed to parse sizes', e);
+    }
   }
   const product = await storeService.updateProduct(req.params.id, req.body);
   res.status(200).json({ success: true, data: product });

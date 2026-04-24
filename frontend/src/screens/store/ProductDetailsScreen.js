@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { getProductById } from '../../api/store.api';
@@ -13,6 +13,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [sizeGuideVisible, setSizeGuideVisible] = useState(false);
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -32,11 +34,26 @@ export default function ProductDetailsScreen({ route, navigation }) {
   };
 
   const handleAddToCart = () => {
-    if (product.stock < quantity) {
-      Alert.alert('Out of Stock', 'Sorry, we don\'t have enough stock.');
+    let availableStock = product.stock;
+    if (product.category === 'Merchandise') {
+      if (!selectedSize) {
+        Alert.alert('Select Size', 'Please select a size first.');
+        return;
+      }
+      availableStock = product.sizes ? product.sizes[selectedSize] : 0;
+    }
+
+    if (availableStock < quantity) {
+      Alert.alert('Out of Stock', 'Sorry, we don\'t have enough stock for this selection.');
       return;
     }
-    addToCart(product, quantity);
+
+    // Pass size to cart if needed, assuming addToCart accepts a size parameter or we can bundle it
+    // For now, I will append size to the product name or add a size property
+    const productToAdd = { ...product, selectedSize };
+    if (selectedSize) productToAdd.name = `${product.name} - Size ${selectedSize}`;
+
+    addToCart(productToAdd, quantity);
     Alert.alert(
       'Added to Cart',
       `${product.name} has been added to your cart.`,
@@ -74,24 +91,59 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <Text style={styles.name}>{product.name}</Text>
           <Text style={styles.category}>{product.category}</Text>
           <Text style={styles.price}>Rs. {product.price.toFixed(2)}</Text>
-          
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Description</Text>
             <Text style={styles.description}>{product.description}</Text>
           </View>
 
+          {product.category === 'Merchandise' && (
+            <View style={styles.section}>
+              <View style={styles.sizeHeader}>
+                <Text style={styles.sectionTitle}>Select Size</Text>
+                <TouchableOpacity onPress={() => setSizeGuideVisible(true)}>
+                  <Text style={styles.sizeGuideText}>Size Guide</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.sizesContainer}>
+                {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                  const stock = product.sizes ? product.sizes[size] : 0;
+                  const isOutOfStock = stock <= 0;
+                  return (
+                    <TouchableOpacity
+                      key={size}
+                      style={[
+                        styles.sizeBtn,
+                        selectedSize === size && styles.sizeBtnSelected,
+                        isOutOfStock && styles.sizeBtnDisabled
+                      ]}
+                      onPress={() => !isOutOfStock && setSelectedSize(size)}
+                      disabled={isOutOfStock}
+                    >
+                      <Text style={[
+                        styles.sizeText,
+                        selectedSize === size && styles.sizeTextSelected,
+                        isOutOfStock && styles.sizeTextDisabled
+                      ]}>{size}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quantity</Text>
             <View style={styles.quantityContainer}>
-              <TouchableOpacity 
-                style={styles.qtyBtn} 
+              <TouchableOpacity
+                style={styles.qtyBtn}
                 onPress={() => setQuantity(Math.max(1, quantity - 1))}
               >
                 <Ionicons name="remove" size={24} color="#333" />
               </TouchableOpacity>
               <Text style={styles.qtyText}>{quantity}</Text>
-              <TouchableOpacity 
-                style={styles.qtyBtn} 
+              <TouchableOpacity
+                style={styles.qtyBtn}
                 onPress={() => setQuantity(quantity + 1)}
               >
                 <Ionicons name="add" size={24} color="#333" />
@@ -102,11 +154,25 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <PrimaryButton
             title="Add to Cart"
             onPress={handleAddToCart}
-            disabled={product.stock <= 0}
+            disabled={(product.category !== 'Merchandise' && product.stock <= 0) || (product.category === 'Merchandise' && (!selectedSize || (product.sizes && product.sizes[selectedSize] <= 0)))}
             style={styles.addBtn}
           />
         </View>
       </ScrollView>
+
+      <Modal visible={sizeGuideVisible} transparent={true} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Size Guide</Text>
+            <Image
+              source={{ uri: 'https://www.skinnydiplondon.com/cdn/shop/files/NEW_Hoodies-Size-Guide.jpg?v=1741000377&width=1350' }}
+              style={styles.sizeGuideImage}
+              resizeMode="contain"
+            />
+            <PrimaryButton title="Close" onPress={() => setSizeGuideVisible(false)} />
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -142,7 +208,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 24,
     fontFamily: 'Dosis_700Bold',
-    color: '#FF5722',
+    color: 'green',
     marginBottom: 20,
   },
   section: {
@@ -178,5 +244,72 @@ const styles = StyleSheet.create({
   addBtn: {
     marginTop: 10,
     marginBottom: 40,
+  },
+  sizeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sizeGuideText: {
+    color: '#2196F3',
+    fontFamily: 'Dosis_600SemiBold',
+    textDecorationLine: 'underline',
+  },
+  sizesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  sizeBtn: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFF',
+  },
+  sizeBtnSelected: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  sizeBtnDisabled: {
+    backgroundColor: '#F5F5F5',
+    borderColor: '#EEE',
+  },
+  sizeText: {
+    fontFamily: 'Dosis_600SemiBold',
+    color: '#333',
+  },
+  sizeTextSelected: {
+    color: '#FFF',
+  },
+  sizeTextDisabled: {
+    color: '#AAA',
+    textDecorationLine: 'line-through',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: 'Dosis_700Bold',
+    marginBottom: 15,
+  },
+  sizeGuideImage: {
+    width: '100%',
+    height: 300,
+    marginBottom: 20,
   },
 });

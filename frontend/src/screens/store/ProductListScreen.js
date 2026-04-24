@@ -32,7 +32,16 @@ export default function ProductListScreen({ route, navigation }) {
     return url;
   };
 
-  const renderProductItem = ({ item }) => (
+  const getTotalStock = (item) => {
+    if (item.category === 'Merchandise' && item.sizes) {
+      return Object.values(item.sizes).reduce((acc, val) => acc + (val || 0), 0);
+    }
+    return item.stock || 0;
+  };
+
+  const renderProductItem = ({ item }) => {
+    const totalStock = getTotalStock(item);
+    return (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => navigation.navigate('ProductDetails', { productId: item._id })}
@@ -45,11 +54,12 @@ export default function ProductListScreen({ route, navigation }) {
         <Text style={styles.productName}>{item.name}</Text>
         <Text style={styles.productPrice}>Rs. {item.price.toFixed(2)}</Text>
         <View style={styles.stockBadge}>
-          <Text style={styles.stockText}>{item.stock > 0 ? 'In Stock' : 'Out of Stock'}</Text>
+          <Text style={styles.stockText}>{totalStock > 0 ? 'In Stock' : 'Out of Stock'}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
+  };
 
   if (loading) {
     return (

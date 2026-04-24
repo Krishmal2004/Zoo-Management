@@ -23,6 +23,14 @@ const productSchema = new mongoose.Schema(
       min: [0, 'Stock cannot be negative'],
       default: 0,
     },
+    sizes: {
+      XS: { type: Number, default: 0 },
+      S: { type: Number, default: 0 },
+      M: { type: Number, default: 0 },
+      L: { type: Number, default: 0 },
+      XL: { type: Number, default: 0 },
+      XXL: { type: Number, default: 0 }
+    },
     category: {
       type: String,
       required: [true, 'Product category is required'],
