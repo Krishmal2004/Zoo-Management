@@ -171,12 +171,10 @@ const createShowCatalogItem = asyncHandler(async (req, res) => {
 
 const deleteCatalogItem = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const item = await TicketCatalog.findById(id);
-  if (!item || !item.active) {
+  const item = await TicketCatalog.findByIdAndDelete(id);
+  if (!item) {
     throw new AppError('Catalog item not found', 404);
   }
-  item.active = false;
-  await item.save();
   res.status(200).json({
     success: true,
     message: 'Catalog item deleted',
