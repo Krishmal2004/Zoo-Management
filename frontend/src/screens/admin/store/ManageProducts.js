@@ -16,6 +16,7 @@ export default function ManageProducts() {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [expandedCategory, setExpandedCategory] = useState(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -133,10 +134,10 @@ export default function ManageProducts() {
   };
 
   const renderProductItem = ({ item }) => (
-    <View style={styles.card}>
+    <View key={item._id} style={styles.card}>
       <View style={styles.cardInfo}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardSub}>Price: Rs. {item.price.toFixed(2)} | Stock: {item.stock}</Text>
+        <Text style={styles.cardSub}>Price: Rs. {item.price.toFixed(2)} | Stock: {item.category === 'Merchandise' && item.sizes ? Object.values(item.sizes).reduce((a,b)=>a+(b||0),0) : item.stock}</Text>
         <Text style={styles.cardCat}>{item.category}</Text>
       </View>
       <View style={styles.cardActions}>
@@ -151,9 +152,35 @@ export default function ManageProducts() {
       <View style={styles.header}>
         <PrimaryButton title="Add New Product" onPress={() => openModal()} />
       </View>
+      <Text style={styles.sectionHeading}>Our Products</Text>
 
       {loading ? <ActivityIndicator size="large" /> : (
-        <FlatList data={products} renderItem={renderProductItem} keyExtractor={item => item._id} contentContainerStyle={styles.list} />
+        <ScrollView contentContainerStyle={styles.list}>
+          {(Array.isArray(categories) ? categories : []).map((cat) => {
+            const catProducts = products.filter(p => p.category === cat.name);
+            return (
+              <View key={cat._id} style={styles.categorySection}>
+                <TouchableOpacity 
+                  style={styles.categoryHeader} 
+                  onPress={() => setExpandedCategory(expandedCategory === cat.name ? null : cat.name)}
+                >
+                  <Text style={styles.categoryHeaderText}>{cat.name}</Text>
+                  <Ionicons name={expandedCategory === cat.name ? "chevron-up" : "chevron-down"} size={20} color="#333" />
+                </TouchableOpacity>
+                
+                {expandedCategory === cat.name && (
+                  <View style={styles.categoryContent}>
+                    {catProducts.length === 0 ? (
+                      <Text style={styles.noProductsText}>No products in this category.</Text>
+                    ) : (
+                      catProducts.map(item => renderProductItem({ item }))
+                    )}
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </ScrollView>
       )}
 
       <Modal visible={modalVisible} animationType="slide">
@@ -244,8 +271,14 @@ export default function ManageProducts() {
 
 const styles = StyleSheet.create({
   header: { padding: 16 },
-  list: { padding: 16 },
-  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', elevation: 2 },
+  sectionHeading: { fontSize: 22, fontFamily: 'Dosis_700Bold', color: '#333', marginLeft: 16, marginBottom: 8 },
+  list: { padding: 16, paddingBottom: 100 },
+  categorySection: { marginBottom: 16, backgroundColor: '#F9F9F9', borderRadius: 12, overflow: 'hidden' },
+  categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: '#E8F5E9' },
+  categoryHeaderText: { fontSize: 18, fontFamily: 'Dosis_700Bold', color: '#2E7D32' },
+  categoryContent: { padding: 12 },
+  noProductsText: { color: '#666', fontFamily: 'Dosis_500Medium', textAlign: 'center', marginVertical: 16 },
+  card: { backgroundColor: '#FFF', borderRadius: 8, padding: 16, marginBottom: 12, flexDirection: 'row', justifyContent: 'space-between', elevation: 2 },
   cardInfo: { flex: 1 },
   cardTitle: { fontSize: 16, fontFamily: 'Dosis_700Bold' },
   cardSub: { fontSize: 14, color: '#666' },

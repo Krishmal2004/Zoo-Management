@@ -13,7 +13,7 @@ export default function CheckoutScreen({ navigation }) {
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [phone, setPhone] = useState('');
-  
+
   // Payment states
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -51,14 +51,16 @@ export default function CheckoutScreen({ navigation }) {
       };
 
       await createOrder(orderData);
-      
+
       Alert.alert(
         'Success',
         'Your order has been placed successfully!',
-        [{ text: 'OK', onPress: () => {
-          clearCart();
-          navigation.navigate('MyOrders');
-        }}]
+        [{
+          text: 'OK', onPress: () => {
+            clearCart();
+            navigation.navigate('MyOrders');
+          }
+        }]
       );
     } catch (error) {
       console.error('Error placing order', error);

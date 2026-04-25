@@ -6,7 +6,7 @@ const createOrder = async (userId, orderData) => {
   
   // 1. Validate items and update stock
   for (const item of items) {
-    await storeService.updateStock(item.product, -item.quantity);
+    await storeService.updateStock(item.product, -item.quantity, item.size);
   }
   
   // 2. Create the order
@@ -56,7 +56,7 @@ const cancelOrder = async (orderId, userId) => {
   
   // Restore stock
   for (const item of order.items) {
-    await storeService.updateStock(item.product, item.quantity);
+    await storeService.updateStock(item.product, item.quantity, item.size);
   }
   
   order.orderStatus = 'cancelled';

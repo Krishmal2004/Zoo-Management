@@ -73,12 +73,25 @@ const deleteProduct = async (id) => {
   return await Product.findByIdAndDelete(id);
 };
 
-const updateStock = async (productId, quantityChange) => {
+const updateStock = async (productId, quantityChange, size = null) => {
   const product = await Product.findById(productId);
   if (!product) throw new Error('Product not found');
 
-  product.stock += quantityChange;
-  if (product.stock < 0) throw new Error(`Insufficient stock for product ${product.name}`);
+  if (product.category === 'Merchandise' && size) {
+    if (product.sizes && product.sizes[size] !== undefined) {
+      product.sizes[size] += quantityChange;
+      if (product.sizes[size] < 0) throw new Error(`Insufficient stock for product ${product.name} (Size: ${size})`);
+      // Optional: keep total stock synced or just let it be handled separately
+    }
+  } else {
+    product.stock += quantityChange;
+    if (product.stock < 0) throw new Error(`Insufficient stock for product ${product.name}`);
+  }
+
+  // Ensure Mongoose detects changes to mixed type 'sizes'
+  if (product.isModified('sizes')) {
+    product.markModified('sizes');
+  }
 
   return await product.save();
 };
