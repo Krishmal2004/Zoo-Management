@@ -13,6 +13,13 @@ import {
   deleteTicketCatalogItem,
 } from '../../api/admin.api';
 
+const DEFAULT_SHOW_IMAGE_PATHS = {
+  birds_of_prey: 'assets/images/show-birds-of-prey.png',
+  elephant_care_bath: 'assets/images/show-elephant-care-bath.png',
+  sea_lion_splash: 'assets/images/show-sea-lion-splash.png',
+  reptile_encounter: 'assets/images/show-reptile-encounter.png',
+};
+
 function Section({ title, children, headerAction }) {
   return (
     <View style={styles.section}>
@@ -93,11 +100,13 @@ function ShowRow({
   draftName,
   draftTime,
   draftPrice,
+  draftImageUrl,
   onEdit,
   onCancel,
   onChangeName,
   onChangeTime,
   onChangePrice,
+  onChangeImageUrl,
   onSave,
   onDelete,
 }) {
@@ -126,6 +135,15 @@ function ShowRow({
               onChangeText={onChangePrice}
               keyboardType="numeric"
               placeholder="Price (LKR)"
+              placeholderTextColor="rgba(13, 45, 29, 0.45)"
+            />
+            <TextInput
+              style={styles.inputImageUrl}
+              value={draftImageUrl}
+              onChangeText={onChangeImageUrl}
+              placeholder="Photo path or URL"
+              autoCapitalize="none"
+              autoCorrect={false}
               placeholderTextColor="rgba(13, 45, 29, 0.45)"
             />
           </View>
@@ -172,9 +190,11 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
   const [draftShowName, setDraftShowName] = useState('');
   const [draftShowTime, setDraftShowTime] = useState('');
   const [draftShowPrice, setDraftShowPrice] = useState('');
+  const [draftShowImageUrl, setDraftShowImageUrl] = useState('');
   const [newShowName, setNewShowName] = useState('');
   const [newShowTime, setNewShowTime] = useState('');
   const [newShowPrice, setNewShowPrice] = useState('');
+  const [newShowImageUrl, setNewShowImageUrl] = useState('');
   const [isAddShowOpen, setIsAddShowOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -238,6 +258,7 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
     setDraftShowName(show.name);
     setDraftShowTime(show.meta?.timeLabel || '');
     setDraftShowPrice(String(show.priceLkr));
+    setDraftShowImageUrl(show.meta?.imageUrl || DEFAULT_SHOW_IMAGE_PATHS[show.code] || '');
   };
 
   const cancelShowEdit = () => {
@@ -245,6 +266,7 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
     setDraftShowName('');
     setDraftShowTime('');
     setDraftShowPrice('');
+    setDraftShowImageUrl('');
   };
 
   const saveShowEdit = async (id) => {
@@ -257,10 +279,17 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
     }
     setSaving(true);
     try {
-      await updateShowTicket(id, {
+      const payload = {
         name: normalizedName,
         timeLabel: normalizedTime,
         priceLkr: Math.round(numericPrice),
+      };
+      const trimmedImageUrl = draftShowImageUrl.trim();
+      if (trimmedImageUrl) {
+        payload.imageUrl = trimmedImageUrl;
+      }
+      await updateShowTicket(id, {
+        ...payload,
       });
       cancelShowEdit();
       await loadCatalog();
@@ -312,10 +341,12 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
         name: normalizedName,
         timeLabel: normalizedTime,
         priceLkr: Math.round(numericPrice),
+        imageUrl: newShowImageUrl.trim(),
       });
       setNewShowName('');
       setNewShowTime('');
       setNewShowPrice('');
+      setNewShowImageUrl('');
       setIsAddShowOpen(false);
       await loadCatalog();
     } catch (error) {
@@ -379,11 +410,13 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
             draftName={draftShowName}
             draftTime={draftShowTime}
             draftPrice={draftShowPrice}
+            draftImageUrl={draftShowImageUrl}
             onEdit={() => startShowEdit(item)}
             onCancel={cancelShowEdit}
             onChangeName={setDraftShowName}
             onChangeTime={setDraftShowTime}
             onChangePrice={setDraftShowPrice}
+            onChangeImageUrl={setDraftShowImageUrl}
             onSave={() => saveShowEdit(item._id)}
             onDelete={() => requestDeleteShow(item._id)}
           />
@@ -420,6 +453,15 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
                 onChangeText={setNewShowPrice}
                 keyboardType="numeric"
                 placeholder="Price (LKR)"
+                placeholderTextColor="rgba(13, 45, 29, 0.45)"
+              />
+              <TextInput
+                style={styles.inputImageUrl}
+                value={newShowImageUrl}
+                onChangeText={setNewShowImageUrl}
+              placeholder="Photo path (e.g. /uploads/ticket-show/new.png)"
+                autoCapitalize="none"
+                autoCorrect={false}
                 placeholderTextColor="rgba(13, 45, 29, 0.45)"
               />
             </View>
@@ -638,6 +680,17 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   inputPrice: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radii.sm,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 8,
+    fontSize: theme.fontSize.body,
+    color: theme.colors.primaryText,
+    backgroundColor: theme.colors.white,
+    marginBottom: theme.spacing.sm,
+  },
+  inputImageUrl: {
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.radii.sm,
