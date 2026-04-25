@@ -10,46 +10,82 @@ const DEFAULT_CATALOG = [
     name: 'Birds of prey flight',
     category: 'show',
     priceLkr: 200,
-    meta: { timeLabel: '10:00 AM' },
+    meta: {
+      timeLabel: '10:00 AM',
+      imageUrl: 'assets/images/show-birds-of-prey.png',
+    },
   },
   {
     code: 'elephant_care_bath',
     name: 'Elephant care & bath',
     category: 'show',
     priceLkr: 250,
-    meta: { timeLabel: '2:30 PM' },
+    meta: {
+      timeLabel: '2:30 PM',
+      imageUrl: 'assets/images/show-elephant-care-bath.png',
+    },
   },
   {
     code: 'sea_lion_splash',
     name: 'Sea lion splash',
     category: 'show',
     priceLkr: 200,
-    meta: { timeLabel: '4:00 PM' },
+    meta: {
+      timeLabel: '4:00 PM',
+      imageUrl: 'assets/images/show-sea-lion-splash.png',
+    },
   },
   {
     code: 'reptile_encounter',
     name: 'Reptile encounter',
     category: 'show',
     priceLkr: 150,
-    meta: { timeLabel: '11:30 AM' },
+    meta: {
+      timeLabel: '11:30 AM',
+      imageUrl: 'assets/images/show-reptile-encounter.png',
+    },
   },
 ];
 
 async function seedTicketCatalog() {
   for (const item of DEFAULT_CATALOG) {
-    await TicketCatalog.updateOne(
-      { code: item.code },
-      {
-        $set: {
-          name: item.name,
-          category: item.category,
-          priceLkr: item.priceLkr,
-          active: true,
-          meta: item.meta || {},
-        },
-      },
-      { upsert: true }
-    );
+    const existing = await TicketCatalog.findOne({ code: item.code }).lean();
+    if (!existing) {
+      await TicketCatalog.create({
+        code: item.code,
+        name: item.name,
+        category: item.category,
+        priceLkr: item.priceLkr,
+        active: true,
+        meta: item.meta || {},
+      });
+      continue;
+    }
+
+    const nextMeta = { ...(existing.meta || {}) };
+    if (item.category === 'show') {
+      if (!nextMeta.timeLabel && item.meta?.timeLabel) {
+        nextMeta.timeLabel = item.meta.timeLabel;
+      }
+      if (!nextMeta.imageUrl && item.meta?.imageUrl) {
+        nextMeta.imageUrl = item.meta.imageUrl;
+      }
+    }
+
+    const update = {};
+    if (existing.category !== item.category) {
+      update.category = item.category;
+    }
+    if (existing.active !== true) {
+      update.active = true;
+    }
+    if (JSON.stringify(nextMeta) !== JSON.stringify(existing.meta || {})) {
+      update.meta = nextMeta;
+    }
+
+    if (Object.keys(update).length) {
+      await TicketCatalog.updateOne({ _id: existing._id }, { $set: update });
+    }
   }
   console.log('[seedCatalog] Ticket catalog seeded/updated.');
 }
