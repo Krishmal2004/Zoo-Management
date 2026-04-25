@@ -5,10 +5,26 @@ import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import { theme } from '../../constants/theme';
 import { getAdminDrawerMenuItems, getAdminModuleHeroByRouteName } from './adminNavigation';
 
+const TICKET_SHOW_ADMIN_OPTIONS = [
+  {
+    key: 'manage-tickets-and-shows',
+    title: 'Manage Tickets and Shows',
+    subtitle: 'Update ticket prices, show times, and seat availability.',
+    accessibilityLabel: 'Manage tickets and shows',
+  },
+  {
+    key: 'manage-bookings',
+    title: 'Manage Bookings',
+    subtitle: 'Review visitor reservations and booking records.',
+    accessibilityLabel: 'Manage bookings',
+  },
+];
+
 export default function AdminModulePlaceholderScreen({ navigation }) {
   const route = useRoute();
   const drawerMenuItems = useMemo(() => getAdminDrawerMenuItems(navigation), [navigation]);
   const hero = getAdminModuleHeroByRouteName(route.name);
+  const showTicketShowOptions = route.name === 'AdminEntryTicketsShowBooking';
 
   return (
     <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
@@ -18,7 +34,27 @@ export default function AdminModulePlaceholderScreen({ navigation }) {
           <Text style={styles.sub}>{hero.subtitle}</Text>
         </View>
       ) : null}
-      <View style={styles.empty} />
+      {showTicketShowOptions ? (
+        <View style={styles.optionsWrap}>
+          {TICKET_SHOW_ADMIN_OPTIONS.map((item) => (
+            <View
+              key={item.key}
+              style={styles.optionCard}
+              accessibilityLabel={item.accessibilityLabel}
+            >
+              <View style={styles.optionTextCol}>
+                <Text style={styles.optionTitle}>{item.title}</Text>
+                <Text style={styles.optionSub}>{item.subtitle}</Text>
+              </View>
+              <Text style={styles.optionChevron} accessible={false}>
+                ›
+              </Text>
+            </View>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.empty} />
+      )}
     </AccountDrawerLayout>
   );
 }
@@ -53,6 +89,46 @@ const styles = StyleSheet.create({
     lineHeight: Math.round(theme.fontSize.sm * 1.45),
     color: theme.colors.accentGreen,
     opacity: 0.92,
+  },
+  optionsWrap: {
+    gap: theme.spacing.sm,
+  },
+  optionCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  optionTextCol: {
+    flex: 1,
+    paddingRight: theme.spacing.sm,
+  },
+  optionTitle: {
+    fontSize: theme.fontSize.body,
+    fontWeight: '700',
+    color: theme.colors.primaryText,
+  },
+  optionSub: {
+    marginTop: theme.spacing.xs,
+    fontSize: theme.fontSize.sm,
+    lineHeight: Math.round(theme.fontSize.sm * 1.4),
+    color: theme.colors.accentGreen,
+    opacity: 0.92,
+  },
+  optionChevron: {
+    fontSize: 22,
+    color: theme.colors.accentGreen,
+    fontWeight: '300',
   },
   empty: {
     flex: 1,
