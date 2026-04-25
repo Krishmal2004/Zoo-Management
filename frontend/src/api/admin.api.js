@@ -56,3 +56,28 @@ export async function deleteUser(id) {
   const res = await apiClient.delete(`/admin/users/${id}`);
   return res.data;
 }
+
+export async function getAdminTicketCatalog() {
+  const res = await apiClient.get('/admin/ticket-catalog');
+  return res.data;
+}
+
+export async function updateEntryTicket(id, payload) {
+  const res = await apiClient.patch(`/admin/ticket-catalog/entry/${id}`, payload);
+  return res.data;
+}
+
+export async function updateShowTicket(id, payload) {
+  const res = await apiClient.patch(`/admin/ticket-catalog/shows/${id}`, payload);
+  return res.data;
+}
+
+export async function createShowTicket(payload) {
+  const res = await apiClient.post('/admin/ticket-catalog/shows', payload);
+  return res.data;
+}
+
+export async function deleteTicketCatalogItem(id) {
+  const res = await apiClient.delete(`/admin/ticket-catalog/${id}`);
+  return res.data;
+}
