@@ -14,30 +14,26 @@ const parseField = (val) => {
 // ─── ADMIN: Create Event ───────────────────────────────────────────────────────
 const createEvent = asyncHandler(async (req, res) => {
   const {
-    title,
-    description,
-    eventType,
-    venue,
-    capacity,
-    pricePerPerson,
-    availableDates,
-    duration,
-    includes,
-    requirements,
+    title, description, eventType, venue,
+    capacity, pricePerPerson, availableDates,
+    duration, includes, requirements,
   } = req.body;
 
-  const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+  // Priority: uploaded file > URL from body > null
+  const imageUrl = req.file
+    ? `/uploads/${req.file.filename}`
+    : (req.body.imageUrl || null);
 
   const event = await Event.create({
     title,
     description,
     eventType,
     venue,
-    capacity:        Number(capacity),
-    pricePerPerson:  Number(pricePerPerson),
-    availableDates:  parseField(availableDates),
+    capacity:       Number(capacity),
+    pricePerPerson: Number(pricePerPerson),
+    availableDates: parseField(availableDates),
     duration,
-    includes:        parseField(includes),
+    includes:       parseField(includes),
     requirements,
     imageUrl,
   });
@@ -69,12 +65,26 @@ const getAllEvents = asyncHandler(async (req, res) => {
 // ─── PUBLIC: Get Single Event ──────────────────────────────────────────────────
 const getEventById = asyncHandler(async (req, res) => {
   const event = await Event.findById(req.params.id);
-
   if (!event) throw new AppError("Event not found", 404);
+
+  // Find which dates are already booked (not cancelled/rejected)
+  const bookedDates = await Booking.find({
+    eventId: event._id,
+    status: { $nin: ["Cancelled", "Rejected"] },
+  }).select("eventDate");
+
+  const bookedDateStrings = bookedDates.map(b =>
+    new Date(b.eventDate).toDateString()
+  );
+
+  // Filter out booked dates from availableDates
+  const availableDates = (event.availableDates || []).filter(
+    d => !bookedDateStrings.includes(new Date(d).toDateString())
+  );
 
   res.status(200).json({
     success: true,
-    data: event,
+    data: { ...event.toObject(), availableDates },
   });
 });
 
@@ -82,11 +92,17 @@ const getEventById = asyncHandler(async (req, res) => {
 const updateEvent = asyncHandler(async (req, res) => {
   const updates = { ...req.body };
 
-  if (updates.availableDates) updates.availableDates = parseField(updates.availableDates); if (false)
-    
-  if (updates.includes) updates.includes = parseField(updates.includes); if (false)
-    
-  if (req.file) updates.imageUrl = `/uploads/${req.file.filename}`;
+  // Parse array fields from form-data
+  if (updates.availableDates) updates.availableDates = parseField(updates.availableDates);
+  if (updates.includes)       updates.includes       = parseField(updates.includes);
+
+  // Handle number fields
+  if (updates.capacity)       updates.capacity       = Number(updates.capacity);
+  if (updates.pricePerPerson) updates.pricePerPerson = Number(updates.pricePerPerson);
+
+  // Handle image — uploaded file takes priority over URL
+  if (req.file)               updates.imageUrl = `/uploads/${req.file.filename}`;
+  else if (updates.imageUrl)  updates.imageUrl = updates.imageUrl; // keep as-is (URL string)
 
   const event = await Event.findByIdAndUpdate(req.params.id, updates, {
     new: true,
@@ -117,7 +133,7 @@ const deleteEvent = asyncHandler(async (req, res) => {
 const bookEvent = asyncHandler(async (req, res) => {
   const { eventDate, guestCount, specialRequests, contactPhone } = req.body;
   const eventId = req.params.id;
-  const userId = req.user._id;
+  const userId  = req.user._id;
 
   const event = await Event.findById(eventId);
   if (!event || !event.isActive) throw new AppError("Event not found", 404);
