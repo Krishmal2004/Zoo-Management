@@ -18,6 +18,7 @@ const TICKET_SHOW_ADMIN_OPTIONS = [
     title: 'Manage Bookings',
     subtitle: 'Review visitor reservations and booking records.',
     accessibilityLabel: 'Manage bookings',
+    screen: 'AdminManageBookings',
   },
 ];
 
