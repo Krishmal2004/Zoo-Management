@@ -1,5 +1,6 @@
 const User = require('../models/User.model');
 const TicketCatalog = require('../models/TicketCatalog.model');
+const TicketBooking = require('../models/TicketBooking.model');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const bcrypt = require('bcryptjs');
@@ -13,6 +14,14 @@ function toCatalogCode(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
+}
+
+function toTodayDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 const listUsers = asyncHandler(async (req, res) => {
@@ -198,6 +207,21 @@ const deleteCatalogItem = asyncHandler(async (req, res) => {
   });
 });
 
+const listBookings = asyncHandler(async (req, res) => {
+  const visitDate = String(req.query.visitDate || '').trim() || toTodayDateKey();
+
+  const bookings = await TicketBooking.find({ visitDate })
+    .populate({ path: 'userId', select: 'fullName email phone' })
+    .sort({ visitDate: 1, createdAt: -1 })
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    message: 'Bookings loaded',
+    data: { visitDate, bookings },
+  });
+});
+
 module.exports = {
   listUsers,
   createUser,
@@ -208,4 +232,5 @@ module.exports = {
   updateShowCatalogItem,
   createShowCatalogItem,
   deleteCatalogItem,
+  listBookings,
 };
