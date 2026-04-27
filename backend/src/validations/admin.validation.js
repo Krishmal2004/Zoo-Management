@@ -69,6 +69,10 @@ const updateShowCatalogRules = [
     .optional({ values: 'falsy' })
     .isString()
     .withMessage('Show imageUrl must be a string'),
+  body('dailyCapacity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Show dailyCapacity must be a positive integer'),
 ];
 
 const createShowCatalogRules = [
@@ -81,6 +85,10 @@ const createShowCatalogRules = [
     .optional({ values: 'falsy' })
     .isString()
     .withMessage('Show imageUrl must be a string'),
+  body('dailyCapacity')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Show dailyCapacity must be a positive integer'),
 ];
 
 const deleteCatalogItemRules = [...catalogIdParamRule];
