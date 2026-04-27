@@ -11,6 +11,7 @@ const {
   updateShowCatalogRules,
   createShowCatalogRules,
   deleteCatalogItemRules,
+  listAdminBookingsRules,
 } = require('../validations/admin.validation');
 
 const router = express.Router();
@@ -26,5 +27,6 @@ router.patch('/ticket-catalog/entry/:id', updateEntryCatalogRules, validateReque
 router.patch('/ticket-catalog/shows/:id', updateShowCatalogRules, validateRequest, adminController.updateShowCatalogItem);
 router.post('/ticket-catalog/shows', createShowCatalogRules, validateRequest, adminController.createShowCatalogItem);
 router.delete('/ticket-catalog/:id', deleteCatalogItemRules, validateRequest, adminController.deleteCatalogItem);
+router.get('/bookings', listAdminBookingsRules, validateRequest, adminController.listBookings);
 
 module.exports = router;
