@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 const TicketCatalog = require('../models/TicketCatalog.model');
 const TicketBooking = require('../models/TicketBooking.model');
+const DEFAULT_SHOW_DAILY_CAPACITY = 100;
 
 function toBookingItem(catalogItem, quantity) {
   const unitPriceLkr = Number(catalogItem.priceLkr || 0);
@@ -75,6 +76,51 @@ exports.createBooking = asyncHandler(async (req, res) => {
 
   if (!entryItems.length) {
     throw new AppError('At least one entry ticket is required', 400);
+  }
+
+  if (showItems.length) {
+    const requestedShowCodes = [...new Set(showItems.map((item) => item.itemCode))];
+    const activeShows = await TicketCatalog.find({
+      category: 'show',
+      active: true,
+      code: { $in: requestedShowCodes },
+    })
+      .select('code name dailyCapacity')
+      .lean();
+    const showByCode = new Map(activeShows.map((show) => [show.code, show]));
+
+    const sameDayBookings = await TicketBooking.find({
+      visitDate,
+      status: 'confirmed',
+      paymentStatus: 'paid',
+      'showItems.itemCode': { $in: requestedShowCodes },
+    })
+      .select('showItems')
+      .lean();
+
+    const alreadyBookedByCode = new Map();
+    for (const booking of sameDayBookings) {
+      for (const bookedShowItem of booking.showItems || []) {
+        if (!requestedShowCodes.includes(bookedShowItem.itemCode)) continue;
+        const nextBookedQty =
+          (alreadyBookedByCode.get(bookedShowItem.itemCode) || 0) + Number(bookedShowItem.quantity || 0);
+        alreadyBookedByCode.set(bookedShowItem.itemCode, nextBookedQty);
+      }
+    }
+
+    for (const requestedShowItem of showItems) {
+      const showConfig = showByCode.get(requestedShowItem.itemCode);
+      if (!showConfig) {
+        throw new AppError(`Unknown or inactive show item: ${requestedShowItem.itemCode}`, 400);
+      }
+      const dailyCapacity = Number(showConfig.dailyCapacity) || DEFAULT_SHOW_DAILY_CAPACITY;
+      const alreadyBookedQty = alreadyBookedByCode.get(requestedShowItem.itemCode) || 0;
+      const nextBookedQty = alreadyBookedQty + Number(requestedShowItem.quantity || 0);
+
+      if (nextBookedQty > dailyCapacity) {
+        throw new AppError(`No seats left for ${showConfig.name} on ${visitDate}.`, 400);
+      }
+    }
   }
 
   const entrySubtotalLkr = entryItems.reduce((sum, item) => sum + item.lineTotalLkr, 0);
