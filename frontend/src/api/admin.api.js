@@ -81,3 +81,10 @@ export async function deleteTicketCatalogItem(id) {
   const res = await apiClient.delete(`/admin/ticket-catalog/${id}`);
   return res.data;
 }
+
+export async function getAdminBookingsByDate(visitDate) {
+  const params = {};
+  if (visitDate) params.visitDate = visitDate;
+  const res = await apiClient.get('/admin/bookings', { params });
+  return res.data;
+}
