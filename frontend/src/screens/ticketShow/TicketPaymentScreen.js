@@ -108,7 +108,8 @@ export default function TicketPaymentScreen() {
       });
     } catch (error) {
       const message = error?.response?.data?.message || 'Payment failed. Please try again.';
-      Alert.alert('Payment', message);
+      const isCapacityError = /no seats left/i.test(String(message));
+      Alert.alert(isCapacityError ? 'Show availability' : 'Payment', message);
     } finally {
       setSubmitting(false);
     }
