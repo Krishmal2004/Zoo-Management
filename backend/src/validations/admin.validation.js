@@ -1,4 +1,4 @@
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 
 const userIdParamRule = [param('id').isMongoId().withMessage('Valid user id is required')];
 
@@ -93,6 +93,13 @@ const createShowCatalogRules = [
 
 const deleteCatalogItemRules = [...catalogIdParamRule];
 
+const listAdminBookingsRules = [
+  query('visitDate')
+    .optional()
+    .isISO8601({ strict: true, strictSeparator: true })
+    .withMessage('visitDate must be a valid ISO date (YYYY-MM-DD)'),
+];
+
 module.exports = {
   createUserRules,
   updateUserRules,
@@ -101,4 +108,5 @@ module.exports = {
   updateShowCatalogRules,
   createShowCatalogRules,
   deleteCatalogItemRules,
+  listAdminBookingsRules,
 };
