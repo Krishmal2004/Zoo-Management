@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { getMyOrders, cancelOrder } from '../../api/order.api';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function MyOrdersScreen() {
-  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+
+  const statusCategories = ['all', 'pending', 'processing', 'delivered', 'cancelled'];
 
   useEffect(() => {
     fetchOrders();
@@ -47,46 +49,95 @@ export default function MyOrdersScreen() {
     );
   };
 
-  const getStatusColor = (status) => {
+  const filteredOrders = filter === 'all' 
+    ? orders 
+    : orders.filter(o => o.orderStatus === filter);
+
+  const getStatusStyles = (status) => {
     switch (status) {
-      case 'delivered': return '#4CAF50';
-      case 'shipped': return '#2196F3';
-      case 'processing': return '#FF9800';
-      case 'pending': return '#9E9E9E';
-      case 'cancelled': return '#F44336';
-      default: return '#333';
+      case 'delivered': return { color: '#2E7D32', bg: '#E8F5E9' };
+      case 'processing': return { color: '#1565C0', bg: '#E3F2FD' };
+      case 'pending': return { color: '#E65100', bg: '#FFF3E0' };
+      case 'cancelled': return { color: '#C62828', bg: '#FFEBEE' };
+      default: return { color: '#333', bg: '#F0F0F0' };
     }
   };
 
-  const renderOrderItem = ({ item }) => (
-    <View style={styles.orderCard}>
-      <View style={styles.orderHeader}>
-        <Text style={styles.orderId}>Order #{item._id.substring(item._id.length - 8)}</Text>
-        <Text style={[styles.orderStatus, { color: getStatusColor(item.orderStatus) }]}>
-          {item.orderStatus.toUpperCase()}
-        </Text>
-      </View>
-      <View style={styles.orderBody}>
-        <Text style={styles.orderDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
-        <Text style={styles.orderTotal}>Total: Rs. {item.totalAmount.toFixed(2)}</Text>
-      </View>
-      <View style={styles.itemsList}>
-        {item.items.map((orderItem, index) => (
-          <Text key={index} style={styles.itemText}>
-            • {orderItem.product?.name}{orderItem.size ? ` - ${orderItem.size}` : ''} ({orderItem.quantity})
-          </Text>
+  const renderFilterTabs = () => (
+    <View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        contentContainerStyle={styles.filterContainer}
+      >
+        {statusCategories.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            onPress={() => setFilter(cat)}
+            style={[
+              styles.filterTab,
+              filter === cat && styles.activeFilterTab
+            ]}
+          >
+            <Text style={[
+              styles.filterTabText,
+              filter === cat && styles.activeFilterTabText
+            ]}>
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </Text>
+          </TouchableOpacity>
         ))}
-      </View>
-      {item.orderStatus === 'pending' && (
-        <TouchableOpacity 
-          style={styles.cancelBtn} 
-          onPress={() => handleCancelOrder(item._id)}
-        >
-          <Text style={styles.cancelBtnText}>Cancel Order</Text>
-        </TouchableOpacity>
-      )}
+      </ScrollView>
     </View>
   );
+
+  const renderOrderItem = ({ item }) => {
+    const { color, bg } = getStatusStyles(item.orderStatus);
+    
+    return (
+      <View style={[styles.orderCard, item.orderStatus === 'delivered' && styles.deliveredCard]}>
+        <View style={styles.orderHeader}>
+          <View>
+            <Text style={styles.orderId}>Order #{item._id.substring(item._id.length - 8)}</Text>
+            <Text style={styles.orderDate}>{new Date(item.createdAt).toLocaleDateString()}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: bg }]}>
+            <Text style={[styles.orderStatus, { color }]}>
+              {item.orderStatus.toUpperCase()}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.itemsList}>
+          {item.items.map((orderItem, index) => (
+            <View key={index} style={styles.itemRow}>
+              <Text style={styles.itemText}>
+                • {orderItem.product?.name}{orderItem.size ? ` (${orderItem.size})` : ''}
+              </Text>
+              <Text style={styles.itemQty}>x{orderItem.quantity}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.totalLabel}>Total Paid:</Text>
+          <Text style={styles.orderTotal}>Rs. {item.totalAmount.toFixed(2)}</Text>
+        </View>
+
+        {item.orderStatus === 'pending' && (
+          <TouchableOpacity 
+            style={styles.cancelBtn} 
+            onPress={() => handleCancelOrder(item._id)}
+          >
+            <Ionicons name="close-circle-outline" size={16} color="#C62828" />
+            <Text style={styles.cancelBtnText}>Cancel Order</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -98,15 +149,22 @@ export default function MyOrdersScreen() {
 
   return (
     <ScreenContainer>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Orders</Text>
+        <Text style={styles.headerSubtitle}>Track your store purchases</Text>
+      </View>
+
+      {renderFilterTabs()}
+
       <FlatList
-        data={orders}
+        data={filteredOrders}
         renderItem={renderOrderItem}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="receipt-outline" size={80} color="#EEE" />
-            <Text style={styles.emptyText}>You haven't placed any orders yet.</Text>
+            <Ionicons name="receipt-outline" size={80} color="#DDD" />
+            <Text style={styles.emptyText}>No orders found for {filter} status.</Text>
           </View>
         }
       />
@@ -120,81 +178,77 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  listContainer: {
-    padding: 16,
+  listContainer: { paddingHorizontal: 16, paddingBottom: 32 },
+  header: { paddingHorizontal: 16, paddingTop: 16, marginBottom: 16 },
+  headerTitle: { fontSize: 28, fontFamily: 'Dosis_700Bold', color: '#0D2D1D' },
+  headerSubtitle: { fontSize: 15, color: '#666', marginTop: -2 },
+
+  filterContainer: { 
+    flexDirection: 'row', 
+    paddingHorizontal: 16, 
+    marginBottom: 16,
   },
+  filterTab: { 
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#2E7D32', 
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: '#FFF'
+  },
+  activeFilterTab: { backgroundColor: '#2E7D32' },
+  filterTabText: { color: '#2E7D32', fontSize: 13, fontFamily: 'Dosis_600SemiBold' },
+  activeFilterTabText: { color: '#FFF' },
+
   orderCard: {
     backgroundColor: '#FFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
-    elevation: 3,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
+  deliveredCard: { backgroundColor: '#F1F8E9', borderColor: '#C5E1A5', borderWidth: 1 },
   orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-    paddingBottom: 10,
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  orderId: {
-    fontSize: 16,
-    fontFamily: 'Dosis_700Bold',
-    color: '#333',
-  },
-  orderStatus: {
-    fontSize: 14,
-    fontFamily: 'Dosis_700Bold',
-  },
-  orderBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  orderDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  orderTotal: {
-    fontSize: 16,
-    fontFamily: 'Dosis_700Bold',
-    color: '#333',
-  },
-  itemsList: {
-    marginTop: 5,
-  },
-  itemText: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 2,
-  },
+  orderId: { fontSize: 16, fontFamily: 'Dosis_700Bold', color: '#0D2D1D' },
+  orderDate: { fontSize: 12, color: '#999', marginTop: 2 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  orderStatus: { fontSize: 11, fontFamily: 'Dosis_700Bold' },
+  divider: { height: 1, backgroundColor: '#F0F0F0', marginVertical: 12 },
+  
+  itemsList: { marginBottom: 12 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  itemText: { fontSize: 14, color: '#555', flex: 1, fontFamily: 'Dosis_500Medium' },
+  itemQty: { fontSize: 14, color: '#999', fontFamily: 'Dosis_600SemiBold' },
+
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+  totalLabel: { fontSize: 14, color: '#666' },
+  orderTotal: { fontSize: 18, fontFamily: 'Dosis_700Bold', color: '#2E7D32' },
+
   cancelBtn: {
-    marginTop: 15,
-    padding: 10,
-    borderRadius: 8,
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#F44336',
+    borderColor: '#FFEBEE',
+    backgroundColor: '#FFF8F8',
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 8,
   },
-  cancelBtnText: {
-    color: '#F44336',
-    fontFamily: 'Dosis_700Bold',
-    fontSize: 14,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    marginTop: 100,
-  },
-  emptyText: {
-    fontSize: 18,
-    color: '#999',
-    marginTop: 20,
-    fontFamily: 'Dosis_600SemiBold',
-  },
+  cancelBtnText: { color: '#C62828', fontFamily: 'Dosis_700Bold', fontSize: 14 },
+  
+  emptyContainer: { alignItems: 'center', marginTop: 100 },
+  emptyText: { fontSize: 16, color: '#999', marginTop: 20, fontFamily: 'Dosis_500Medium' },
 });

@@ -152,7 +152,7 @@ export default function ManageProducts() {
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <PrimaryButton title="Add New Product" onPress={() => openModal()} />
+        <PrimaryButton title="Add New Product" onPress={() => openModal()} style={styles.addBtn} textColor="white" />
       </View>
       <Text style={styles.sectionHeading}>Our Products</Text>
 
@@ -262,7 +262,7 @@ export default function ManageProducts() {
 
             <View style={styles.modalButtons}>
               <PrimaryButton title="Cancel" onPress={() => setModalVisible(false)} style={styles.modalBtnCancel} />
-              <PrimaryButton title="Save Product" onPress={handleSave} style={styles.modalBtnSave} />
+              <PrimaryButton title="Save Product" onPress={handleSave} style={styles.modalBtnSave} textColor="white" />
             </View>
           </ScrollView>
         </ScreenContainer>
@@ -362,7 +362,8 @@ const styles = StyleSheet.create({
   },
   modalButtons: { flexDirection: 'row', gap: 10, marginTop: 20, marginBottom: 40 },
   modalBtnCancel: { flex: 1, backgroundColor: '#9E9E9E' },
-  modalBtnSave: { flex: 1 },
+  modalBtnSave: { flex: 1, backgroundColor: '#2E7D32' },
+  addBtn: { backgroundColor: '#2E7D32', marginHorizontal: 0 },
   sizesContainer: {
     marginTop: 10,
     marginBottom: 10,

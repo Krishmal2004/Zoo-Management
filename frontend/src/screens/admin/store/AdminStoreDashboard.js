@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../../../components/ui/ScreenContainer';
 import { Ionicons } from '@expo/vector-icons';
+import { getAllOrders } from '../../../api/order.api';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function AdminStoreDashboard({ navigation }) {
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPendingCount();
+    }, [])
+  );
+
+  const fetchPendingCount = async () => {
+    try {
+      const response = await getAllOrders();
+      const orders = response.data.data || [];
+      const pending = orders.filter(o => o.orderStatus === 'pending').length;
+      setPendingCount(pending);
+    } catch (error) {
+      console.error('Error fetching pending count', error);
+    }
+  };
+
   const menuItems = [
-    { title: 'Manage Products', icon: 'cube', screen: 'ManageProducts', color: '#4CAF50' },
-    { title: 'Manage Orders', icon: 'receipt', screen: 'ManageOrders', color: '#4CAF50' },
+    { title: 'Manage Products', icon: 'cube', screen: 'ManageProducts', color: '#1B5E20' },
+    { title: 'Manage Orders', icon: 'receipt', screen: 'ManageOrders', color: '#1B5E20', showBadge: true },
   ];
 
   return (
@@ -26,6 +47,12 @@ export default function AdminStoreDashboard({ navigation }) {
                 <Ionicons name={item.icon} size={32} color="#FFF" />
               </View>
               <Text style={styles.cardTitle}>{item.title}</Text>
+
+              {item.showBadge && pendingCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{pendingCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
         </View>
@@ -78,7 +105,30 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontFamily: 'Dosis_700Bold',
-    color: '#333',
+    color: '#0D2D1D',
     textAlign: 'center',
+  },
+  badge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#4CAF50',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontFamily: 'Dosis_700Bold',
   },
 });

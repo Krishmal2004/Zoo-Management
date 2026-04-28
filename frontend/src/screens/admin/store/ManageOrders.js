@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Modal, ScrollView } from 'react-native';
 import ScreenContainer from '../../../components/ui/ScreenContainer';
 import { getAllOrders, updateOrderStatus, deleteOrder } from '../../../api/order.api';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,9 @@ export default function ManageOrders() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [nextStatuses, setNextStatuses] = useState([]);
+  const [filter, setFilter] = useState('all');
+
+  const statusCategories = ['all', 'pending', 'processing', 'delivered', 'cancelled'];
 
   useEffect(() => {
     fetchOrders();
@@ -81,10 +84,47 @@ export default function ManageOrders() {
     }
   };
 
+  const filteredOrders = filter === 'all' 
+    ? orders 
+    : orders.filter(o => o.orderStatus === filter);
+
+
+
+  const renderFilterTabs = () => (
+    <View>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        contentContainerStyle={styles.filterContainer}
+      >
+        {statusCategories.map((cat) => (
+          <TouchableOpacity
+            key={cat}
+            onPress={() => setFilter(cat)}
+            style={[
+              styles.filterTab,
+              filter === cat && styles.activeFilterTab
+            ]}
+          >
+            <Text style={[
+              styles.filterTabText,
+              filter === cat && styles.activeFilterTabText
+            ]}>
+              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+
   const renderOrderItem = ({ item }) => (
     <View style={[styles.card, item.orderStatus === 'delivered' && styles.deliveredCard]}>
       <View style={styles.cardHeader}>
-        <Text style={styles.orderId}>Order #{item._id.substring(item._id.length - 6)}</Text>
+        <View>
+          <Text style={styles.orderId}>Order #{item._id.substring(item._id.length - 6)}</Text>
+          <Text style={styles.dateText}>{new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+        </View>
         <View style={styles.headerRight}>
           <TouchableOpacity
             onPress={() => handleUpdateStatus(item._id, item.orderStatus)}
@@ -92,14 +132,16 @@ export default function ManageOrders() {
               styles.statusBadge,
               item.orderStatus === 'delivered' && styles.deliveredBadge,
               item.orderStatus === 'cancelled' && styles.cancelledBadge,
-              (item.orderStatus === 'pending' || item.orderStatus === 'processing') && styles.activeBadge
+              item.orderStatus === 'pending' && styles.pendingBadge,
+              item.orderStatus === 'processing' && styles.processingBadge,
             ]}
           >
             <Text style={[
               styles.statusText,
               item.orderStatus === 'delivered' && styles.deliveredText,
               item.orderStatus === 'cancelled' && styles.cancelledText,
-              (item.orderStatus === 'pending' || item.orderStatus === 'processing') && styles.activeText
+              item.orderStatus === 'pending' && styles.pendingText,
+              item.orderStatus === 'processing' && styles.processingText,
             ]}>{item.orderStatus.toUpperCase()}</Text>
             {item.orderStatus !== 'cancelled' && item.orderStatus !== 'delivered' && (
               <Ionicons name="caret-down" size={12} color="#4CAF50" />
@@ -116,29 +158,29 @@ export default function ManageOrders() {
         </View>
       </View>
 
+      <View style={styles.divider} />
+
       <View style={styles.infoRow}>
-        <Ionicons name="person-outline" size={14} color="#666" />
+        <Ionicons name="person-outline" size={16} color="#666" />
         <Text style={styles.customer}>{item.user?.fullName} ({item.user?.email})</Text>
       </View>
 
       <View style={styles.infoRow}>
-        <Ionicons name="calendar-outline" size={14} color="#666" />
-        <Text style={styles.dateText}>Ordered on: {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-      </View>
-
-      <View style={styles.infoRow}>
-        <Ionicons name="location-outline" size={14} color="#666" />
+        <Ionicons name="location-outline" size={16} color="#666" />
         <Text style={styles.address}>{item.shippingAddress?.address}, {item.shippingAddress?.city}</Text>
       </View>
 
-      <Text style={styles.total}>Total Amount: Rs. {item.totalAmount.toFixed(2)}</Text>
+      <View style={styles.priceRow}>
+        <Text style={styles.totalLabel}>Total Amount:</Text>
+        <Text style={styles.totalValue}>Rs. {item.totalAmount.toFixed(2)}</Text>
+      </View>
 
       <View style={styles.itemsContainer}>
         <Text style={styles.itemsHeader}>Ordered Items:</Text>
         {item.items.map((i, idx) => (
           <View key={idx} style={styles.itemRow}>
             <Text style={styles.itemText}>• {i.product?.name}{i.size ? ` (${i.size})` : ''}</Text>
-            <Text style={styles.itemQty}>Qty: {i.quantity}</Text>
+            <Text style={styles.itemQty}>x {i.quantity}</Text>
           </View>
         ))}
       </View>
@@ -147,12 +189,31 @@ export default function ManageOrders() {
 
   return (
     <ScreenContainer>
-      {loading ? <ActivityIndicator size="large" /> : (
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.headerTitle}>Order Requests</Text>
+          <Text style={styles.headerSubtitle}>Manage store orders</Text>
+        </View>
+      </View>
+
+      {renderFilterTabs()}
+
+      {loading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#1B5E20" />
+        </View>
+      ) : (
         <FlatList
-          data={orders}
+          data={filteredOrders}
           renderItem={renderOrderItem}
           keyExtractor={item => item._id}
           contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="receipt-outline" size={64} color="#CCC" />
+              <Text style={styles.emptyText}>No orders found for {filter} status.</Text>
+            </View>
+          }
         />
       )}
 
@@ -189,44 +250,97 @@ export default function ManageOrders() {
 }
 
 const styles = StyleSheet.create({
-  list: { padding: 16 },
-  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 16, elevation: 2 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  orderId: { fontSize: 16, fontFamily: 'Dosis_700Bold' },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F0F0', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20 },
-  statusText: { fontSize: 11, marginRight: 4, fontFamily: 'Dosis_700Bold' },
+  list: { paddingHorizontal: 16, paddingBottom: 32 },
+  header: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    paddingHorizontal: 16, 
+    paddingTop: 16,
+    marginBottom: 8
+  },
+  headerTitle: { fontSize: 24, fontFamily: 'Dosis_700Bold', color: '#0D2D1D' },
+  headerSubtitle: { fontSize: 14, color: '#666', marginTop: -2 },
+  
+  filterContainer: { 
+    flexDirection: 'row', 
+    paddingHorizontal: 16, 
+    marginBottom: 16,
+  },
+  filterTab: { 
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#1B5E20', 
+    marginRight: 8,
+    marginBottom: 8,
+    backgroundColor: '#FFF'
+  },
+  activeFilterTab: { backgroundColor: '#1B5E20' },
+  filterTabText: { color: '#1B5E20', fontSize: 13, fontFamily: 'Dosis_600SemiBold' },
+  activeFilterTabText: { color: '#FFF' },
+
+  card: { 
+    backgroundColor: '#FFF', 
+    borderRadius: 16, 
+    padding: 16, 
+    marginBottom: 16, 
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  orderId: { fontSize: 18, fontFamily: 'Dosis_700Bold', color: '#0D2D1D' },
+  divider: { height: 1, backgroundColor: '#EEE', marginVertical: 12 },
+  
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
+  statusText: { fontSize: 12, marginRight: 4, fontFamily: 'Dosis_700Bold' },
   deliveredBadge: { backgroundColor: '#E8F5E9' },
   deliveredText: { color: '#2E7D32' },
   cancelledBadge: { backgroundColor: '#FFEBEE' },
   cancelledText: { color: '#C62828' },
-  activeBadge: { backgroundColor: '#F1F8E9' },
-  activeText: { color: '#558B2F' },
-  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  customer: { fontSize: 14, color: '#333', marginLeft: 8 },
-  dateText: { fontSize: 13, color: '#666', marginLeft: 8 },
-  total: { fontSize: 16, fontFamily: 'Dosis_700Bold', color: '#333', marginVertical: 8 },
-  address: { fontSize: 13, color: '#666', marginLeft: 8 },
+  pendingBadge: { backgroundColor: '#FFF3E0' },
+  pendingText: { color: '#E65100' },
+  processingBadge: { backgroundColor: '#E3F2FD' },
+  processingText: { color: '#1565C0' },
+
+  infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  customer: { fontSize: 14, color: '#333', marginLeft: 10, fontFamily: 'Dosis_500Medium' },
+  dateText: { fontSize: 12, color: '#666' },
+  address: { fontSize: 14, color: '#666', marginLeft: 10, flex: 1 },
+  
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10 },
+  totalLabel: { fontSize: 14, color: '#666', fontFamily: 'Dosis_500Medium' },
+  totalValue: { fontSize: 18, fontFamily: 'Dosis_700Bold', color: '#1B5E20' },
+
   itemsContainer: {
-    marginTop: 12,
+    marginTop: 8,
     padding: 12,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50'
+    backgroundColor: '#F7F9F7',
+    borderRadius: 12,
   },
-  itemsHeader: { fontSize: 14, fontFamily: 'Dosis_700Bold', color: '#333', marginBottom: 6 },
+  itemsHeader: { fontSize: 14, fontFamily: 'Dosis_700Bold', color: '#333', marginBottom: 8 },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  itemText: { fontSize: 13, color: '#444', flex: 1 },
-  itemQty: { fontSize: 13, fontFamily: 'Dosis_600SemiBold', color: '#666' },
+  itemText: { fontSize: 14, color: '#444', flex: 1, fontFamily: 'Dosis_500Medium' },
+  itemQty: { fontSize: 14, fontFamily: 'Dosis_600SemiBold', color: '#666' },
+  
   headerRight: { flexDirection: 'row', alignItems: 'center' },
-  deleteButton: { marginLeft: 12, padding: 4 },
+  deleteButton: { marginLeft: 10, backgroundColor: '#FFF0F0', padding: 8, borderRadius: 10 },
   deliveredCard: { backgroundColor: '#F1F8E9', borderColor: '#C5E1A5', borderWidth: 1 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#FFF', borderRadius: 20, padding: 24, width: '80%', alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontFamily: 'Dosis_700Bold', color: '#333', marginBottom: 8 },
-  modalSubtitle: { fontSize: 14, color: '#666', marginBottom: 20, textAlign: 'center' },
-  modalButton: { backgroundColor: '#4CAF50', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 12, width: '100%', alignItems: 'center', marginBottom: 12 },
+  
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 100 },
+  emptyText: { marginTop: 16, fontSize: 16, color: '#999', fontFamily: 'Dosis_500Medium' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: '#FFF', borderRadius: 24, padding: 24, width: '85%', alignItems: 'center' },
+  modalTitle: { fontSize: 22, fontFamily: 'Dosis_700Bold', color: '#0D2D1D', marginBottom: 8 },
+  modalSubtitle: { fontSize: 15, color: '#666', marginBottom: 24, textAlign: 'center' },
+  modalButton: { backgroundColor: '#1B5E20', paddingVertical: 14, paddingHorizontal: 30, borderRadius: 16, width: '100%', alignItems: 'center', marginBottom: 12 },
   modalButtonText: { color: '#FFF', fontSize: 16, fontFamily: 'Dosis_700Bold' },
-  cancelButton: { paddingVertical: 10, width: '100%', alignItems: 'center' },
-  cancelButtonText: { color: '#666', fontSize: 14, fontFamily: 'Dosis_600SemiBold' },
+  cancelButton: { paddingVertical: 12, width: '100%', alignItems: 'center' },
+  cancelButtonText: { color: '#999', fontSize: 15, fontFamily: 'Dosis_600SemiBold' },
 });

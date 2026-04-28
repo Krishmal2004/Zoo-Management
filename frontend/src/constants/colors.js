@@ -8,7 +8,7 @@ export const colors = {
   accentGreen: '#2E7D32',
   linkGreen: '#1B5E20',
   /** Accent link on welcome screen (mockup) */
-  signInLink: '#5DBB63',
+  signInLink: '#2E7D32',
   sage: '#C5D9C5',
   sageButton: '#B8D4B8',
   yellow: '#FFC107',
