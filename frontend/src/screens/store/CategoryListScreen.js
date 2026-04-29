@@ -50,20 +50,20 @@ export default function CategoryListScreen({ navigation }) {
   }
 
   return (
-    <ScreenContainer>
-      <View style={styles.header}>
-        <Text style={styles.title}>Shop by Category</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Cart')}>
-          <View style={styles.cartIconContainer}>
-            <Ionicons name="cart-outline" size={28} color="#333" />
-            {cart.length > 0 && (
-              <View style={styles.cartBadge}>
-                <Text style={styles.cartBadgeText}>{cart.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-      </View>
+    <ScreenContainer contentStyle={{ paddingHorizontal: 0 }}>
+      <TouchableOpacity 
+        style={styles.floatingCart} 
+        onPress={() => navigation.navigate('Cart')}
+      >
+        <View style={styles.cartIconContainer}>
+          <Ionicons name="cart-outline" size={28} color="#333" />
+          {cart.length > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cart.length}</Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
 
       <FlatList
         data={categories}
@@ -71,6 +71,17 @@ export default function CategoryListScreen({ navigation }) {
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View>
+            <Image
+              source={require('../../../assets/store_banner.jpg')}
+              style={styles.bannerImage}
+            />
+            <View style={styles.header}>
+              <Text style={styles.title}>Shop by Category</Text>
+            </View>
+          </View>
+        }
       />
     </ScreenContainer>
   );
@@ -116,13 +127,36 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   listContainer: {
-    paddingHorizontal: 16,
     paddingBottom: 80,
+  },
+  bannerImage: {
+    width: '92%',
+    height: 180,
+    borderRadius: 24,
+    alignSelf: 'center',
+    marginTop: 0, // Higher on the page
+    resizeMode: 'cover',
+    backgroundColor: '#EEE', // Fallback color
+  },
+  floatingCart: {
+    position: 'absolute',
+    top: 10,
+    right: 15,
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    borderRadius: 25,
+    padding: 2,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   categoryCard: {
     backgroundColor: '#FFF',
     borderRadius: 12,
     marginBottom: 16,
+    marginHorizontal: 16,
     flexDirection: 'row',
     overflow: 'hidden',
     elevation: 3,

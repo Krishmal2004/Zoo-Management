@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import ScreenContainer from '../../../components/ui/ScreenContainer';
 import { Ionicons } from '@expo/vector-icons';
 import { getAllOrders } from '../../../api/order.api';
 import { useFocusEffect } from '@react-navigation/native';
+import AccountDrawerLayout from '../../../components/profile/AccountDrawerLayout';
+import { getAdminDrawerMenuItems } from '../adminNavigation';
 
 export default function AdminStoreDashboard({ navigation }) {
   const [pendingCount, setPendingCount] = useState(0);
@@ -26,105 +27,133 @@ export default function AdminStoreDashboard({ navigation }) {
   };
 
   const menuItems = [
-    { title: 'Manage Products', icon: 'cube', screen: 'ManageProducts', color: '#1B5E20' },
-    { title: 'Manage Orders', icon: 'receipt', screen: 'ManageOrders', color: '#1B5E20', showBadge: true },
+    {
+      title: 'Manage Products',
+      description: 'Add, edit or remove products and manage inventory stock.',
+      icon: 'cube-outline',
+      screen: 'ManageProducts'
+    },
+    {
+      title: 'Manage Orders',
+      description: 'View and process customer orders, update delivery status.',
+      icon: 'receipt-outline',
+      screen: 'ManageOrders',
+      showBadge: true
+    },
   ];
 
+  const drawerMenuItems = React.useMemo(() => getAdminDrawerMenuItems(navigation), [navigation]);
+
   return (
-    <ScreenContainer>
-      <View style={styles.container}>
-        <Text style={styles.title}>Store Management</Text>
-        <Text style={styles.subtitle}>Admin Control Panel</Text>
+    <AccountDrawerLayout
+      headerTitle="Explore"
+      drawerMenuItems={drawerMenuItems}
+    >
+      <View style={styles.headerCard}>
+        <Text style={styles.headerTitle}>Store & Inventory Management</Text>
+        <Text style={styles.headerSubtitle}>
+          Configure products, manage categories, and handle visitor orders.
+        </Text>
+      </View>
 
-        <View style={styles.grid}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.card}
-              onPress={() => navigation.navigate(item.screen)}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: item.color }]}>
-                <Ionicons name={item.icon} size={32} color="#FFF" />
-              </View>
-              <Text style={styles.cardTitle}>{item.title}</Text>
+      <View style={styles.menuList}>
+        {menuItems.map((item, index) => (
+          <TouchableOpacity
+            key={index}
+            style={styles.menuItem}
+            onPress={() => navigation.navigate(item.screen)}
+          >
+            <View style={styles.menuContent}>
+              <Text style={styles.menuTitle}>{item.title}</Text>
+              <Text style={styles.menuDescription}>{item.description}</Text>
+            </View>
 
+            <View style={styles.rightAction}>
               {item.showBadge && pendingCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{pendingCount}</Text>
                 </View>
               )}
-            </TouchableOpacity>
-          ))}
-        </View>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </View>
+          </TouchableOpacity>
+        ))}
       </View>
-    </ScreenContainer>
+    </AccountDrawerLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flexGrow: 1,
   },
-  title: {
-    fontSize: 28,
-    fontFamily: 'Dosis_700Bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    fontFamily: 'Dosis_600SemiBold',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  card: {
-    width: '48%',
-    backgroundColor: '#FFF',
-    borderRadius: 15,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-    elevation: 4,
+  headerCard: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
+    borderLeftWidth: 6,
+    borderLeftColor: '#2E7D32',
+    elevation: 2,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.05,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
   },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cardTitle: {
-    fontSize: 16,
+  headerTitle: {
+    fontSize: 24,
     fontFamily: 'Dosis_700Bold',
-    color: '#0D2D1D',
-    textAlign: 'center',
+    color: '#1B5E20',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 18,
+    color: '#4E6E4E',
+    fontFamily: 'Dosis_500Medium',
+    lineHeight: 20,
+  },
+  menuList: {
+    gap: 16,
+  },
+  menuItem: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  menuContent: {
+    flex: 1,
+    marginRight: 12,
+  },
+  menuTitle: {
+    fontSize: 20,
+    fontFamily: 'Dosis_700Bold',
+    color: '#1B5E20',
+    marginBottom: 4,
+  },
+  menuDescription: {
+    fontSize: 16,
+    color: '#666',
+    fontFamily: 'Dosis_500Medium',
+    lineHeight: 18,
+  },
+  rightAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   badge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
     backgroundColor: '#4CAF50',
-    width: 24,
-    height: 24,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFF',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
+    marginRight: 8,
   },
   badgeText: {
     color: '#FFF',
@@ -132,3 +161,4 @@ const styles = StyleSheet.create({
     fontFamily: 'Dosis_700Bold',
   },
 });
+

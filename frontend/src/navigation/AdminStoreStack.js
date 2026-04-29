@@ -10,7 +10,7 @@ const Stack = createNativeStackNavigator();
 export default function AdminStoreStack() {
   return (
     <Stack.Navigator screenOptions={stackScreenOptions}>
-      <Stack.Screen name="StoreDashboard" component={AdminStoreDashboard} options={{ title: 'Store Admin' }} />
+      <Stack.Screen name="StoreDashboard" component={AdminStoreDashboard} options={{ headerShown: false }} />
       <Stack.Screen name="ManageProducts" component={ManageProducts} options={{ title: 'Manage Products' }} />
       <Stack.Screen name="ManageOrders" component={ManageOrders} options={{ title: 'Manage Orders' }} />
     </Stack.Navigator>

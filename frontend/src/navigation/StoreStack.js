@@ -13,7 +13,7 @@ const Stack = createNativeStackNavigator();
 export default function StoreStack() {
   return (
     <Stack.Navigator screenOptions={stackScreenOptions}>
-      <Stack.Screen name="CategoryList" component={CategoryListScreen} options={{ title: 'Zoo Store' }} />
+      <Stack.Screen name="CategoryList" component={CategoryListScreen} options={{ title: 'Online Store' }} />
       <Stack.Screen name="ProductList" component={ProductListScreen} options={({ route }) => ({ title: route.params.categoryName })} />
       <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ title: 'Product Details' }} />
       <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'My Cart' }} />

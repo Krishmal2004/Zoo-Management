@@ -143,8 +143,12 @@ export default function ManageProducts() {
         <Text style={styles.cardCat}>{item.category}</Text>
       </View>
       <View style={styles.cardActions}>
-        <TouchableOpacity onPress={() => openModal(item)}><Ionicons name="pencil" size={20} color="#4CAF50" /></TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(item._id)} style={{ marginLeft: 15 }}><Ionicons name="trash" size={20} color="#F44336" /></TouchableOpacity>
+        <TouchableOpacity style={styles.editBtn} onPress={() => openModal(item)}>
+          <Text style={styles.editBtnText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item._id)}>
+          <Text style={styles.deleteBtnText}>Delete</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -286,6 +290,33 @@ const styles = StyleSheet.create({
   cardSub: { fontSize: 14, color: '#666' },
   cardCat: { fontSize: 12, color: '#4CAF50', marginTop: 4 },
   cardActions: { flexDirection: 'row', alignItems: 'center' },
+  editBtn: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  editBtnText: {
+    color: '#2E7D32',
+    fontSize: 14,
+    fontFamily: 'Dosis_700Bold',
+  },
+  deleteBtn: {
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  deleteBtnText: {
+    color: '#D32F2F',
+    fontSize: 14,
+    fontFamily: 'Dosis_700Bold',
+  },
   modalScroll: { padding: 20 },
   modalTitle: { fontSize: 24, fontFamily: 'Dosis_700Bold', marginBottom: 20 },
   label: { fontSize: 16, marginBottom: 8, marginTop: 16, fontFamily: 'Dosis_600SemiBold' },
