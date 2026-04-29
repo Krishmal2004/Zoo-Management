@@ -9,6 +9,9 @@ import TicketBookingScreen from '../screens/ticketShow/TicketBookingScreen';
 import TicketShowSelectionScreen from '../screens/ticketShow/TicketShowSelectionScreen';
 import TicketPaymentScreen from '../screens/ticketShow/TicketPaymentScreen';
 import TicketPaymentSuccessScreen from '../screens/ticketShow/TicketPaymentSuccessScreen';
+import GroupBookingRequestScreen from '../screens/ticketShow/GroupBookingRequestScreen';
+import GroupRequestSubmittedScreen from '../screens/ticketShow/GroupRequestSubmittedScreen';
+import MyGroupRequestsScreen from '../screens/ticketShow/MyGroupRequestsScreen';
 import EventsPlaceholder from '../screens/events/EventsPlaceholder';
 import FeedbackPlaceholder from '../screens/feedback/FeedbackPlaceholder';
 import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
@@ -30,6 +33,9 @@ export default function AppStack() {
       <Stack.Screen name="TicketShowSelection" component={TicketShowSelectionScreen} options={{ title: 'Select shows' }} />
       <Stack.Screen name="Payment" component={TicketPaymentScreen} options={{ title: 'Payment' }} />
       <Stack.Screen name="PaymentSuccess" component={TicketPaymentSuccessScreen} options={{ title: 'Payment successful' }} />
+      <Stack.Screen name="GroupBookingRequest" component={GroupBookingRequestScreen} options={{ title: 'Group booking request' }} />
+      <Stack.Screen name="GroupRequestSubmitted" component={GroupRequestSubmittedScreen} options={{ title: 'Request submitted' }} />
+      <Stack.Screen name="MyGroupRequests" component={MyGroupRequestsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Events" component={EventsPlaceholder} options={{ title: 'Event Booking' }} />
       <Stack.Screen name="Feedback" component={FeedbackPlaceholder} options={{ title: 'Submit Feedbacks, Inquiries or Reviews' }} />
       <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
