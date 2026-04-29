@@ -1,6 +1,4 @@
-/**
- * Operational errors with HTTP status codes for centralized error handling.
- */
+/* Operational errors with HTTP status codes for centralized error handling. */
 class AppError extends Error {
   constructor(message, statusCode = 500) {
     super(message);

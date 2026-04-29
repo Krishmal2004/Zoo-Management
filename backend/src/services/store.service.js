@@ -1,9 +1,5 @@
 const Product = require('../models/Product.model');
 
-/**
- * Category Services 
- * Using a fixed list of categories as requested by the user.
- */
 const getAllCategories = async () => {
   const categories = [
     {
@@ -81,14 +77,13 @@ const updateStock = async (productId, quantityChange, size = null) => {
     if (product.sizes && product.sizes[size] !== undefined) {
       product.sizes[size] += quantityChange;
       if (product.sizes[size] < 0) throw new Error(`Insufficient stock for product ${product.name} (Size: ${size})`);
-      // Optional: keep total stock synced or just let it be handled separately
     }
   } else {
     product.stock += quantityChange;
     if (product.stock < 0) throw new Error(`Insufficient stock for product ${product.name}`);
   }
 
-  // Ensure Mongoose detects changes to mixed type 'sizes'
+
   if (product.isModified('sizes')) {
     product.markModified('sizes');
   }

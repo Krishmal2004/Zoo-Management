@@ -1,6 +1,4 @@
-/**
- * Wraps async route handlers so rejected promises call next(err).
- */
+/* wraps async route handlers so rejected promises call next() */
 const asyncHandler = (fn) => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };

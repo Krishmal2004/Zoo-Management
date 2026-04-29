@@ -1,9 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const storeService = require('../services/store.service');
 
-/**
- * CATEGORY CONTROLLERS
- */
+
 exports.getAllCategories = asyncHandler(async (req, res) => {
   const categories = await storeService.getAllCategories();
   res.status(200).json({ success: true, data: categories });
@@ -24,9 +22,6 @@ exports.deleteCategory = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, message: 'Category deleted successfully' });
 });
 
-/**
- * PRODUCT CONTROLLERS
- */
 exports.getAllProducts = asyncHandler(async (req, res) => {
   const products = await storeService.getAllProducts(req.query);
   res.status(200).json({ success: true, data: products });

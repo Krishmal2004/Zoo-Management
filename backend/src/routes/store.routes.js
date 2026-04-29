@@ -5,17 +5,13 @@ const { createUpload } = require('../middleware/upload.middleware');
 
 const router = express.Router();
 
-/**
- * CATEGORY ROUTES
- */
+
 router.get('/categories', storeController.getAllCategories);
 router.post('/categories', protect, restrictTo('admin'), storeController.createCategory);
 router.put('/categories/:id', protect, restrictTo('admin'), storeController.updateCategory);
 router.delete('/categories/:id', protect, restrictTo('admin'), storeController.deleteCategory);
 
-/**
- * PRODUCT ROUTES
- */
+
 router.get('/products', storeController.getAllProducts);
 router.get('/products/:id', storeController.getProductById);
 router.post('/products', protect, restrictTo('admin'), createUpload('products').single('image'), storeController.createProduct);
