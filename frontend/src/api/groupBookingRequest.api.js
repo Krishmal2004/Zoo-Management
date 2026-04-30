@@ -13,10 +13,12 @@ export async function submitGroupRequest({ fields, document }) {
     formData.append(key, String(value));
   });
 
-  // Web requires a real File/Blob. Native uses { uri, name, type }.
+  // Supporting document is optional.
   if (document?.file) {
+    // Web requires a real File/Blob.
     formData.append('supportingDocument', document.file, document.name);
-  } else {
+  } else if (document?.uri) {
+    // Native uses { uri, name, type }.
     formData.append('supportingDocument', {
       uri: document.uri,
       name: document.name,
