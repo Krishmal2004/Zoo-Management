@@ -37,6 +37,14 @@ export default function AdminModulePlaceholderScreen({ navigation }) {
 
   return (
     <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
+      <Pressable
+        onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('AdminHome'))}
+        style={styles.backBtn}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Text style={styles.backBtnText}>← Back</Text>
+      </Pressable>
       {hero ? (
         <View style={styles.heroCard} accessibilityRole="header">
           <Text style={styles.title}>{hero.title}</Text>
@@ -72,6 +80,22 @@ export default function AdminModulePlaceholderScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  backBtn: {
+    alignSelf: 'flex-start',
+    marginTop: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: theme.radii.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.white,
+  },
+  backBtnText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '700',
+    color: theme.colors.linkGreen,
+  },
   heroCard: {
     backgroundColor: theme.colors.welcomeBackground,
     borderRadius: theme.radii.md,
