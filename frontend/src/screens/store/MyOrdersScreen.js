@@ -3,10 +3,14 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, 
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { getMyOrders, cancelOrder } from '../../api/order.api';
 import { Ionicons } from '@expo/vector-icons';
+import StatusModal from '../../components/ui/StatusModal';
+
 
 export default function MyOrdersScreen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalConfig, setModalConfig] = useState({ visible: false, type: 'success', title: '', message: '' });
+
 
 
   useEffect(() => {
@@ -24,29 +28,39 @@ export default function MyOrdersScreen() {
     }
   };
 
-  const handleCancelOrder = async (orderId) => {
-    Alert.alert(
-      'Cancel Order',
-      'Are you sure you want to cancel this order?',
-      [
-        { text: 'No' },
-        { 
-          text: 'Yes, Cancel', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await cancelOrder(orderId);
-              Alert.alert('Success', 'Order cancelled successfully.');
-              fetchOrders();
-            } catch (error) {
-              const msg = error.response?.data?.message || 'Could not cancel order.';
-              Alert.alert('Error', msg);
-            }
-          }
+  const handleCancelOrder = (orderId) => {
+    setModalConfig({
+      visible: true,
+      type: 'warning',
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order?',
+      confirmText: 'Yes, Cancel',
+      onConfirm: async () => {
+        try {
+          await cancelOrder(orderId);
+          setModalConfig({
+            visible: true,
+            type: 'success',
+            title: 'Order Cancelled',
+            message: 'Your order has been cancelled successfully.'
+          });
+          fetchOrders();
+        } catch (error) {
+          const msg = error.response?.data?.message || 'Could not cancel order.';
+          setModalConfig({
+            visible: true,
+            type: 'error',
+            title: 'Cancellation Failed',
+            message: msg
+          });
         }
-      ]
-    );
+      },
+      cancelText: 'No',
+      onCancel: () => {}
+    });
   };
+
+
 
 
 
@@ -137,7 +151,21 @@ export default function MyOrdersScreen() {
           </View>
         }
       />
+
+      <StatusModal
+        visible={modalConfig.visible}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText}
+        onConfirm={modalConfig.onConfirm}
+        cancelText={modalConfig.cancelText}
+        onCancel={modalConfig.onCancel}
+        onClose={() => setModalConfig({ ...modalConfig, visible: false, onConfirm: null, onCancel: null })}
+      />
+
     </ScreenContainer>
+
   );
 }
 

@@ -5,6 +5,8 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import { getProductById } from '../../api/store.api';
 import { useCart } from '../../context/CartContext';
 import { Ionicons } from '@expo/vector-icons';
+import StatusModal from '../../components/ui/StatusModal';
+
 
 import { getApiBaseUrl } from '../../api/getApiBaseUrl';
 
@@ -15,7 +17,9 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(null);
   const [sizeGuideVisible, setSizeGuideVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ visible: false, type: 'success', title: '', message: '', onConfirm: null });
   const { addToCart } = useCart();
+
 
   useEffect(() => {
     fetchProduct();
@@ -37,31 +41,47 @@ export default function ProductDetailsScreen({ route, navigation }) {
     let availableStock = product.stock;
     if (product.category === 'Merchandise') {
       if (!selectedSize) {
-        Alert.alert('Select Size', 'Please select a size first.');
+        setModalConfig({
+          visible: true,
+          type: 'warning',
+          title: 'Select Size',
+          message: 'Please select a size first.'
+        });
         return;
       }
+
       availableStock = product.sizes ? product.sizes[selectedSize] : 0;
     }
 
     if (availableStock < quantity) {
-      Alert.alert('Out of Stock', 'Sorry, we don\'t have enough stock for this selection.');
+      setModalConfig({
+        visible: true,
+        type: 'error',
+        title: 'Out of Stock',
+        message: "Sorry, we don't have enough stock for this selection."
+      });
       return;
     }
+
 
     // Pass size to cart if needed, assuming addToCart accepts a size parameter or we can bundle it
     // For now, I will append size to the product name or add a size property
     const productToAdd = { ...product, selectedSize };
 
     addToCart(productToAdd, quantity);
-    Alert.alert(
-      'Added to Cart',
-      `${product.name} has been added to your cart.`,
-      [
-        { text: 'Continue Shopping' },
-        { text: 'Go to Cart', onPress: () => navigation.navigate('Cart') }
-      ]
-    );
+    setModalConfig({
+      visible: true,
+      type: 'success',
+      title: 'Added to Cart',
+      message: `${product.name} has been added to your cart.`,
+      confirmText: 'Go to Cart',
+      onConfirm: () => navigation.navigate('Cart'),
+      cancelText: 'Continue Shopping',
+      onCancel: () => {} // Simply closes the modal
+    });
+
   };
+
 
   const getImageUrl = (url) => {
     if (!url) return 'https://via.placeholder.com/300';
@@ -172,7 +192,21 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
+      <StatusModal
+        visible={modalConfig.visible}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        confirmText={modalConfig.confirmText || 'Continue'}
+        onConfirm={modalConfig.onConfirm}
+        cancelText={modalConfig.cancelText}
+        onCancel={modalConfig.onCancel}
+        onClose={() => setModalConfig({ ...modalConfig, visible: false, onConfirm: null, onCancel: null, confirmText: 'Continue', cancelText: 'Cancel' })}
+      />
+
     </ScreenContainer>
+
   );
 }
 

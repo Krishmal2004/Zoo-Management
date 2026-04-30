@@ -6,6 +6,9 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import TextField from '../../components/ui/TextField';
 import { useCart } from '../../context/CartContext';
 import { createOrder } from '../../api/order.api';
+import StatusModal from '../../components/ui/StatusModal';
+
+
 
 export default function CheckoutScreen({ navigation }) {
   const { cart, totalAmount, clearCart } = useCart();
@@ -26,6 +29,9 @@ export default function CheckoutScreen({ navigation }) {
   const [expiryError, setExpiryError] = useState('');
   const [cvvError, setCvvError] = useState('');
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ visible: false, type: 'success', title: '', message: '' });
+
+
 
   const SRI_LANKA_DISTRICTS = [
     "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
@@ -55,13 +61,24 @@ export default function CheckoutScreen({ navigation }) {
 
   const handlePlaceOrder = async () => {
     if (!address || !city || !zipCode || !phone) {
-      Alert.alert('Validation Error', 'Please fill in all shipping details.');
+      setModalConfig({
+        visible: true,
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please fill in all shipping details.'
+      });
       return;
     }
     if (!cardNumber || !expiry || !cvv) {
-      Alert.alert('Validation Error', 'Please fill in all payment details.');
+      setModalConfig({
+        visible: true,
+        type: 'warning',
+        title: 'Validation Error',
+        message: 'Please fill in all payment details.'
+      });
       return;
     }
+
     
     if (!validateCardNumberLogic(cardNumber)) {
       setCardError('Enter a valid 16-digit card number');
@@ -97,24 +114,26 @@ export default function CheckoutScreen({ navigation }) {
       };
 
       await createOrder(orderData);
-
-      Alert.alert(
-        'Success',
-        'Your order has been placed successfully!',
-        [{
-          text: 'OK', onPress: () => {
-            clearCart();
-            navigation.navigate('MyOrders');
-          }
-        }]
-      );
+      setModalConfig({
+        visible: true,
+        type: 'success',
+        title: 'Payment Successful',
+        message: 'Your order has been placed successfully! Thank you for shopping with us.'
+      });
     } catch (error) {
+
       console.error('Error placing order', error);
-      Alert.alert('Error', 'Failed to place order. Please try again.');
+      setModalConfig({
+        visible: true,
+        type: 'error',
+        title: 'Order Failed',
+        message: 'Failed to place order. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <ScreenContainer>
@@ -272,7 +291,23 @@ export default function CheckoutScreen({ navigation }) {
           style={styles.payBtn}
         />
       </ScrollView>
+
+      <StatusModal
+        visible={modalConfig.visible}
+        type={modalConfig.type}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        onClose={() => {
+          if (modalConfig.type === 'success') {
+            clearCart();
+            navigation.navigate('MyOrders');
+          }
+          setModalConfig({ ...modalConfig, visible: false });
+        }}
+      />
     </ScreenContainer>
+
+
   );
 }
 
