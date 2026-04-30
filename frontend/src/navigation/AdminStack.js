@@ -5,6 +5,7 @@ import UserManagementScreen from '../screens/admin/UserManagementScreen';
 import AdminModulePlaceholderScreen from '../screens/admin/AdminModulePlaceholderScreen';
 import AdminTicketsShowsListScreen from '../screens/admin/AdminTicketsShowsListScreen';
 import AdminManageBookingsScreen from '../screens/admin/AdminManageBookingsScreen';
+import AdminManageGroupBookingsScreen from '../screens/admin/AdminManageGroupBookingsScreen';
 import { stackScreenOptions } from './screenOptions';
 
 const Stack = createNativeStackNavigator();
@@ -27,6 +28,11 @@ export default function AdminStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen name="AdminManageBookings" component={AdminManageBookingsScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="AdminManageGroupBookings"
+        component={AdminManageGroupBookingsScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen name="AdminEventManagement" component={AdminModulePlaceholderScreen} options={adminModulePlaceholderOptions} />
       <Stack.Screen
         name="AdminAnimalEncounterPhotography"
