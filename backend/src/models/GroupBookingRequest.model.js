@@ -87,7 +87,8 @@ const groupBookingRequestSchema = new mongoose.Schema(
     },
     supportingDocument: {
       type: supportingDocumentSchema,
-      required: true,
+      required: false,
+      default: null,
     },
     status: {
       type: String,
