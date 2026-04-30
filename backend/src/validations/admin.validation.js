@@ -100,6 +100,13 @@ const listAdminBookingsRules = [
     .withMessage('visitDate must be a valid ISO date (YYYY-MM-DD)'),
 ];
 
+const listAdminGroupBookingsRules = [
+  query('status')
+    .optional()
+    .isIn(['pending', 'approved', 'rejected', 'completed'])
+    .withMessage('status must be pending, approved, rejected, or completed'),
+];
+
 module.exports = {
   createUserRules,
   updateUserRules,
@@ -109,4 +116,5 @@ module.exports = {
   createShowCatalogRules,
   deleteCatalogItemRules,
   listAdminBookingsRules,
+  listAdminGroupBookingsRules,
 };
