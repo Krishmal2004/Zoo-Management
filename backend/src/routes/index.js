@@ -8,6 +8,13 @@ const animalsRoutes = require('./animals.routes');
 const encountersRoutes = require('./encounters.routes');
 const storeRoutes = require('./store.routes');
 const adminRoutes = require('./admin.routes');
+const photographyBookingRoutes = require('./photographyBooking.routes');
+const photographerRoutes = require('./photographer.routes');
+const photographyPackageRoutes = require('./photographyPackage.routes');
+const photoRoutes = require('./photo.routes');
+const timeSlotRoutes = require('./timeSlot.routes');
+const visitorRoutes = require('./visitor.routes');
+const feedingBookingRoutes = require('./feedingBooking.routes');
 
 const router = express.Router();
 
@@ -31,5 +38,12 @@ router.use('/animals', animalsRoutes);
 router.use('/encounters', encountersRoutes);
 router.use('/store', storeRoutes);
 router.use('/admin', adminRoutes);
+router.use('/photography-bookings', photographyBookingRoutes);
+router.use('/photographers', photographerRoutes);
+router.use('/photography-packages', photographyPackageRoutes);
+router.use('/photos', photoRoutes);
+router.use('/time-slots', timeSlotRoutes);
+router.use('/visitors', visitorRoutes);
+router.use('/feeding-bookings', feedingBookingRoutes);
 
 module.exports = router;

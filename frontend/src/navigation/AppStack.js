@@ -7,7 +7,9 @@ import TicketShowPlaceholder from '../screens/ticketShow/TicketShowPlaceholder';
 import EventsPlaceholder from '../screens/events/EventsPlaceholder';
 import FeedbackPlaceholder from '../screens/feedback/FeedbackPlaceholder';
 import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
-import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
+import AnimalListScreen from '../screens/encounters/AnimalListScreen';
+import BookingScreen from '../screens/encounters/BookingScreen';
+import PhotoGalleryScreen from '../screens/encounters/PhotoGalleryScreen';
 import StorePlaceholder from '../screens/store/StorePlaceholder';
 import { stackScreenOptions } from './screenOptions';
 
@@ -23,7 +25,9 @@ export default function AppStack() {
       <Stack.Screen name="Events" component={EventsPlaceholder} options={{ title: 'Event Booking' }} />
       <Stack.Screen name="Feedback" component={FeedbackPlaceholder} options={{ title: 'Submit Feedbacks, Inquiries or Reviews' }} />
       <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
-      <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
+      <Stack.Screen name="Encounters" component={AnimalListScreen} options={{ title: 'Animal Encounter and Photography' }} />
+      <Stack.Screen name="Booking" component={BookingScreen} options={({ route }) => ({ title: `${route.params?.type || 'Booking'} Session` })} />
+      <Stack.Screen name="PhotoGallery" component={PhotoGalleryScreen} options={{ title: 'Photo Gallery' }} />
       <Stack.Screen name="Store" component={StorePlaceholder} options={{ title: 'Online Store' }} />
     </Stack.Navigator>
   );
