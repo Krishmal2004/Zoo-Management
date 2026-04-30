@@ -242,6 +242,25 @@ const listGroupBookings = asyncHandler(async (req, res) => {
   });
 });
 
+const updateGroupBookingStatus = asyncHandler(async (req, res) => {
+  const request = await GroupBookingRequest.findById(req.params.id);
+  if (!request) {
+    throw new AppError('Group booking request not found', 404);
+  }
+
+  request.status = req.body.status;
+  if (typeof req.body.reviewNotes === 'string') {
+    request.reviewNotes = req.body.reviewNotes.trim();
+  }
+  await request.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Group booking status updated',
+    data: { groupBooking: request },
+  });
+});
+
 const downloadGroupBookingDocument = asyncHandler(async (req, res) => {
   const request = await GroupBookingRequest.findById(req.params.id).lean();
   if (!request) {
@@ -277,5 +296,6 @@ module.exports = {
   deleteCatalogItem,
   listBookings,
   listGroupBookings,
+  updateGroupBookingStatus,
   downloadGroupBookingDocument,
 };
