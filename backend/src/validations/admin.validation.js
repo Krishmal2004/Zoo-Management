@@ -107,6 +107,10 @@ const listAdminGroupBookingsRules = [
     .withMessage('status must be pending, approved, rejected, or completed'),
 ];
 
+const adminGroupBookingIdParamRules = [
+  param('id').isMongoId().withMessage('Group booking id must be a valid Mongo id'),
+];
+
 module.exports = {
   createUserRules,
   updateUserRules,
@@ -117,4 +121,5 @@ module.exports = {
   deleteCatalogItemRules,
   listAdminBookingsRules,
   listAdminGroupBookingsRules,
+  adminGroupBookingIdParamRules,
 };
