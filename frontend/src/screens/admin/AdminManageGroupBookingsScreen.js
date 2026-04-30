@@ -1,9 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import { getAdminDrawerMenuItems } from './adminNavigation';
-import { getAdminGroupBookings } from '../../api/admin.api';
+import { downloadAdminGroupBookingDocument, getAdminGroupBookings } from '../../api/admin.api';
 import { theme } from '../../constants/theme';
 
 const STATUS_OPTIONS = [
@@ -16,6 +16,15 @@ const STATUS_OPTIONS = [
 
 function statusLabel(status) {
   return String(status || '').trim() || 'pending';
+}
+
+function parseFileName(contentDisposition, fallbackName) {
+  const source = String(contentDisposition || '');
+  const utf8 = source.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8?.[1]) return decodeURIComponent(utf8[1]);
+  const plain = source.match(/filename="?([^"]+)"?/i);
+  if (plain?.[1]) return plain[1];
+  return fallbackName || 'group-booking-document';
 }
 
 export default function AdminManageGroupBookingsScreen({ navigation }) {
@@ -52,6 +61,38 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
     },
     [loadGroupBookings]
   );
+
+  const downloadDocument = useCallback(async (groupRequestId, fallbackFileName) => {
+    if (!groupRequestId) return;
+    try {
+      const { blob, contentDisposition } = await downloadAdminGroupBookingDocument(groupRequestId);
+
+      // In web, force browser file download.
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
+        const objectUrl = window.URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = parseFileName(contentDisposition, fallbackFileName);
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        window.URL.revokeObjectURL(objectUrl);
+        return;
+      }
+
+      Alert.alert(
+        'Document',
+        'Download is supported on web. On mobile, this build currently opens documents externally.'
+      );
+    } catch (error) {
+      const message = error?.response?.data?.message || 'Unable to download the submitted document.';
+      if (typeof message === 'string' && message.trim()) {
+        Alert.alert('Document', message);
+        return;
+      }
+      Alert.alert('Document', 'Unable to download the submitted document.');
+    }
+  }, []);
 
   return (
     <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
@@ -105,10 +146,29 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
                 <Text style={styles.metaText}>Reference: {request.requestCode || '-'}</Text>
                 <Text style={styles.metaText}>Visit date: {request.visitDate || '-'}</Text>
                 <Text style={styles.metaText}>People: {request.totalPeople || 0}</Text>
+                <Text style={styles.metaText}>Adults: {request.adultsCount ?? 0}</Text>
+                <Text style={styles.metaText}>Children: {request.childrenCount ?? 0}</Text>
                 <Text style={styles.metaText}>Group type: {request.groupType || '-'}</Text>
                 <Text style={styles.metaText}>Contact person: {request.contactName || '-'}</Text>
                 <Text style={styles.metaText}>Contact email: {request.contactEmail || user.email || '-'}</Text>
                 <Text style={styles.metaText}>Contact phone: {request.contactPhone || user.phone || '-'}</Text>
+                <Text style={styles.metaText}>Submitted at: {String(request.createdAt || '-').slice(0, 10)}</Text>
+                <Text style={styles.metaText}>Notes: {request.notes ? request.notes : '-'}</Text>
+                <Text style={styles.metaText}>Review notes: {request.reviewNotes ? request.reviewNotes : '-'}</Text>
+                {request.supportingDocument?.storedPath ? (
+                  <Pressable
+                    onPress={() => downloadDocument(request._id, request.supportingDocument?.fileName)}
+                    style={styles.documentBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel="Download submitted document"
+                  >
+                    <Text style={styles.documentBtnText}>
+                      Download submitted document ({request.supportingDocument.fileName || 'file'})
+                    </Text>
+                  </Pressable>
+                ) : (
+                  <Text style={styles.metaText}>Submitted document: Not attached</Text>
+                )}
               </View>
             );
           })}
@@ -244,5 +304,20 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     opacity: 0.9,
     marginTop: 2,
+  },
+  documentBtn: {
+    marginTop: theme.spacing.sm,
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: theme.radii.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.accentGreen,
+    backgroundColor: theme.colors.backgroundAlt,
+  },
+  documentBtnText: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: '700',
+    color: theme.colors.linkGreen,
   },
 });
