@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Pressable, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Alert, Platform, Linking } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import { getAdminDrawerMenuItems } from './adminNavigation';
@@ -56,6 +56,24 @@ function parseFileName(contentDisposition, fallbackName) {
   const plain = source.match(/filename="?([^"]+)"?/i);
   if (plain?.[1]) return plain[1];
   return fallbackName || 'group-booking-document';
+}
+
+function MetaRow({ label, value, onPress }) {
+  const normalized = value ?? '-';
+  return (
+    <View style={styles.metaRow}>
+      <Text style={styles.metaText}>
+        <Text style={styles.metaKey}>{label}: </Text>
+        {onPress ? (
+          <Text style={styles.metaLink} onPress={onPress}>
+            {normalized}
+          </Text>
+        ) : (
+          <Text style={styles.metaValue}>{normalized}</Text>
+        )}
+      </Text>
+    </View>
+  );
 }
 
 export default function AdminManageGroupBookingsScreen({ navigation }) {
@@ -145,6 +163,15 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
     []
   );
 
+  const openExternal = useCallback(async (url) => {
+    if (!url) return;
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert('Contact', 'Unable to open this contact link right now.');
+    }
+  }, []);
+
   return (
     <AccountDrawerLayout headerTitle="Explore" drawerMenuItems={drawerMenuItems}>
       <Pressable
@@ -214,18 +241,34 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.metaText}>Reference: {request.requestCode || '-'}</Text>
-                <Text style={styles.metaText}>Visit date: {request.visitDate || '-'}</Text>
-                <Text style={styles.metaText}>People: {request.totalPeople || 0}</Text>
-                <Text style={styles.metaText}>Adults: {request.adultsCount ?? 0}</Text>
-                <Text style={styles.metaText}>Children: {request.childrenCount ?? 0}</Text>
-                <Text style={styles.metaText}>Group type: {request.groupType || '-'}</Text>
-                <Text style={styles.metaText}>Contact person: {request.contactName || '-'}</Text>
-                <Text style={styles.metaText}>Contact email: {request.contactEmail || user.email || '-'}</Text>
-                <Text style={styles.metaText}>Contact phone: {request.contactPhone || user.phone || '-'}</Text>
-                <Text style={styles.metaText}>Submitted at: {String(request.createdAt || '-').slice(0, 10)}</Text>
-                <Text style={styles.metaText}>Notes: {request.notes ? request.notes : '-'}</Text>
-                <Text style={styles.metaText}>Review notes: {request.reviewNotes ? request.reviewNotes : '-'}</Text>
+                <MetaRow label="Reference" value={request.requestCode || '-'} />
+                <MetaRow label="Visit date" value={request.visitDate || '-'} />
+                <MetaRow label="People" value={request.totalPeople || 0} />
+                <MetaRow label="Adults" value={request.adultsCount ?? 0} />
+                <MetaRow label="Children" value={request.childrenCount ?? 0} />
+                <MetaRow label="Group type" value={request.groupType || '-'} />
+                <MetaRow label="Contact person" value={request.contactName || '-'} />
+                <MetaRow
+                  label="Contact email"
+                  value={request.contactEmail || user.email || '-'}
+                  onPress={
+                    request.contactEmail || user.email
+                      ? () => openExternal(`mailto:${request.contactEmail || user.email}`)
+                      : undefined
+                  }
+                />
+                <MetaRow
+                  label="Contact phone"
+                  value={request.contactPhone || user.phone || '-'}
+                  onPress={
+                    request.contactPhone || user.phone
+                      ? () => openExternal(`tel:${request.contactPhone || user.phone}`)
+                      : undefined
+                  }
+                />
+                <MetaRow label="Submitted at" value={String(request.createdAt || '-').slice(0, 10)} />
+                <MetaRow label="Notes" value={request.notes ? request.notes : '-'} />
+                <MetaRow label="Review notes" value={request.reviewNotes ? request.reviewNotes : '-'} />
                 {request.supportingDocument?.storedPath ? (
                   <Pressable
                     onPress={() => downloadDocument(request._id, request.supportingDocument?.fileName)}
@@ -238,7 +281,7 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
                     </Text>
                   </Pressable>
                 ) : (
-                  <Text style={styles.metaText}>Submitted document: Not attached</Text>
+                  <MetaRow label="Submitted document" value="Not attached" />
                 )}
                 <View style={styles.statusActionsRow}>
                   <Pressable
@@ -429,6 +472,22 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     opacity: 0.9,
     marginTop: 2,
+  },
+  metaRow: {
+    marginTop: 2,
+  },
+  metaKey: {
+    fontWeight: '700',
+    color: theme.colors.primaryText,
+  },
+  metaValue: {
+    fontWeight: '400',
+    color: theme.colors.primaryText,
+  },
+  metaLink: {
+    fontWeight: '600',
+    color: theme.colors.linkGreen,
+    textDecorationLine: 'underline',
   },
   documentBtn: {
     marginTop: theme.spacing.sm,
