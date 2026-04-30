@@ -15,9 +15,9 @@ const TICKET_SHOW_ADMIN_OPTIONS = [
   },
   {
     key: 'manage-bookings',
-    title: 'Manage Normal Bookings',
+    title: 'Manage Regular Bookings',
     subtitle: 'Review visitor reservations and regular booking records.',
-    accessibilityLabel: 'Manage normal bookings',
+    accessibilityLabel: 'Manage regular bookings',
     screen: 'AdminManageBookings',
   },
   {
