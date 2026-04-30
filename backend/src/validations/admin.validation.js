@@ -111,6 +111,16 @@ const adminGroupBookingIdParamRules = [
   param('id').isMongoId().withMessage('Group booking id must be a valid Mongo id'),
 ];
 
+const checkInBookingRules = [
+  body('code')
+    .isString()
+    .withMessage('code must be a string')
+    .bail()
+    .trim()
+    .isLength({ min: 4, max: 512 })
+    .withMessage('code must be between 4 and 512 characters'),
+];
+
 const updateAdminGroupBookingStatusRules = [
   ...adminGroupBookingIdParamRules,
   body('status')
@@ -136,4 +146,5 @@ module.exports = {
   listAdminGroupBookingsRules,
   adminGroupBookingIdParamRules,
   updateAdminGroupBookingStatusRules,
+  checkInBookingRules,
 };
