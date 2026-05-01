@@ -6,7 +6,14 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
 
-const FEEDBACK_TYPES = ['Suggestion', 'Complaint', 'Compliment', 'Other'];
+const FEEDBACK_TYPES = [
+  'Entry Tickets and Show Booking',
+  'Event Booking',
+  'Animal Encounter and Photography',
+  'Animal Information and Education',
+  'Online Store',
+  'General',
+];
 
 export default function AddFeedbackScreen({ navigation }) {
   const [type, setType] = useState('');
