@@ -288,7 +288,7 @@ export default function UserManagementScreen({ navigation }) {
               disabled={Boolean(deletingId)}
             >
               <Text style={[styles.linkText, styles.deleteText]}>
-                {String(deletingId) === String(u._id) ? 'Deleting...' : 'Delete'}
+                {String(deletingId) === String(u._id) ? 'Deleting...' : 'DELETE'}
               </Text>
             </Pressable>
           </View>

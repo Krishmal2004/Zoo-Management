@@ -131,7 +131,7 @@ export default function PhotographerManagementScreen() {
               </View>
               <View style={styles.actions}>
                 <TouchableOpacity onPress={() => openEdit(item)}><Text style={styles.editLink}>Edit</Text></TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.delBtn}><Text style={styles.delBtnText}>DEL</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.delBtn}><Text style={styles.delBtnText}>DELETE</Text></TouchableOpacity>
               </View>
             </View>
           )}
