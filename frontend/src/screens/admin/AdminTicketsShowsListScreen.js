@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput, Modal, Alert, ActivityIndicator, Image, Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import { theme } from '../../constants/theme';
@@ -11,7 +12,9 @@ import {
   updateShowTicket,
   createShowTicket,
   deleteTicketCatalogItem,
+  uploadShowPosterImage,
 } from '../../api/admin.api';
+import { resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 
 const DEFAULT_SHOW_IMAGE_PATHS = {
   birds_of_prey: 'assets/images/show-birds-of-prey.png',
@@ -19,6 +22,68 @@ const DEFAULT_SHOW_IMAGE_PATHS = {
   sea_lion_splash: 'assets/images/show-sea-lion-splash.png',
   reptile_encounter: 'assets/images/show-reptile-encounter.png',
 };
+
+const BUNDLE_IMAGE_BY_PATH = {
+  'assets/images/show-birds-of-prey.png': require('../../../assets/images/show-birds-of-prey.png'),
+  'assets/images/show-elephant-care-bath.png': require('../../../assets/images/show-elephant-care-bath.png'),
+  'assets/images/show-sea-lion-splash.png': require('../../../assets/images/show-sea-lion-splash.png'),
+  'assets/images/show-reptile-encounter.png': require('../../../assets/images/show-reptile-encounter.png'),
+};
+
+function posterPreviewSource(url) {
+  const t = String(url || '').trim();
+  if (!t) return null;
+  if (t.startsWith('file://')) return { uri: t };
+  const bundle = BUNDLE_IMAGE_BY_PATH[t];
+  if (bundle) return bundle;
+  const remote = resolveUploadsFileUri(t);
+  return remote ? { uri: remote } : null;
+}
+
+function ShowPosterField({ value, onChangeText, onPickFromGallery, uploading, disabled }) {
+  const src = posterPreviewSource(value);
+  return (
+    <View style={styles.posterField}>
+      <View style={styles.posterRow}>
+        {src ? (
+          <Image
+            source={src}
+            style={styles.posterThumb}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
+        ) : (
+          <View style={[styles.posterThumb, styles.posterThumbPlaceholder]}>
+            <MaterialCommunityIcons name="image-area" size={28} color="rgba(13, 45, 29, 0.35)" />
+          </View>
+        )}
+        <Pressable
+          onPress={onPickFromGallery}
+          disabled={disabled || uploading}
+          style={[styles.posterPickBtn, (disabled || uploading) && styles.posterPickBtnDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Choose show poster from gallery"
+        >
+          {uploading ? (
+            <ActivityIndicator size="small" color={theme.colors.white} />
+          ) : (
+            <Text style={styles.posterPickBtnText}>Choose from gallery</Text>
+          )}
+        </Pressable>
+      </View>
+      <TextInput
+        style={styles.inputImageUrl}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder="Optional: URL or server path"
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholderTextColor="rgba(13, 45, 29, 0.45)"
+        editable={!disabled}
+      />
+    </View>
+  );
+}
 
 function Section({ title, children, headerAction }) {
   return (
@@ -109,6 +174,9 @@ function ShowRow({
   onChangePrice,
   onChangeImageUrl,
   onChangeDailyCapacity,
+  onPickPoster,
+  posterUploading,
+  saving,
   onSave,
   onDelete,
 }) {
@@ -139,14 +207,12 @@ function ShowRow({
               placeholder="Price (LKR)"
               placeholderTextColor="rgba(13, 45, 29, 0.45)"
             />
-            <TextInput
-              style={styles.inputImageUrl}
+            <ShowPosterField
               value={draftImageUrl}
               onChangeText={onChangeImageUrl}
-              placeholder="Photo path or URL"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholderTextColor="rgba(13, 45, 29, 0.45)"
+              onPickFromGallery={onPickPoster}
+              uploading={posterUploading}
+              disabled={saving}
             />
             <TextInput
               style={[styles.inputPrice, styles.inputNoBottomMargin]}
@@ -210,6 +276,7 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
   const [newShowDailyCapacity, setNewShowDailyCapacity] = useState('100');
   const [isAddShowOpen, setIsAddShowOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [posterUploading, setPosterUploading] = useState(false);
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -227,6 +294,32 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
   useEffect(() => {
     loadCatalog();
   }, [loadCatalog]);
+
+  const pickShowPoster = useCallback(async (setImageUrl) => {
+    if (posterUploading || saving) return;
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Photos', 'Allow photo library access to choose a show poster.');
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: Platform.OS === 'ios',
+      quality: 0.85,
+    });
+    if (picked.canceled || !picked.assets?.[0]?.uri) return;
+    setPosterUploading(true);
+    try {
+      const data = await uploadShowPosterImage(picked.assets[0]);
+      const path = data?.data?.imageUrl;
+      if (path) setImageUrl(path);
+      else Alert.alert('Upload', 'Could not read image URL from the server response.');
+    } catch {
+      Alert.alert('Upload', 'Could not upload the image. Try again or enter a URL below.');
+    } finally {
+      setPosterUploading(false);
+    }
+  }, [posterUploading, saving]);
 
   const startTicketEdit = (ticket) => {
     setEditingTicketId(ticket._id);
@@ -461,6 +554,9 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
             onChangePrice={setDraftShowPrice}
             onChangeImageUrl={setDraftShowImageUrl}
             onChangeDailyCapacity={setDraftShowDailyCapacity}
+            onPickPoster={() => pickShowPoster(setDraftShowImageUrl)}
+            posterUploading={posterUploading}
+            saving={saving}
             onSave={() => saveShowEdit(item._id)}
             onDelete={() => requestDeleteShow(item._id)}
           />
@@ -499,14 +595,12 @@ export default function AdminTicketsShowsListScreen({ navigation }) {
                 placeholder="Price (LKR)"
                 placeholderTextColor="rgba(13, 45, 29, 0.45)"
               />
-              <TextInput
-                style={styles.inputImageUrl}
+              <ShowPosterField
                 value={newShowImageUrl}
                 onChangeText={setNewShowImageUrl}
-                placeholder="Photo path (e.g. /uploads/ticket-show/new.png)"
-                autoCapitalize="none"
-                autoCorrect={false}
-                placeholderTextColor="rgba(13, 45, 29, 0.45)"
+                onPickFromGallery={() => pickShowPoster(setNewShowImageUrl)}
+                uploading={posterUploading}
+                disabled={saving}
               />
               <TextInput
                 style={[styles.inputPrice, styles.inputNoBottomMargin]}
@@ -773,6 +867,45 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.body,
     color: theme.colors.primaryText,
     backgroundColor: theme.colors.white,
+    marginTop: theme.spacing.sm,
+  },
+  posterField: {
+    marginBottom: theme.spacing.sm,
+  },
+  posterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  posterThumb: {
+    width: 72,
+    height: 72,
+    borderRadius: theme.radii.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.welcomeBackground,
+  },
+  posterThumbPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  posterPickBtn: {
+    flex: 1,
+    backgroundColor: theme.colors.accentGreen,
+    borderRadius: theme.radii.sm,
+    paddingVertical: 10,
+    paddingHorizontal: theme.spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  posterPickBtnDisabled: {
+    opacity: 0.65,
+  },
+  posterPickBtnText: {
+    color: theme.colors.white,
+    fontSize: theme.fontSize.sm,
+    fontWeight: '700',
   },
   inputPriceCompact: {
     flex: 1,
