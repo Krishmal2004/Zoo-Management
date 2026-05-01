@@ -15,10 +15,13 @@ const FEEDBACK_TYPES = [
   'General',
 ];
 
-export default function AddFeedbackScreen({ navigation }) {
-  const [type, setType] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+export default function AddFeedbackScreen({ navigation, route }) {
+  const existingFeedback = route.params?.feedback;
+  const isEditing = !!existingFeedback;
+
+  const [type, setType] = useState(existingFeedback?.type || '');
+  const [subject, setSubject] = useState(existingFeedback?.subject || '');
+  const [message, setMessage] = useState(existingFeedback?.message || '');
   const [loading, setLoading] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
 
@@ -30,10 +33,17 @@ export default function AddFeedbackScreen({ navigation }) {
 
     setLoading(true);
     try {
-      await feedbackApi.createFeedback({ type, subject, message });
-      Alert.alert('Success', 'Your feedback has been submitted. Thank you!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      if (isEditing) {
+        await feedbackApi.updateFeedback(existingFeedback._id, { type, subject, message });
+        Alert.alert('Success', 'Your feedback has been updated.', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        await feedbackApi.createFeedback({ type, subject, message });
+        Alert.alert('Success', 'Your feedback has been submitted. Thank you!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit feedback.');
     } finally {
@@ -72,7 +82,7 @@ export default function AddFeedbackScreen({ navigation }) {
         />
 
         <PrimaryButton
-          title="Submit Feedback"
+          title={isEditing ? "Update Feedback" : "Submit Feedback"}
           onPress={handleSubmit}
           loading={loading}
           style={styles.submitBtn}

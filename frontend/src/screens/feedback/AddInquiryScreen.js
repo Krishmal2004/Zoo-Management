@@ -6,6 +6,7 @@ import TextField from '../../components/ui/TextField';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
+import { getApiBaseUrl } from '../../api/getApiBaseUrl';
 
 const INQUIRY_TYPES = [
   'Entry Tickets and Show Booking',
@@ -16,11 +17,14 @@ const INQUIRY_TYPES = [
   'General',
 ];
 
-export default function AddInquiryScreen({ navigation }) {
-  const [type, setType] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
-  const [image, setImage] = useState(null);
+export default function AddInquiryScreen({ navigation, route }) {
+  const existingInquiry = route.params?.inquiry;
+  const isEditing = !!existingInquiry;
+
+  const [type, setType] = useState(existingInquiry?.type || '');
+  const [subject, setSubject] = useState(existingInquiry?.subject || '');
+  const [message, setMessage] = useState(existingInquiry?.message || '');
+  const [image, setImage] = useState(existingInquiry?.imageUrl ? { uri: `${getApiBaseUrl().replace('/api', '')}${existingInquiry.imageUrl}` } : null);
   const [loading, setLoading] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
 
@@ -55,7 +59,7 @@ export default function AddInquiryScreen({ navigation }) {
       formData.append('subject', subject);
       formData.append('message', message);
       
-      if (image) {
+      if (image && !image.uri.startsWith('http')) { // Only append if it's a new local file
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
         formData.append('image', {
@@ -65,10 +69,17 @@ export default function AddInquiryScreen({ navigation }) {
         });
       }
 
-      await feedbackApi.createInquiry(formData);
-      Alert.alert('Success', 'Your inquiry has been submitted. We will get back to you soon!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      if (isEditing) {
+        await feedbackApi.updateInquiry(existingInquiry._id, formData);
+        Alert.alert('Success', 'Your inquiry has been updated.', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        await feedbackApi.createInquiry(formData);
+        Alert.alert('Success', 'Your inquiry has been submitted. We will get back to you soon!', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit inquiry.');
     } finally {
@@ -129,7 +140,7 @@ export default function AddInquiryScreen({ navigation }) {
         </View>
 
         <PrimaryButton
-          title="Submit Inquiry"
+          title={isEditing ? "Update Inquiry" : "Submit Inquiry"}
           onPress={handleSubmit}
           loading={loading}
           style={styles.submitBtn}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, Image, TouchableOpacity, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import PrimaryButton from '../../components/ui/PrimaryButton';
@@ -55,6 +55,28 @@ export default function InquiryListScreen({ navigation }) {
     }
   };
 
+  const handleDelete = (id) => {
+    Alert.alert(
+      'Delete Inquiry',
+      'Are you sure you want to delete this inquiry?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await feedbackApi.deleteInquiry(id);
+              fetchInquiries();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete inquiry');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -77,6 +99,21 @@ export default function InquiryListScreen({ navigation }) {
           resizeMode="cover"
         />
       )}
+
+      <View style={styles.cardActions}>
+        <TouchableOpacity 
+          style={styles.editBtn} 
+          onPress={() => navigation.navigate('AddInquiry', { inquiry: item })}
+        >
+          <Text style={styles.editBtnText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.deleteBtn} 
+          onPress={() => handleDelete(item._id)}
+        >
+          <Text style={styles.deleteBtnText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -183,7 +220,38 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     opacity: 0.8,
     lineHeight: 20,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  editBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    backgroundColor: theme.colors.backgroundAlt,
+  },
+  editBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.accentGreen,
+  },
+  deleteBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    backgroundColor: '#FFEBEE',
+  },
+  deleteBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: theme.colors.error,
   },
   image: {
     width: '100%',

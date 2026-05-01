@@ -16,11 +16,15 @@ router.use(requireDatabase, protect);
 // Feedback
 router.post('/', feedbackController.createFeedback);
 router.get('/user', feedbackController.getMyFeedbacks);
+router.patch('/:id', feedbackController.updateFeedback);
+router.delete('/:id', feedbackController.deleteFeedback);
 router.get('/all', restrictTo('admin'), feedbackController.getAllFeedbacks);
 
 // Inquiries
 router.post('/inquiries', inquiryUpload.single('image'), feedbackController.createInquiry);
 router.get('/inquiries/user', feedbackController.getMyInquiries);
+router.patch('/inquiries/:id', inquiryUpload.single('image'), feedbackController.updateInquiry);
+router.delete('/inquiries/:id', feedbackController.deleteInquiry);
 router.get('/inquiries/all', restrictTo('admin'), feedbackController.getAllInquiries);
 
 // Reviews

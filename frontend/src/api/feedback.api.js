@@ -51,3 +51,28 @@ export async function getAllReviews() {
   const res = await apiClient.get('/feedback/reviews/all');
   return res.data;
 }
+
+// Update & Delete
+export async function updateFeedback(id, payload) {
+  const res = await apiClient.patch(`/feedback/${id}`, payload);
+  return res.data;
+}
+
+export async function deleteFeedback(id) {
+  const res = await apiClient.delete(`/feedback/${id}`);
+  return res.data;
+}
+
+export async function updateInquiry(id, formData) {
+  const res = await apiClient.patch(`/feedback/inquiries/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+}
+
+export async function deleteInquiry(id) {
+  const res = await apiClient.delete(`/feedback/inquiries/${id}`);
+  return res.data;
+}
