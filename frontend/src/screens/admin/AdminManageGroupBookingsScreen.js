@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Pressable, Alert, Platform, Linking } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useFocusEffect } from '@react-navigation/native';
 import AccountDrawerLayout from '../../components/profile/AccountDrawerLayout';
 import { getAdminDrawerMenuItems } from './adminNavigation';
@@ -58,6 +60,38 @@ function parseFileName(contentDisposition, fallbackName) {
   return fallbackName || 'group-booking-document';
 }
 
+function decodeDisplayFileName(name) {
+  const s = String(name || 'file').trim();
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+function sanitizeFileName(name) {
+  return String(name || 'document')
+    .replace(/[/\\?%*:|"<>]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 180) || 'document';
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 8192;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const end = Math.min(i + chunkSize, bytes.length);
+    const chunk = bytes.subarray(i, end);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  if (typeof btoa === 'undefined') {
+    throw new Error('Base64 encoding is not available');
+  }
+  return btoa(binary);
+}
+
 function MetaRow({ label, value, onPress }) {
   const normalized = value ?? '-';
   return (
@@ -83,6 +117,7 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState('');
+  const [downloadingDocId, setDownloadingDocId] = useState('');
 
   const loadGroupBookings = useCallback(async (status) => {
     setLoading(true);
@@ -114,15 +149,26 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
 
   const downloadDocument = useCallback(async (groupRequestId, fallbackFileName) => {
     if (!groupRequestId) return;
+    setDownloadingDocId(groupRequestId);
     try {
-      const { blob, contentDisposition } = await downloadAdminGroupBookingDocument(groupRequestId);
+      const { arrayBuffer: rawBuffer, blob, contentDisposition, contentType } =
+        await downloadAdminGroupBookingDocument(groupRequestId);
+      let arrayBuffer = rawBuffer;
+      if (arrayBuffer && ArrayBuffer.isView(arrayBuffer)) {
+        const view = arrayBuffer;
+        arrayBuffer = view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+      }
+      const parsedName = parseFileName(contentDisposition, fallbackFileName);
+      const fileName = sanitizeFileName(parsedName);
 
-      // In web, force browser file download.
       if (Platform.OS === 'web' && typeof window !== 'undefined' && typeof document !== 'undefined') {
-        const objectUrl = window.URL.createObjectURL(blob);
+        const b =
+          blob ||
+          new Blob([arrayBuffer], { type: contentType || 'application/octet-stream' });
+        const objectUrl = window.URL.createObjectURL(b);
         const anchor = document.createElement('a');
         anchor.href = objectUrl;
-        anchor.download = parseFileName(contentDisposition, fallbackFileName);
+        anchor.download = fileName;
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
@@ -130,17 +176,41 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
         return;
       }
 
-      Alert.alert(
-        'Document',
-        'Download is supported on web. On mobile, this build currently opens documents externally.'
-      );
-    } catch (error) {
-      const message = error?.response?.data?.message || 'Unable to download the submitted document.';
-      if (typeof message === 'string' && message.trim()) {
-        Alert.alert('Document', message);
+      if (!arrayBuffer || !(arrayBuffer instanceof ArrayBuffer) || arrayBuffer.byteLength === 0) {
+        Alert.alert('Document', 'The server returned an empty file.');
         return;
       }
-      Alert.alert('Document', 'Unable to download the submitted document.');
+
+      const baseDir = FileSystem.cacheDirectory;
+      if (!baseDir) {
+        Alert.alert('Document', 'File storage is not available on this device.');
+        return;
+      }
+
+      const uniqueName = `${Date.now()}-${fileName}`;
+      const dest = `${baseDir}${uniqueName}`;
+      const base64 = arrayBufferToBase64(arrayBuffer);
+      await FileSystem.writeAsStringAsync(dest, base64, { encoding: FileSystem.EncodingType.Base64 });
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (!canShare) {
+        Alert.alert(
+          'Document',
+          'Sharing is not available on this device. The file was prepared but could not be opened in another app.'
+        );
+        return;
+      }
+
+      const mimeType = String(contentType || 'application/octet-stream').split(';')[0].trim();
+      await Sharing.shareAsync(dest, { mimeType, dialogTitle: decodeDisplayFileName(fileName) });
+    } catch (error) {
+      const message =
+        (typeof error?.message === 'string' && error.message.trim()) ||
+        (typeof error?.response?.data?.message === 'string' && error.response.data.message.trim()) ||
+        'Unable to download the submitted document.';
+      Alert.alert('Document', message);
+    } finally {
+      setDownloadingDocId('');
     }
   }, []);
 
@@ -272,13 +342,19 @@ export default function AdminManageGroupBookingsScreen({ navigation }) {
                 {request.supportingDocument?.storedPath ? (
                   <Pressable
                     onPress={() => downloadDocument(request._id, request.supportingDocument?.fileName)}
-                    style={styles.documentBtn}
+                    style={[styles.documentBtn, downloadingDocId === request._id && styles.documentBtnDisabled]}
                     accessibilityRole="button"
                     accessibilityLabel="Download submitted document"
+                    disabled={downloadingDocId === request._id}
                   >
-                    <Text style={styles.documentBtnText}>
-                      Download submitted document ({request.supportingDocument.fileName || 'file'})
-                    </Text>
+                    {downloadingDocId === request._id ? (
+                      <ActivityIndicator size="small" color={theme.colors.linkGreen} />
+                    ) : (
+                      <Text style={styles.documentBtnText}>
+                        Download submitted document (
+                        {decodeDisplayFileName(request.supportingDocument.fileName) || 'file'})
+                      </Text>
+                    )}
                   </Pressable>
                 ) : (
                   <MetaRow label="Submitted document" value="Not attached" />
@@ -503,6 +579,9 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     fontWeight: '700',
     color: theme.colors.linkGreen,
+  },
+  documentBtnDisabled: {
+    opacity: 0.65,
   },
   statusActionsRow: {
     flexDirection: 'row',
