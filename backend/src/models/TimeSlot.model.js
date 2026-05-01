@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 
 const timeSlotSchema = new mongoose.Schema(
   {
+    type: {
+      type: String,
+      required: [true, 'Slot type is required'],
+      default: 'Photography',
+    },
     date: {
       type: Date,
       required: [true, 'Date is required'],
@@ -9,12 +14,10 @@ const timeSlotSchema = new mongoose.Schema(
     startTime: {
       type: String,
       required: [true, 'Start time is required'],
-      match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'Start time must be in HH:mm format'],
     },
     endTime: {
       type: String,
       required: [true, 'End time is required'],
-      match: [/^([01]\d|2[0-3]):([0-5]\d)$/, 'End time must be in HH:mm format'],
     },
     isBooked: {
       type: Boolean,
@@ -23,22 +26,25 @@ const timeSlotSchema = new mongoose.Schema(
     photographer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Photographer',
-      required: [true, 'Photographer is required'],
+    },
+    animalName: {
+      type: String,
+      default: 'All',
     },
     capacity: {
       type: Number,
-      required: [true, 'Capacity is required'],
-      min: [1, 'Capacity must be at least 1'],
-      max: [500, 'Capacity cannot exceed 500'],
+      default: 5,
     },
   },
   { timestamps: true }
 );
 
+// End time validation
 timeSlotSchema.path('endTime').validate(function validateEndTime(value) {
-  return this.startTime < value;
+  return !this.startTime || this.startTime < value;
 }, 'End time must be later than start time');
 
-timeSlotSchema.index({ photographer: 1, date: 1, startTime: 1, endTime: 1 }, { unique: true });
+// REMOVED UNIQUE INDEX TO PREVENT CONFLICTS DURING DEVELOPMENT
+// timeSlotSchema.index({ type: 1, photographer: 1, animalName: 1, date: 1, startTime: 1, endTime: 1 }, { unique: true });
 
 module.exports = mongoose.model('TimeSlot', timeSlotSchema);

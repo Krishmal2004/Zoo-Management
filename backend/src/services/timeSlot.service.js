@@ -5,8 +5,23 @@ const AppError = require('../utils/AppError');
 const populatePhotographer = { path: 'photographer', select: 'name specialty isActive' };
 
 const createTimeSlot = async (payload) => {
-  const slot = await TimeSlot.create(payload);
-  return slot.populate(populatePhotographer);
+  // Manual validation for conditional fields
+  if (payload.type === 'Photography' && !payload.photographer) {
+    throw new AppError('Photographer is required for photography slots', 400);
+  }
+  if (payload.type === 'Feeding' && !payload.animalName) {
+    throw new AppError('Animal name is required for feeding slots', 400);
+  }
+
+  try {
+    const slot = await TimeSlot.create(payload);
+    return slot.populate(populatePhotographer);
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new AppError('This time slot already exists.', 400);
+    }
+    throw error;
+  }
 };
 
 const getAllTimeSlots = () => TimeSlot.find().populate(populatePhotographer).sort({ createdAt: -1 });
@@ -29,7 +44,7 @@ const updateTimeSlot = async (id, payload) => {
   }
 
   const updatePayload = {};
-  ['isBooked', 'capacity', 'startTime', 'endTime', 'photographer', 'date'].forEach((field) => {
+  ['isBooked', 'capacity', 'startTime', 'endTime', 'photographer', 'date', 'type', 'animalName'].forEach((field) => {
     if (Object.prototype.hasOwnProperty.call(payload, field)) {
       updatePayload[field] = payload[field];
     }

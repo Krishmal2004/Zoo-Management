@@ -20,11 +20,15 @@ export default function TimeSlotManagementScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   
   // Form state
-  const [date, setDate] = useState('2026-05-01');
+  const [type, setType] = useState('Photography'); // Photography or Feeding
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('09:00');
   const [endTime, setEndTime] = useState('10:00');
   const [photographerId, setPhotographerId] = useState('');
+  const [animalName, setAnimalName] = useState('All');
   const [capacity, setCapacity] = useState('5');
+
+  const animals = ['Parrots', 'Deer', 'Giraffe', 'Zebra', 'All'];
 
   useEffect(() => {
     fetchData();
@@ -37,8 +41,8 @@ export default function TimeSlotManagementScreen() {
         apiClient.get('/time-slots'),
         apiClient.get('/photographers')
       ]);
-      setSlots(slotsRes.data.data);
-      setPhotographers(photogRes.data.data);
+      if (slotsRes.data.success) setSlots(slotsRes.data.data);
+      if (photogRes.data.success) setPhotographers(photogRes.data.data.filter(p => p.isActive));
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -47,46 +51,75 @@ export default function TimeSlotManagementScreen() {
   };
 
   const handleCreate = async () => {
-    if (!photographerId) {
+    if (type === 'Photography' && !photographerId) {
       Alert.alert('Error', 'Please select a photographer.');
       return;
     }
 
     try {
       const payload = {
+        type,
         date,
         startTime,
         endTime,
-        photographer: photographerId,
-        capacity: parseInt(capacity)
+        photographer: type === 'Photography' ? photographerId : null,
+        animalName: type === 'Feeding' ? animalName : null,
+        capacity: parseInt(capacity) || 1
       };
-      await apiClient.post('/time-slots', payload);
-      Alert.alert('Success', 'Time slot created.');
-      setModalVisible(false);
-      fetchData();
+      
+      const response = await apiClient.post('/time-slots', payload);
+      
+      if (response.data.success) {
+        Alert.alert('Success', `${type} slot created successfully.`);
+        setModalVisible(false);
+        fetchData();
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to create time slot.');
+      console.error('Error creating slot:', error.response?.data || error.message);
+      const errorMsg = error.response?.data?.message || 'Failed to create time slot. Please check your inputs.';
+      Alert.alert('Error', errorMsg);
     }
+  };
+
+  const handleDelete = (id) => {
+    Alert.alert('Delete Slot', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          await apiClient.delete(`/time-slots/${id}`);
+          fetchData();
+        } catch (error) {
+          Alert.alert('Error', 'Failed to delete slot.');
+        }
+      }}
+    ]);
   };
 
   const renderSlot = ({ item }) => (
     <View style={styles.card}>
-      <View>
-        <Text style={styles.slotTime}>{item.startTime} - {item.endTime}</Text>
+      <View style={{ flex: 1 }}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.slotTime}>{item.startTime} - {item.endTime}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: item.type === 'Feeding' ? '#FFF3E0' : '#E3F2FD' }]}>
+            <Text style={[styles.typeText, { color: item.type === 'Feeding' ? '#E65100' : '#1565C0' }]}>{item.type}</Text>
+          </View>
+        </View>
         <Text style={styles.slotDate}>{new Date(item.date).toLocaleDateString()}</Text>
-        <Text style={styles.slotPhotog}>📸 {item.photographer?.name || 'Assigned'}</Text>
+        <Text style={styles.slotDetail}>
+          {item.type === 'Photography' ? `📸 ${item.photographer?.name || 'Unknown'}` : `🦁 Animal: ${item.animalName || 'All'}`}
+        </Text>
       </View>
-      <View style={styles.statusBadge}>
-        <Text style={styles.statusText}>{item.isBooked ? 'Booked' : 'Available'}</Text>
-      </View>
+      <TouchableOpacity onPress={() => handleDelete(item._id)} style={styles.deleteIcon}>
+        <Text style={{ color: '#F44336', fontWeight: 'bold' }}>✕</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Time Slots</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+        <Text style={styles.title}>Slot Management</Text>
+        <TouchableOpacity style={styles.addBtn} onPress={() => { setModalVisible(true); setPhotographerId(''); }}>
           <Text style={styles.addBtnText}>+ New Slot</Text>
         </TouchableOpacity>
       </View>
@@ -99,52 +132,87 @@ export default function TimeSlotManagementScreen() {
           keyExtractor={(item) => item._id}
           renderItem={renderSlot}
           contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.empty}>No slots created yet.</Text>}
         />
       )}
 
-      <Modal visible={modalVisible} animationType="fade" transparent>
+      <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create New Slot</Text>
-            
-            <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-            <TextInput style={styles.input} value={date} onChangeText={setDate} />
-            
-            <View style={styles.row}>
-              <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.label}>Start (HH:mm)</Text>
-                <TextInput style={styles.input} value={startTime} onChangeText={setStartTime} />
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalTitle}>Create New Slot</Text>
+              
+              <Text style={styles.label}>Slot Type</Text>
+              <View style={styles.row}>
+                {['Photography', 'Feeding'].map(t => (
+                  <TouchableOpacity 
+                    key={t}
+                    style={[styles.typeOption, type === t && styles.activeTypeOption]}
+                    onPress={() => setType(t)}
+                  >
+                    <Text style={[styles.typeOptionText, type === t && styles.activeTypeOptionText]}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.label}>End (HH:mm)</Text>
-                <TextInput style={styles.input} value={endTime} onChangeText={setEndTime} />
+
+              <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
+              <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="2026-05-01" />
+              
+              <View style={styles.row}>
+                <View style={{ flex: 1, marginRight: 10 }}>
+                  <Text style={styles.label}>Start (HH:mm)</Text>
+                  <TextInput style={styles.input} value={startTime} onChangeText={setStartTime} placeholder="09:00" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>End (HH:mm)</Text>
+                  <TextInput style={styles.input} value={endTime} onChangeText={setEndTime} placeholder="10:00" />
+                </View>
               </View>
-            </View>
 
-            <Text style={styles.label}>Capacity</Text>
-            <TextInput style={styles.input} value={capacity} onChangeText={setCapacity} keyboardType="numeric" />
+              <Text style={styles.label}>Capacity</Text>
+              <TextInput style={styles.input} value={capacity} onChangeText={setCapacity} keyboardType="numeric" />
 
-            <Text style={styles.label}>Select Photographer</Text>
-            <ScrollView horizontal style={styles.photogList}>
-              {photographers.map(p => (
-                <TouchableOpacity 
-                  key={p._id} 
-                  style={[styles.photogChip, photographerId === p._id && styles.activeChip]}
-                  onPress={() => setPhotographerId(p._id)}
-                >
-                  <Text style={[styles.chipText, photographerId === p._id && styles.activeChipText]}>{p.name}</Text>
+              {type === 'Photography' ? (
+                <>
+                  <Text style={styles.label}>Assign Photographer</Text>
+                  <ScrollView horizontal style={styles.chipList} showsHorizontalScrollIndicator={false}>
+                    {photographers.map(p => (
+                      <TouchableOpacity 
+                        key={p._id} 
+                        style={[styles.chip, photographerId === p._id && styles.activeChip]}
+                        onPress={() => setPhotographerId(p._id)}
+                      >
+                        <Text style={[styles.chipText, photographerId === p._id && styles.activeChipText]}>{p.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>Assign Animal</Text>
+                  <ScrollView horizontal style={styles.chipList} showsHorizontalScrollIndicator={false}>
+                    {animals.map(a => (
+                      <TouchableOpacity 
+                        key={a} 
+                        style={[styles.chip, animalName === a && styles.activeChip]}
+                        onPress={() => setAnimalName(a)}
+                      >
+                        <Text style={[styles.chipText, animalName === a && styles.activeChipText]}>{a}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
+
+              <View style={styles.modalBtns}>
+                <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
                 </TouchableOpacity>
-              ))}
+                <TouchableOpacity style={styles.saveBtn} onPress={handleCreate}>
+                  <Text style={styles.saveBtnText}>Create Slot</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
-
-            <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleCreate}>
-                <Text style={styles.saveBtnText}>Create</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
       </Modal>
@@ -156,30 +224,37 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: '#FFF' },
   title: { fontSize: 24, fontWeight: 'bold' },
-  addBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
+  addBtn: { backgroundColor: '#2196F3', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
   addBtnText: { color: '#FFF', fontWeight: 'bold' },
   list: { padding: 15 },
-  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 15, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 1 },
+  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 15, marginBottom: 12, flexDirection: 'row', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   slotTime: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  slotDate: { fontSize: 14, color: '#666' },
-  slotPhotog: { fontSize: 13, color: '#2196F3', marginTop: 4 },
-  statusBadge: { backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  statusText: { color: '#2E7D32', fontSize: 12, fontWeight: 'bold' },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  typeText: { fontSize: 10, fontWeight: 'bold' },
+  slotDate: { fontSize: 13, color: '#666' },
+  slotDetail: { fontSize: 13, color: '#2196F3', marginTop: 4, fontWeight: '500' },
+  deleteIcon: { padding: 10 },
   loader: { marginTop: 50 },
+  empty: { textAlign: 'center', marginTop: 50, color: '#999', fontStyle: 'italic' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#FFF', borderRadius: 16, padding: 20 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: 5 },
-  input: { backgroundColor: '#F0F2F5', borderRadius: 8, padding: 12, marginBottom: 15 },
-  row: { flexDirection: 'row' },
-  photogList: { flexDirection: 'row', marginBottom: 20 },
-  photogChip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, backgroundColor: '#EEE', marginRight: 8 },
-  activeChip: { backgroundColor: '#2196F3' },
-  chipText: { color: '#666' },
-  activeChipText: { color: '#FFF', fontWeight: 'bold' },
-  modalBtns: { flexDirection: 'row', justifyContent: 'space-between' },
+  modalContent: { backgroundColor: '#FFF', borderRadius: 16, padding: 20, maxHeight: '90%' },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  label: { fontSize: 14, fontWeight: '600', color: '#666', marginBottom: 8, marginTop: 5 },
+  input: { backgroundColor: '#F0F2F5', borderRadius: 8, padding: 12, marginBottom: 15, fontSize: 16 },
+  row: { flexDirection: 'row', marginBottom: 15 },
+  typeOption: { flex: 1, padding: 12, alignItems: 'center', backgroundColor: '#EEE', borderRadius: 8, marginRight: 10 },
+  activeTypeOption: { backgroundColor: '#2196F3' },
+  typeOptionText: { color: '#666', fontWeight: 'bold' },
+  activeTypeOptionText: { color: '#FFF' },
+  chipList: { flexDirection: 'row', marginBottom: 20 },
+  chip: { paddingHorizontal: 15, paddingVertical: 10, borderRadius: 20, backgroundColor: '#EEE', marginRight: 10, borderWidth: 1, borderColor: 'transparent' },
+  activeChip: { backgroundColor: '#E3F2FD', borderColor: '#2196F3' },
+  chipText: { color: '#666', fontSize: 13 },
+  activeChipText: { color: '#2196F3', fontWeight: 'bold' },
+  modalBtns: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
   cancelBtn: { flex: 1, padding: 15, alignItems: 'center' },
-  cancelBtnText: { color: '#666' },
+  cancelBtnText: { color: '#666', fontWeight: 'bold' },
   saveBtn: { flex: 1, backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, alignItems: 'center' },
   saveBtnText: { color: '#FFF', fontWeight: 'bold' },
 });
