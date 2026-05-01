@@ -22,7 +22,7 @@ export default function BookingScreen({ route, navigation }) {
   const [bookingType, setBookingType] = useState(initialType || 'Feeding');
   const [visitorName, setVisitorName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); 
+  const [date, setDate] = useState('2026-05-01'); 
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [participants, setParticipants] = useState('1');
   
@@ -42,7 +42,10 @@ export default function BookingScreen({ route, navigation }) {
         apiClient.get('/time-slots'),
         apiClient.get('/photographers')
       ]);
-      if (slotsRes.data.success) setAllSlots(slotsRes.data.data);
+      
+      if (slotsRes.data.success) {
+        setAllSlots(slotsRes.data.data);
+      }
       if (photogRes.data.success) {
         setPhotographers(photogRes.data.data.filter(p => p.isActive));
       }
@@ -53,14 +56,20 @@ export default function BookingScreen({ route, navigation }) {
     }
   };
 
-  // Filter slots by type, date, availability, and selected photographer/animal
+  // Robust filtering logic with normalization
   const availableSlots = allSlots.filter(slot => {
-    // 1. Match Type
-    if (slot.type !== bookingType) return false;
+    // 1. Match Type (Case-insensitive)
+    const sType = (slot.type || '').trim().toLowerCase();
+    const bType = bookingType.trim().toLowerCase();
+    if (sType !== bType) return false;
 
-    // 2. Match Date (compare YYYY-MM-DD only)
-    const slotDateStr = new Date(slot.date).toISOString().split('T')[0];
-    if (slotDateStr !== date) return false;
+    // 2. Match Date (Trim and compare)
+    let slotDateStr = slot.date;
+    if (typeof slotDateStr !== 'string') {
+      slotDateStr = new Date(slotDateStr).toISOString().split('T')[0];
+    }
+    
+    if (slotDateStr.trim() !== date.trim()) return false;
 
     // 3. Match Availability
     if (slot.isBooked) return false;
@@ -69,42 +78,28 @@ export default function BookingScreen({ route, navigation }) {
     if (bookingType === 'Photography') {
       return !selectedPhotographer || slot.photographer?._id === selectedPhotographer._id;
     } else {
-      // For Feeding, show slots for this specific animal or "All"
-      return !animal || slot.animalName === animal.name || slot.animalName === 'All';
+      const targetAnimal = (animal?.name || '').trim().toLowerCase();
+      const slotAnimal = (slot.animalName || '').trim().toLowerCase();
+      return slotAnimal === targetAnimal || slotAnimal === 'all';
     }
   });
 
   const handlePhotogSelect = (photog) => {
-    if (selectedPhotographer?._id === photog._id) {
-      setSelectedPhotographer(null);
-    } else {
-      setSelectedPhotographer(photog);
-    }
+    setSelectedPhotographer(selectedPhotographer?._id === photog._id ? null : photog);
     setSelectedSlotId('');
   };
 
-  if (!animal) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>No animal data found.</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   const handleConfirmBooking = async () => {
     if (!visitorName.trim() || !contactInfo.trim() || !selectedSlotId) {
-      Alert.alert('Missing Fields', 'Please fill in all fields before confirming.');
+      Alert.alert('Details Missing', 'Please fill in your name, contact, and select a slot.');
       return;
     }
 
     const selectedSlot = allSlots.find(s => s._id === selectedSlotId);
 
     try {
+      setLoading(true);
       const endpoint = bookingType === 'Feeding' ? '/feeding-bookings' : '/photography-bookings';
-      
       const payload = bookingType === 'Feeding' 
         ? {
             visitorName,
@@ -112,7 +107,7 @@ export default function BookingScreen({ route, navigation }) {
             animalName: animal.name,
             date: selectedSlot.date,
             timeSlot: `${selectedSlot.startTime} - ${selectedSlot.endTime}`,
-            numberOfParticipants: parseInt(participants)
+            numberOfParticipants: parseInt(participants) || 1
           }
         : {
             visitorName,
@@ -125,59 +120,41 @@ export default function BookingScreen({ route, navigation }) {
           };
 
       const response = await apiClient.post(endpoint, payload);
-
       if (response.data.success) {
-        // If it's a feeding booking, we might want to mark the slot as booked too
-        // (Though the service usually handles this for photography, we do it here for demo consistency)
         if (bookingType === 'Feeding') {
           await apiClient.patch(`/time-slots/${selectedSlot._id}`, { isBooked: true });
         }
-
-        Alert.alert(
-          'Booking Success!',
-          `Successfully booked a ${bookingType} session for ${animal.name}.`,
-          [{ text: 'OK', onPress: () => navigation.navigate('Encounters') }]
-        );
+        Alert.alert('Success!', 'Your session is booked.', [{ text: 'OK', onPress: () => navigation.navigate('Encounters') }]);
       }
     } catch (error) {
-      console.error('Booking error:', error);
-      Alert.alert('Error', 'Failed to confirm booking.');
+      Alert.alert('Error', 'Failed to book. Try again.');
+    } finally {
+      setLoading(false);
     }
   };
-
-  const renderPhotographer = ({ item }) => (
-    <TouchableOpacity 
-      style={[styles.photogChip, selectedPhotographer?._id === item._id && styles.activePhotogChip]}
-      onPress={() => handlePhotogSelect(item)}
-    >
-      <Text style={[styles.photogChipText, selectedPhotographer?._id === item._id && styles.activePhotogText]}>
-        {item.name}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView showsVerticalScrollIndicator={false}>
-          <Image source={{ uri: animal.image }} style={styles.image} />
+          {animal?.image && <Image source={{ uri: animal.image }} style={styles.image} />}
           
           <View style={styles.content}>
             <View style={styles.headerRow}>
-              <Text style={styles.title}>{animal.name}</Text>
+              <Text style={styles.title}>{animal?.name || 'Booking'}</Text>
               <View style={styles.typeBadge}>
                 <Text style={styles.typeBadgeText}>{bookingType}</Text>
               </View>
             </View>
 
             <View style={styles.formSection}>
-              <Text style={styles.sectionLabel}>Select Activity</Text>
+              <Text style={styles.sectionLabel}>Activity Type</Text>
               <View style={styles.tabContainer}>
                 {['Feeding', 'Photography'].map(t => (
                   <TouchableOpacity 
                     key={t}
                     style={[styles.tab, bookingType === t && styles.activeTab]}
-                    onPress={() => { setBookingType(t); setSelectedSlotId(''); setSelectedPhotographer(null); }}
+                    onPress={() => { setBookingType(t); setSelectedSlotId(''); }}
                   >
                     <Text style={[styles.tabText, bookingType === t && styles.activeTabText]}>{t}</Text>
                   </TouchableOpacity>
@@ -186,58 +163,18 @@ export default function BookingScreen({ route, navigation }) {
             </View>
 
             <View style={styles.formSection}>
-              <Text style={styles.sectionLabel}>Visitor Details</Text>
-              <TextInput style={styles.input} placeholder="Your Name" value={visitorName} onChangeText={setVisitorName} />
-              <TextInput style={styles.input} placeholder="Contact Info" value={contactInfo} onChangeText={setContactInfo} />
+              <Text style={styles.sectionLabel}>Your Details</Text>
+              <TextInput style={styles.input} placeholder="Name" value={visitorName} onChangeText={setVisitorName} />
+              <TextInput style={styles.input} placeholder="Phone/Email" value={contactInfo} onChangeText={setContactInfo} />
             </View>
 
-            {bookingType === 'Feeding' && (
-              <View style={styles.formSection}>
-                <Text style={styles.sectionLabel}>Participants (Max 20)</Text>
-                <TextInput 
-                  style={styles.input} 
-                  value={participants} 
-                  onChangeText={setParticipants} 
-                  keyboardType="numeric" 
-                  placeholder="1"
-                />
-              </View>
-            )}
-
             <View style={styles.formSection}>
-              <Text style={styles.sectionLabel}>Booking Date (YYYY-MM-DD)</Text>
+              <Text style={styles.sectionLabel}>Booking Date</Text>
               <TextInput style={styles.input} value={date} onChangeText={setDate} placeholder="2026-05-01" />
             </View>
 
-            {bookingType === 'Photography' && (
-              <>
-                <View style={styles.formSection}>
-                  <Text style={styles.sectionLabel}>Our Photographers</Text>
-                  <FlatList
-                    data={photographers}
-                    renderItem={renderPhotographer}
-                    keyExtractor={item => item._id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.photogList}
-                  />
-                </View>
-
-                {selectedPhotographer && (
-                  <View style={styles.photogSpotlight}>
-                    <View style={styles.spotlightHeader}>
-                      <Text style={styles.spotlightName}>{selectedPhotographer.name}</Text>
-                      <Text style={styles.spotlightRate}>Rs.{selectedPhotographer.hourlyRate}/hr</Text>
-                    </View>
-                    <Text style={styles.spotlightSpecialty}>Specialty: {selectedPhotographer.specialty}</Text>
-                    <Text style={styles.spotlightRating}>⭐ {selectedPhotographer.rating} ({selectedPhotographer.ratingCount} reviews)</Text>
-                  </View>
-                )}
-              </>
-            )}
-
             <View style={styles.formSection}>
-              <Text style={styles.sectionLabel}>Available {bookingType} Slots</Text>
+              <Text style={styles.sectionLabel}>Available Slots</Text>
               {loading ? (
                 <ActivityIndicator color="#2196F3" />
               ) : availableSlots.length > 0 ? (
@@ -251,14 +188,20 @@ export default function BookingScreen({ route, navigation }) {
                       <Text style={[styles.slotTime, selectedSlotId === slot._id && styles.activeSlotText]}>
                         {slot.startTime} - {slot.endTime}
                       </Text>
-                      <Text style={[styles.slotPhotog, selectedSlotId === slot._id && styles.activeSlotText]}>
+                      <Text style={[styles.slotDetail, selectedSlotId === slot._id && styles.activeSlotText]}>
                         {slot.type === 'Photography' ? (slot.photographer?.name || 'Assigned') : (slot.animalName || 'Feeding')}
                       </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
               ) : (
-                <Text style={styles.noSlotsText}>No {bookingType.toLowerCase()} slots available for this selection.</Text>
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No {bookingType} slots for {date}.</Text>
+                  <Text style={styles.emptySub}>Total slots in DB: {allSlots.length}</Text>
+                  {allSlots.length > 0 && (
+                    <Text style={styles.hint}>Check if animal name "{animal?.name}" matches Admin selection.</Text>
+                  )}
+                </View>
               )}
             </View>
 
@@ -267,7 +210,7 @@ export default function BookingScreen({ route, navigation }) {
               onPress={handleConfirmBooking}
               disabled={!selectedSlotId}
             >
-              <Text style={styles.confirmButtonText}>Confirm {bookingType} Booking</Text>
+              <Text style={styles.confirmButtonText}>Confirm Booking</Text>
             </TouchableOpacity>
             
             <View style={{ height: 40 }} />
@@ -280,43 +223,31 @@ export default function BookingScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7FA' },
-  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  errorText: { fontSize: 18, color: '#666', marginBottom: 20 },
-  backButton: { paddingVertical: 12, paddingHorizontal: 24, backgroundColor: '#2196F3', borderRadius: 8 },
-  backButtonText: { color: '#fff', fontWeight: 'bold' },
-  image: { width: '100%', height: 220, resizeMode: 'cover' },
-  content: { padding: 20, marginTop: -20, backgroundColor: '#F5F7FA', borderTopLeftRadius: 25, borderTopRightRadius: 25, flex: 1 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1A1A1A' },
-  typeBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  typeBadgeText: { color: '#2196F3', fontWeight: '700', fontSize: 12, textTransform: 'uppercase' },
+  image: { width: '100%', height: 220 },
+  content: { padding: 20, marginTop: -20, backgroundColor: '#F5F7FA', borderTopLeftRadius: 25, borderTopRightRadius: 25 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: 'bold' },
+  typeBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 15 },
+  typeBadgeText: { color: '#2196F3', fontWeight: 'bold', fontSize: 12 },
   formSection: { marginBottom: 20 },
-  sectionLabel: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 10 },
-  tabContainer: { flexDirection: 'row', backgroundColor: '#EEE', borderRadius: 10, padding: 4 },
-  tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
-  activeTab: { backgroundColor: '#FFF', elevation: 2 },
-  tabText: { color: '#666', fontWeight: '600' },
+  sectionLabel: { fontSize: 15, fontWeight: 'bold', color: '#444', marginBottom: 10 },
+  tabContainer: { flexDirection: 'row', backgroundColor: '#EEE', borderRadius: 8, padding: 3 },
+  tab: { flex: 1, paddingVertical: 8, alignItems: 'center', borderRadius: 6 },
+  activeTab: { backgroundColor: '#FFF' },
+  tabText: { color: '#666', fontWeight: 'bold' },
   activeTabText: { color: '#2196F3' },
-  input: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', borderRadius: 10, paddingHorizontal: 15, paddingVertical: 12, fontSize: 16, marginBottom: 10 },
-  photogList: { paddingVertical: 5 },
-  photogChip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', marginRight: 10 },
-  activePhotogChip: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
-  photogChipText: { color: '#666', fontWeight: '600' },
-  activePhotogText: { color: '#FFF' },
-  photogSpotlight: { backgroundColor: '#FFF', borderRadius: 15, padding: 15, marginBottom: 20, borderWidth: 1, borderColor: '#E3F2FD' },
-  spotlightHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  spotlightName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  spotlightRate: { fontSize: 16, color: '#4CAF50', fontWeight: '700' },
-  spotlightSpecialty: { fontSize: 14, color: '#666', marginBottom: 4 },
-  spotlightRating: { fontSize: 14, color: '#FFA000', fontWeight: '600' },
-  slotsContainer: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -5 },
-  slot: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', borderRadius: 8, padding: 12, margin: 5, width: '47%', alignItems: 'center' },
+  input: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', borderRadius: 8, padding: 12, fontSize: 16, marginBottom: 10 },
+  slotsContainer: { flexDirection: 'row', flexWrap: 'wrap' },
+  slot: { backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DDD', borderRadius: 8, padding: 12, margin: 5, width: '46%', alignItems: 'center' },
   activeSlot: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
-  slotTime: { color: '#444', fontSize: 14, fontWeight: 'bold' },
-  slotPhotog: { color: '#666', fontSize: 11, marginTop: 4 },
+  slotTime: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+  slotDetail: { fontSize: 11, color: '#666', marginTop: 4 },
   activeSlotText: { color: '#FFF' },
-  noSlotsText: { color: '#999', fontStyle: 'italic', textAlign: 'center', padding: 20 },
-  confirmButton: { backgroundColor: '#4CAF50', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-  confirmButtonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  emptyContainer: { padding: 20, alignItems: 'center', backgroundColor: '#F0F0F0', borderRadius: 10 },
+  emptyText: { color: '#666', fontWeight: 'bold' },
+  emptySub: { color: '#999', fontSize: 12, marginTop: 5 },
+  hint: { color: '#2196F3', fontSize: 11, marginTop: 10, textAlign: 'center' },
+  confirmButton: { backgroundColor: '#4CAF50', padding: 16, borderRadius: 12, alignItems: 'center' },
+  confirmButtonText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
   disabledButton: { backgroundColor: '#CCC' },
 });
