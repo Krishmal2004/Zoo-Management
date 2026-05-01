@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking, ImageBackground, Dimensions } from 'react-native';
+import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking, ImageBackground, Dimensions, RefreshControl } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width / 2 - 24;
@@ -8,16 +8,19 @@ import AnimalCard from '../../components/animals/AnimalCard';
 import CategoryFilter from '../../components/animals/CategoryFilter';
 import { Ionicons } from '@expo/vector-icons';
 
+import { useFocusEffect } from '@react-navigation/native';
+
 const AnimalsListScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('information'); // 'information' or 'education'
   
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
-  const loadAnimals = async () => {
-    setLoading(true);
+  const loadAnimals = async (isRefreshing = false) => {
+    if (!isRefreshing) setLoading(true);
     try {
       const response = await fetchAnimals(search, category);
       setAnimals(response.data);
@@ -25,15 +28,21 @@ const AnimalsListScreen = ({ navigation }) => {
       console.error(error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  // Sync Data: Refresh every time the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
       loadAnimals();
-    }, 500); // debounce search
-    return () => clearTimeout(timer);
-  }, [search, category]);
+    }, [search, category])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadAnimals(true);
+  };
 
   const educationItems = useMemo(() => {
     const items = [];
@@ -139,6 +148,9 @@ const AnimalsListScreen = ({ navigation }) => {
               columnWrapperStyle={styles.row}
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
+              }
             />
           )}
         </>
@@ -162,6 +174,9 @@ const AnimalsListScreen = ({ navigation }) => {
               columnWrapperStyle={styles.row}
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
+              }
             />
           )}
         </View>
