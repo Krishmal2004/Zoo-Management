@@ -11,6 +11,7 @@ import AddFeedbackScreen from '../screens/feedback/AddFeedbackScreen';
 import InquiryListScreen from '../screens/feedback/InquiryListScreen';
 import AddInquiryScreen from '../screens/feedback/AddInquiryScreen';
 import ReviewListScreen from '../screens/feedback/ReviewListScreen';
+import AddReviewScreen from '../screens/feedback/AddReviewScreen';
 import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
 import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
 import StorePlaceholder from '../screens/store/StorePlaceholder';
@@ -32,6 +33,7 @@ export default function AppStack() {
       <Stack.Screen name="InquiryList" component={InquiryListScreen} options={{ title: 'My Inquiries' }} />
       <Stack.Screen name="AddInquiry" component={AddInquiryScreen} options={{ title: 'Submit Inquiry' }} />
       <Stack.Screen name="ReviewList" component={ReviewListScreen} options={{ title: 'My Reviews' }} />
+      <Stack.Screen name="AddReview" component={AddReviewScreen} options={{ title: 'Submit Review' }} />
       <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
       <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
       <Stack.Screen name="Store" component={StorePlaceholder} options={{ title: 'Online Store' }} />
