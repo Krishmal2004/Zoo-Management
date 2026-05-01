@@ -5,6 +5,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getAllEvents, deleteEvent } from "../../../api/events.api";
+import { getApiBaseUrl } from "../../../api/getApiBaseUrl";
 
 function useFocusRefresh(navigation, fetchFn) {
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function AdminEventManagementScreen({ navigation }) {
   const [events, setEvents]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const uploadsBaseUrl = getApiBaseUrl().replace(/\/api\/?$/i, "");
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -57,7 +59,7 @@ export default function AdminEventManagementScreen({ navigation }) {
           item.imageUrl
             ? { uri: item.imageUrl.startsWith("http")
                 ? item.imageUrl
-                : `${process.env.EXPO_PUBLIC_API_URL}${item.imageUrl}` }
+                : `${uploadsBaseUrl}${item.imageUrl.startsWith("/uploads/") && !item.imageUrl.startsWith("/uploads/events/") ? item.imageUrl.replace("/uploads/", "/uploads/events/") : item.imageUrl}` }
             : { uri: "https://placehold.co/400x200/2D6A4F/white?text=Event" }
         }
         style={styles.cardImage}

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getAllEvents } from "../../api/events.api";
+import { getApiBaseUrl } from "../../api/getApiBaseUrl";
 
 const EVENT_TYPES = ["All", "Wedding", "Birthday", "Corporate", "Anniversary", "Graduation", "Other"];
 
@@ -33,6 +34,8 @@ export default function EventsListScreen({ navigation }) {
   const [search, setSearch]       = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [activeTab, setActiveTab] = useState("events"); // "events" | "bookings"
+  // API base includes `/api`, but uploaded files are served from `/uploads` (outside `/api`).
+  const uploadsBaseUrl = getApiBaseUrl().replace(/\/api\/?$/i, "");
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -83,13 +86,15 @@ export default function EventsListScreen({ navigation }) {
   const renderEvent = ({ item }) => (
     (() => {
       const rawImageUrl = item?.imageUrl;
+      const cacheBuster =
+        item?.updatedAt || item?.createdAt ? new Date(item.updatedAt || item.createdAt).getTime() : Date.now();
       const resolvedImageUri = rawImageUrl
         ? (typeof rawImageUrl === "string" && rawImageUrl.startsWith("http")
           ? rawImageUrl
-          : `${process.env.EXPO_PUBLIC_API_URL}${rawImageUrl}`)
+          : `${uploadsBaseUrl}${rawImageUrl.startsWith("/uploads/") && !rawImageUrl.startsWith("/uploads/events/")
+              ? rawImageUrl.replace("/uploads/", "/uploads/events/")
+              : rawImageUrl}`) + `?t=${cacheBuster}`
         : "https://placehold.co/400x200/1B4332/white?text=Zoo+Event";
-
-      console.log("[EventsListScreen] render event imageUrl:", rawImageUrl, "=>", resolvedImageUri);
 
       return (
     <TouchableOpacity

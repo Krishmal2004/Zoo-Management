@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getEventById } from "../../api/events.api";
+import { getApiBaseUrl } from "../../api/getApiBaseUrl";
 
 const TYPE_ICONS = {
   All:         "apps-outline",
@@ -27,6 +28,8 @@ export default function EventDetailScreen({ route, navigation }) {
   const { eventId } = route.params;
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  // API base includes `/api`, but uploaded files are served from `/uploads` (outside `/api`).
+  const uploadsBaseUrl = getApiBaseUrl().replace(/\/api\/?$/i, "");
 
   useEffect(() => {
     (async () => {
@@ -52,13 +55,15 @@ export default function EventDetailScreen({ route, navigation }) {
   if (!event) return null;
 
   const rawImageUrl = event?.imageUrl;
+  const cacheBuster =
+    event?.updatedAt || event?.createdAt ? new Date(event.updatedAt || event.createdAt).getTime() : Date.now();
   const resolvedImageUri = rawImageUrl
     ? (typeof rawImageUrl === "string" && rawImageUrl.startsWith("http")
       ? rawImageUrl
-      : `${process.env.EXPO_PUBLIC_API_URL}${rawImageUrl}`)
+      : `${uploadsBaseUrl}${rawImageUrl.startsWith("/uploads/") && !rawImageUrl.startsWith("/uploads/events/")
+          ? rawImageUrl.replace("/uploads/", "/uploads/events/")
+          : rawImageUrl}`) + `?t=${cacheBuster}`
     : "https://placehold.co/400x300/2D6A4F/white?text=Zoo+Event";
-
-  console.log("[EventDetailScreen] hero imageUrl:", rawImageUrl, "=>", resolvedImageUri);
 
   return (
     <View style={styles.container}>

@@ -21,7 +21,7 @@ const createEvent = asyncHandler(async (req, res) => {
 
   // Priority: uploaded file > URL from body > null
   const imageUrl = req.file
-    ? `/uploads/${req.file.filename}`
+    ? `/uploads/events/${req.file.filename}`
     : (req.body.imageUrl || null);
 
   const event = await Event.create({
@@ -101,7 +101,7 @@ const updateEvent = asyncHandler(async (req, res) => {
   if (updates.pricePerPerson) updates.pricePerPerson = Number(updates.pricePerPerson);
 
   // Handle image — uploaded file takes priority over URL
-  if (req.file)               updates.imageUrl = `/uploads/${req.file.filename}`;
+  if (req.file)               updates.imageUrl = `/uploads/events/${req.file.filename}`;
   else if (updates.imageUrl)  updates.imageUrl = updates.imageUrl; // keep as-is (URL string)
 
   const event = await Event.findByIdAndUpdate(req.params.id, updates, {
