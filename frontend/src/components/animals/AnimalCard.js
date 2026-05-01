@@ -1,22 +1,23 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ImageBackground, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width / 2 - 24; // 2 columns with padding
 
 const AnimalCard = ({ animal, onPress }) => {
-  const imageUrl = animal.images && animal.images.length > 0 ? animal.images[0] : 'https://via.placeholder.com/150';
+  const imageUrl = animal.images && animal.images.length > 0 ? animal.images[0] : 'https://via.placeholder.com/300';
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      <Image source={{ uri: imageUrl }} style={styles.image} />
-      <View style={styles.infoContainer}>
-        <Text style={styles.name} numberOfLines={1}>{animal.name}</Text>
-        <Text style={styles.species} numberOfLines={1}>{animal.species}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{animal.category}</Text>
+      <ImageBackground source={{ uri: imageUrl }} style={styles.imageBackground} resizeMode="cover">
+        <View style={styles.overlay}>
+          <Text style={styles.name} numberOfLines={1}>{animal.name}</Text>
+          <Text style={styles.species} numberOfLines={1}>{animal.species}</Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{animal.category}</Text>
+          </View>
         </View>
-      </View>
+      </ImageBackground>
     </TouchableOpacity>
   );
 };
@@ -24,6 +25,7 @@ const AnimalCard = ({ animal, onPress }) => {
 const styles = StyleSheet.create({
   card: {
     width: cardWidth,
+    height: cardWidth, // Make it a perfect square
     backgroundColor: '#fff',
     borderRadius: 16,
     marginBottom: 16,
@@ -34,29 +36,30 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
-  image: {
+  imageBackground: {
     width: '100%',
-    height: 120,
-    backgroundColor: '#f0f0f0',
+    height: '100%',
+    justifyContent: 'flex-end', // Align the overlay to the bottom
   },
-  infoContainer: {
+  overlay: {
     padding: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
   },
   name: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 2,
     fontFamily: 'Dosis_700Bold',
   },
   species: {
     fontSize: 12,
-    color: '#666',
+    color: '#ddd',
     fontStyle: 'italic',
     marginBottom: 8,
   },
   badge: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -64,9 +67,10 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    color: '#2E7D32',
+    color: '#fff',
     fontWeight: '600',
   },
 });
 
 export default AnimalCard;
+

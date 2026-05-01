@@ -95,6 +95,96 @@ const mockAnimals = [
         url: 'https://study.com/academy/practice/quiz-worksheet-rainforest-birds.html',
       }
     ]
+  },
+  {
+    name: 'Giant Panda',
+    species: 'Ailuropoda melanoleuca',
+    category: 'Mammal',
+    images: ['https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?q=80&w=1000&auto=format&fit=crop'],
+    description: 'The giant panda is a bear species endemic to China, known for its distinctive black-and-white coat.',
+    habitat: 'Mountainous regions of central China.',
+    diet: 'Herbivore - 99% bamboo.',
+    funFacts: ['Pandas spend up to 14 hours a day eating bamboo.', 'Newborn pandas are the size of a stick of butter.'],
+    conservationStatus: 'Vulnerable',
+    educationContent: [
+      {
+        type: 'video',
+        title: 'Panda Cub Playing',
+        url: 'https://www.youtube.com/watch?v=sGF6bOi1NfA',
+      }
+    ]
+  },
+  {
+    name: 'Emperor Penguin',
+    species: 'Aptenodytes forsteri',
+    category: 'Bird',
+    images: ['https://images.unsplash.com/photo-1598439210625-5067c578f3f6?q=80&w=1000&auto=format&fit=crop'],
+    description: 'The tallest and heaviest of all living penguin species and is endemic to Antarctica.',
+    habitat: 'Ice and frigid waters of Antarctica.',
+    diet: 'Carnivore - mainly fish, krill, and squid.',
+    funFacts: ['They can dive up to 500 meters deep.', 'Males incubate the egg for two months without eating.'],
+    conservationStatus: 'Near Threatened',
+    educationContent: [
+      {
+        type: 'article',
+        title: 'How Emperor Penguins Survive the Cold',
+        url: 'https://en.wikipedia.org/wiki/Emperor_penguin',
+      }
+    ]
+  },
+  {
+    name: 'Poison Dart Frog',
+    species: 'Dendrobatidae',
+    category: 'Amphibian',
+    images: ['https://images.unsplash.com/photo-1628169229045-812066fa4ce9?q=80&w=1000&auto=format&fit=crop'],
+    description: 'Small, brightly colored frogs whose vivid colors serve as a warning of their toxicity.',
+    habitat: 'Humid, tropical environments of Central and South America.',
+    diet: 'Carnivore - spiders, ants, and termites.',
+    funFacts: ['Their poison comes from their diet of ants and mites.', 'One frog contains enough poison to kill 10 adults.'],
+    conservationStatus: 'Vulnerable',
+    educationContent: [
+      {
+        type: 'quiz',
+        title: 'Amphibian Facts Quiz',
+        url: 'https://games.nationalgeographic.com/trivia/amphibians',
+      }
+    ]
+  },
+  {
+    name: 'Great White Shark',
+    species: 'Carcharodon carcharias',
+    category: 'Fish',
+    images: ['https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1000&auto=format&fit=crop'],
+    description: 'A large mackerel shark found in the coastal surface waters of all the major oceans.',
+    habitat: 'Coastal and offshore waters with temperatures between 12 and 24 °C.',
+    diet: 'Carnivore - marine mammals, fish, and seabirds.',
+    funFacts: ['They can detect one drop of blood in 100 liters of water.', 'They have up to 300 serrated, triangular teeth.'],
+    conservationStatus: 'Vulnerable',
+    educationContent: [
+      {
+        type: 'video',
+        title: 'Great White Shark Breaching',
+        url: 'https://www.youtube.com/watch?v=yjd-wZ9s_2E',
+      }
+    ]
+  },
+  {
+    name: 'Monarch Butterfly',
+    species: 'Danaus plexippus',
+    category: 'Insect',
+    images: ['https://images.unsplash.com/photo-1560064161-12c8b7f86eb8?q=80&w=1000&auto=format&fit=crop'],
+    description: 'A milkweed butterfly known for its iconic orange and black wings and remarkable migration.',
+    habitat: 'Meadows, prairies, and anywhere milkweed grows.',
+    diet: 'Herbivore - nectar from flowers.',
+    funFacts: ['They undertake a massive multi-generational migration.', 'Caterpillars only eat milkweed.'],
+    conservationStatus: 'Endangered',
+    educationContent: [
+      {
+        type: 'activity',
+        title: 'Draw a Butterfly Activity',
+        url: 'https://www.artforkidshub.com/how-to-draw-a-monarch-butterfly/',
+      }
+    ]
   }
 ];
 
