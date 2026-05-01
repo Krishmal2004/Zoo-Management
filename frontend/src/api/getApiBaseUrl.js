@@ -170,3 +170,8 @@ export function getApiBaseUrl() {
   const fallback = `http://localhost:${DEFAULT_PORT}${API_SUFFIX}`;
   return fromEnv || fallback;
 }
+
+export function getStaticBaseUrl() {
+  const apiBase = getApiBaseUrl();
+  return apiBase.replace(/\/api$/, '');
+}

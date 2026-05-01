@@ -8,6 +8,7 @@ import EncounterPhotographyDashboard from '../screens/admin/EncounterPhotography
 import PhotographerManagementScreen from '../screens/admin/PhotographerManagementScreen';
 import TimeSlotManagementScreen from '../screens/admin/TimeSlotManagementScreen';
 import PhotographyBookingManagementScreen from '../screens/admin/PhotographyBookingManagementScreen';
+import AnimalManagementScreen from '../screens/admin/AnimalManagementScreen';
 import { stackScreenOptions } from './screenOptions';
 
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,11 @@ export default function AdminStack() {
         name="PhotoUpload" 
         component={PhotoUploadScreen} 
         options={{ title: 'Upload Photos' }} 
+      />
+      <Stack.Screen 
+        name="AnimalManagement" 
+        component={AnimalManagementScreen} 
+        options={{ title: 'Manage Encounter Animals' }} 
       />
 
       <Stack.Screen

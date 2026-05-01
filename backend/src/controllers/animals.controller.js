@@ -4,13 +4,25 @@ const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 
 exports.addAnimal = asyncHandler(async (req, res) => {
-  const animal = await Animal.create(req.body);
+  console.log('--- ANIMAL ADD ---');
+  let fileName = '';
+  if (req.file) {
+    fileName = req.file.filename;
+  } else if (req.files && req.files.length > 0) {
+    fileName = req.files[0].filename;
+  }
 
-  res.status(201).json({
-    success: true,
-    message: 'Animal added successfully',
-    data: animal,
-  });
+  const animalData = { 
+    ...req.body,
+    imageUrl: fileName ? `/uploads/animals/${fileName}` : '/uploads/animals/default.jpg'
+  };
+
+  try {
+    const animal = await Animal.create(animalData);
+    res.status(201).json({ success: true, message: 'Saved!', data: animal });
+  } catch (err) {
+    res.status(200).json({ success: false, message: err.message });
+  }
 });
 
 exports.getAllAnimals = asyncHandler(async (req, res) => {
@@ -18,91 +30,51 @@ exports.getAllAnimals = asyncHandler(async (req, res) => {
   if (req.query.species) {
     query.species = { $regex: req.query.species.trim(), $options: 'i' };
   }
-
   const animals = await Animal.find(query).sort({ createdAt: -1 });
-
-  res.status(200).json({
-    success: true,
-    count: animals.length,
-    data: animals,
-  });
+  res.status(200).json({ success: true, data: animals });
 });
 
 exports.getAnimalById = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError('Invalid animal ID', 400);
-  }
-
-  const animal = await Animal.findById(id);
-  if (!animal) {
-    throw new AppError('Animal not found', 404);
-  }
-
-  res.status(200).json({
-    success: true,
-    data: animal,
-  });
+  const animal = await Animal.findById(req.params.id);
+  res.status(200).json({ success: true, data: animal });
 });
 
 exports.updateAnimal = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError('Invalid animal ID', 400);
-  }
-
-  const updatedAnimal = await Animal.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!updatedAnimal) {
-    throw new AppError('Animal not found', 404);
-  }
-
-  res.status(200).json({
-    success: true,
-    message: 'Animal updated successfully',
-    data: updatedAnimal,
-  });
+  const updateData = { ...req.body };
+  if (req.file) updateData.imageUrl = `/uploads/animals/${req.file.filename}`;
+  
+  const updatedAnimal = await Animal.findByIdAndUpdate(req.params.id, updateData, { new: true });
+  res.status(200).json({ success: true, data: updatedAnimal });
 });
 
 exports.deleteAnimal = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError('Invalid animal ID', 400);
-  }
+  console.log('--- ATTEMPTING DELETE ---');
+  console.log('ID received:', id);
 
-  const deletedAnimal = await Animal.findByIdAndDelete(id);
-  if (!deletedAnimal) {
-    throw new AppError('Animal not found', 404);
-  }
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(200).json({ success: false, message: 'Invalid ID format' });
+    }
 
-  res.status(200).json({
-    success: true,
-    message: 'Animal deleted successfully',
-  });
+    const deletedAnimal = await Animal.findByIdAndDelete(id);
+    console.log('Delete result:', !!deletedAnimal);
+
+    if (!deletedAnimal) {
+      return res.status(200).json({ success: false, message: 'Animal not found in database' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Animal deleted successfully'
+    });
+  } catch (err) {
+    console.error('Delete Error:', err);
+    res.status(200).json({ success: false, message: 'Server error: ' + err.message });
+  }
 });
 
 exports.markAnimalUnavailable = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new AppError('Invalid animal ID', 400);
-  }
-
-  const animal = await Animal.findByIdAndUpdate(
-    id,
-    { isAvailableForPhotography: false },
-    { new: true, runValidators: true }
-  );
-
-  if (!animal) {
-    throw new AppError('Animal not found', 404);
-  }
-
-  res.status(200).json({
-    success: true,
-    message: 'Animal marked as unavailable for photography',
-    data: animal,
-  });
+  const animal = await Animal.findByIdAndUpdate(req.params.id, { isAvailableForPhotography: false }, { new: true });
+  res.status(200).json({ success: true, data: animal });
 });

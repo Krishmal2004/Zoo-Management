@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   FlatList, 
@@ -6,38 +6,38 @@ import {
   Text, 
   SafeAreaView, 
   StatusBar, 
-  TouchableOpacity 
+  TouchableOpacity,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import AnimalCard from '../../components/AnimalCard';
-
-const animals = [
-  {
-    id: '1',
-    name: 'Parrots',
-    description: 'Get up close and personal with our colorful and intelligent parrots. Experience the joy of feeding them directly from your hands.',
-    image: 'https://images.unsplash.com/photo-1522814041793-1df25026210f?auto=format&fit=crop&q=80&w=600',
-  },
-  {
-    id: '2',
-    name: 'Deer',
-    description: 'Enjoy a peaceful encounter with our gentle deer herd. A perfect opportunity for families to connect with nature.',
-    image: 'https://images.unsplash.com/photo-1484406561678-5a49c63b4fec?auto=format&fit=crop&q=80&w=600',
-  },
-  {
-    id: '3',
-    name: 'Giraffe',
-    description: 'Stand eye-to-eye with these gentle giants! Book an exclusive feeding session and capture the perfect towering selfie.',
-    image: 'https://images.unsplash.com/photo-1547474261-24874da80b0c?auto=format&fit=crop&q=80&w=600',
-  },
-  {
-    id: '4',
-    name: 'Zebra',
-    description: 'Witness the striking patterns of our zebras in a guided photography session. Capture stunning wildlife moments.',
-    image: 'https://images.unsplash.com/photo-1526437340632-47525287f3bd?auto=format&fit=crop&q=80&w=600',
-  },
-];
+import apiClient from '../../api/client';
+import { getStaticBaseUrl } from '../../api/getApiBaseUrl';
 
 export default function AnimalListScreen({ navigation }) {
+  const [animals, setAnimals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchAnimals();
+  }, []);
+
+  const fetchAnimals = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/animals');
+      if (response.data.success) {
+        setAnimals(response.data.data);
+      }
+    } catch (error) {
+      console.error('Fetch animals error:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   const handleBookFeeding = (animal) => {
     navigation.navigate('Booking', { animal, type: 'Feeding' });
   };
@@ -67,19 +67,41 @@ export default function AnimalListScreen({ navigation }) {
         </View>
       </View>
 
-      <FlatList
-        data={animals}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <AnimalCard
-            animal={item}
-            onBookFeeding={handleBookFeeding}
-            onBookPhotography={handleBookPhotography}
-          />
-        )}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading && !refreshing ? (
+        <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 50 }} />
+      ) : (
+        <FlatList
+          data={animals}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => {
+            const staticBase = getStaticBaseUrl();
+            const imageUrl = item.imageUrl?.startsWith('http') 
+              ? item.imageUrl 
+              : `${staticBase}${item.imageUrl}`;
+              
+            return (
+              <AnimalCard
+                animal={{
+                  ...item,
+                  image: imageUrl
+                }}
+                onBookFeeding={() => handleBookFeeding(item)}
+                onBookPhotography={() => handleBookPhotography(item)}
+              />
+            );
+          }}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAnimals(); }} />
+          }
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyText}>No encounter animals available right now.</Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -140,4 +162,12 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
+  empty: {
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    color: '#999',
+    fontSize: 16,
+  }
 });

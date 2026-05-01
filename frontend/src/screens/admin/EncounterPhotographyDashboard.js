@@ -28,6 +28,12 @@ export default function EncounterPhotographyDashboard({ navigation }) {
       icon: '📸',
       screen: 'PhotoUpload',
     },
+    {
+      title: 'Animal Management',
+      subtitle: 'Manage animals and their photos',
+      icon: '🦁',
+      screen: 'AnimalManagement',
+    },
   ];
 
   return (
