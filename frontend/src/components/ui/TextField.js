@@ -12,12 +12,17 @@ export default function TextField({
   autoCapitalize = 'none',
   error,
   editable = true,
+  ...props
 }) {
   return (
     <View style={styles.wrap}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <TextInput
-        style={[styles.input, error ? styles.inputError : null]}
+        style={[
+          styles.input,
+          error ? styles.inputError : null,
+          props.multiline ? styles.inputMultiline : null,
+        ]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
@@ -26,6 +31,7 @@ export default function TextField({
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         editable={editable}
+        {...props}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
@@ -49,6 +55,11 @@ const styles = StyleSheet.create({
     color: theme.colors.black,
   },
   inputError: { borderWidth: 1, borderColor: theme.colors.error },
+  inputMultiline: {
+    minHeight: 120,
+    textAlignVertical: 'top',
+    paddingTop: 14,
+  },
   errorText: {
     color: theme.colors.error,
     fontSize: theme.fontSize.sm,
