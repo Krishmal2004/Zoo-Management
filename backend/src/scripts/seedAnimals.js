@@ -24,6 +24,11 @@ const mockAnimals = [
         type: 'video',
         title: 'Why Elephants Never Forget',
         url: 'https://www.youtube.com/watch?v=lFXyNj3QxOU',
+      },
+      {
+        type: 'quiz',
+        title: 'Test Your Elephant Knowledge!',
+        url: 'https://games.nationalgeographic.com/trivia/elephants',
       }
     ]
   },
@@ -42,6 +47,11 @@ const mockAnimals = [
         type: 'video',
         title: 'Tiger Hunt in the Wild',
         url: 'https://www.youtube.com/watch?v=1zBspPEOVyY',
+      },
+      {
+        type: 'game',
+        title: 'Jungle Predator Game',
+        url: 'https://pbskids.org/wildkratts/games/predator-power',
       }
     ]
   },
@@ -55,7 +65,13 @@ const mockAnimals = [
     diet: 'Herbivore - eating leaves, flowers, and fruit.',
     funFacts: ['They have a third eye on top of their heads called a parietal eye.'],
     conservationStatus: 'Least Concern',
-    educationContent: []
+    educationContent: [
+      {
+        type: 'activity',
+        title: 'Print & Color: Green Iguana',
+        url: 'https://www.supercoloring.com/coloring-pages/green-iguana-1',
+      }
+    ]
   },
   {
     name: 'Macaw',
@@ -67,7 +83,18 @@ const mockAnimals = [
     diet: 'Omnivore - seeds, nuts, fruits, insects.',
     funFacts: ['Some macaws can live up to 80 years.', 'They have bone in their tongues.'],
     conservationStatus: 'Least Concern',
-    educationContent: []
+    educationContent: [
+      {
+        type: 'activity',
+        title: 'Origami Macaw Craft',
+        url: 'https://www.origami-make.org/origami-macaw.php',
+      },
+      {
+        type: 'quiz',
+        title: 'Rainforest Birds Quiz',
+        url: 'https://study.com/academy/practice/quiz-worksheet-rainforest-birds.html',
+      }
+    ]
   }
 ];
 

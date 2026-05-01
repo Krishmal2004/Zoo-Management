@@ -55,10 +55,21 @@ const AnimalsListScreen = ({ navigation }) => {
     />
   );
 
+  const getIconForType = (type) => {
+    switch(type) {
+      case 'video': return 'play-circle';
+      case 'game': return 'game-controller';
+      case 'quiz': return 'help-circle';
+      case 'activity': return 'color-palette';
+      case 'article':
+      default: return 'document-text';
+    }
+  };
+
   const renderEducationItem = ({ item }) => (
     <TouchableOpacity style={styles.educationCard} onPress={() => openUrl(item.url)}>
       <Ionicons 
-        name={item.type === 'video' ? 'play-circle' : 'document-text'} 
+        name={getIconForType(item.type)} 
         size={40} 
         color="#2E7D32" 
       />

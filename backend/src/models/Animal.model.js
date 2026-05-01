@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const educationSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['article', 'video'],
+    enum: ['article', 'video', 'activity', 'game', 'quiz'],
     required: true,
   },
   title: {
