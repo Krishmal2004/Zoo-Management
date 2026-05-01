@@ -157,28 +157,32 @@ const AnimalsListScreen = ({ navigation }) => {
       ) : (
         // Education Tab
         <View style={styles.educationContainer}>
-          {loading ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="large" color="#2E7D32" />
-            </View>
-          ) : educationItems.length === 0 ? (
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>No educational content available.</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={educationItems}
-              keyExtractor={(item, index) => `${item.animalName}-${index}`}
-              renderItem={renderEducationItem}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
-              contentContainerStyle={styles.listContainer}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
-              }
-            />
-          )}
+          <TouchableOpacity 
+            style={styles.quizMainCard} 
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('QuizScreen')}
+          >
+            <ImageBackground 
+              source={{ uri: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?q=80&w=1200&auto=format&fit=crop' }} 
+              style={styles.quizCardImage}
+              resizeMode="cover"
+            >
+              <View style={styles.quizCardOverlay}>
+                <View style={styles.quizBadge}>
+                  <Ionicons name="trophy" size={16} color="#FFD700" />
+                  <Text style={styles.quizBadgeText}>DAILY CHALLENGE</Text>
+                </View>
+                <Text style={styles.quizCardTitle}>Zoo Master Quiz</Text>
+                <Text style={styles.quizCardDescription}>
+                  Test your animal knowledge and become a Zoo Master! 5 questions about our majestic residents.
+                </Text>
+                <View style={styles.startButton}>
+                  <Text style={styles.startButtonText}>Start Quiz</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#fff" />
+                </View>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -240,15 +244,81 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyText: {
     fontSize: 16,
     color: '#666',
     fontFamily: 'Dosis_500Medium',
+  },
+  educationContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  quizMainCard: {
+    width: '100%',
+    height: 300,
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  quizCardImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  quizCardOverlay: {
+    padding: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  quizBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginBottom: 12,
+    gap: 6,
+  },
+  quizBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1.5,
+  },
+  quizCardTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'Dosis_700Bold',
+    marginBottom: 8,
+  },
+  quizCardDescription: {
+    fontSize: 14,
+    color: '#eee',
+    fontFamily: 'Dosis_500Medium',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    gap: 10,
+  },
+  startButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Dosis_700Bold',
   },
   squareCard: {
     width: cardWidth,
