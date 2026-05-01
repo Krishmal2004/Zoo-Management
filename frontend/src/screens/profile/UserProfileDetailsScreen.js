@@ -80,6 +80,13 @@ export default function UserProfileDetailsScreen({ navigation }) {
         titleStyle: drawerTitleStyle,
         onPress: () => navigation.navigate('UserProfileDetails'),
       },
+      {
+        key: 'my-event-bookings',
+        label: 'My Event Bookings',
+        accessibilityLabel: 'My event bookings',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('Events', { screen: 'MyBookings' }),
+      },
     ],
     [navigation]
   );
