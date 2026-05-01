@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking, ImageBackground, Dimensions, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking, ImageBackground, Dimensions, RefreshControl, ScrollView } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const cardWidth = width / 2 - 24;
@@ -9,6 +9,65 @@ import CategoryFilter from '../../components/animals/CategoryFilter';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useFocusEffect } from '@react-navigation/native';
+
+const QUIZZES = [
+  {
+    id: 'daily-challenge',
+    title: 'Daily Zoo Master',
+    subtitle: '5 Questions • Fun Facts',
+    image: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?q=80&w=800&auto=format&fit=crop',
+    icon: 'trophy',
+    color: '#FFD700'
+  },
+  {
+    id: 'mammal-expert',
+    title: 'Mammal Expert',
+    subtitle: '8 Questions • Anatomy',
+    image: 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=800&auto=format&fit=crop',
+    icon: 'paw',
+    color: '#4CAF50'
+  },
+  {
+    id: 'bird-watcher',
+    title: 'Bird Watcher',
+    subtitle: '6 Questions • Habitats',
+    image: 'https://images.unsplash.com/photo-1552728089-57bdde30fc3e?q=80&w=800&auto=format&fit=crop',
+    icon: 'airplane',
+    color: '#2196F3'
+  },
+  {
+    id: 'reptile-king',
+    title: 'Reptile King',
+    subtitle: '5 Questions • Survival',
+    image: 'https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae?q=80&w=800&auto=format&fit=crop',
+    icon: 'flame',
+    color: '#FF5722'
+  }
+];
+
+const INFOGRAPHICS = [
+  {
+    title: "Butterfly Life Cycle",
+    type: "Life Cycle",
+    imageUrl: "https://images.unsplash.com/photo-1545191143-698f219154a4?q=80&w=800&auto=format&fit=crop",
+    description: "The incredible transformation from a tiny egg to a beautiful Monarch butterfly.",
+    points: ["Egg: Laid on milkweed leaves.", "Larva: The caterpillar eats non-stop.", "Pupa: Inside the chrysalis, the body melts and reforms.", "Adult: Emerges to begin the cycle again."]
+  },
+  {
+    title: "Elephant Anatomy",
+    type: "Anatomy",
+    imageUrl: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?q=80&w=800&auto=format&fit=crop",
+    description: "The African Elephant is a masterpiece of natural engineering.",
+    points: ["Trunk: 40,000 muscles for precision.", "Ears: Large surface area for cooling.", "Tusks: Elongated incisor teeth for digging.", "Skin: 2.5cm thick for protection."]
+  },
+  {
+    title: "Tiger: Built for Power",
+    type: "Anatomy",
+    imageUrl: "https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?q=80&w=800&auto=format&fit=crop",
+    description: "Every part of the Bengal Tiger is designed for the perfect hunt.",
+    points: ["Eyes: 6x better night vision than humans.", "Claws: Fully retractable for silent walking.", "Teeth: 3-inch canines for powerful grip.", "Tail: Helps with balance during fast turns."]
+  }
+];
 
 const AnimalsListScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('information'); // 'information' or 'education'
@@ -99,91 +158,49 @@ const AnimalsListScreen = ({ navigation }) => {
     );
   };
 
+  const handleCategorySelect = (cat) => {
+    if (cat === 'Education') {
+      navigation.navigate('Education');
+    } else {
+      setCategory(cat);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Top Tab Switcher */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'information' && styles.activeTabButton]} 
-          onPress={() => setActiveTab('information')}
-        >
-          <Text style={[styles.tabText, activeTab === 'information' && styles.activeTabText]}>Information</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tabButton, activeTab === 'education' && styles.activeTabButton]} 
-          onPress={() => setActiveTab('education')}
-        >
-          <Text style={[styles.tabText, activeTab === 'education' && styles.activeTabText]}>Education</Text>
-        </TouchableOpacity>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search animals..."
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
+      <View style={{ height: 60 }}>
+        <CategoryFilter selectedCategory={category} onSelectCategory={handleCategorySelect} />
       </View>
 
-      {activeTab === 'information' ? (
-        <>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search animals..."
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-          <View style={{ height: 60 }}>
-            <CategoryFilter selectedCategory={category} onSelectCategory={setCategory} />
-          </View>
-
-          {loading ? (
-            <View style={styles.center}>
-              <ActivityIndicator size="large" color="#2E7D32" />
-            </View>
-          ) : animals.length === 0 ? (
-            <View style={styles.center}>
-              <Text style={styles.emptyText}>No animals found.</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={animals}
-              keyExtractor={(item) => item._id}
-              renderItem={renderAnimalItem}
-              numColumns={2}
-              columnWrapperStyle={styles.row}
-              contentContainerStyle={styles.listContainer}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
-              }
-            />
-          )}
-        </>
-      ) : (
-        // Education Tab
-        <View style={styles.educationContainer}>
-          <TouchableOpacity 
-            style={styles.quizMainCard} 
-            activeOpacity={0.9}
-            onPress={() => navigation.navigate('QuizScreen')}
-          >
-            <ImageBackground 
-              source={{ uri: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?q=80&w=1200&auto=format&fit=crop' }} 
-              style={styles.quizCardImage}
-              resizeMode="cover"
-            >
-              <View style={styles.quizCardOverlay}>
-                <View style={styles.quizBadge}>
-                  <Ionicons name="trophy" size={16} color="#FFD700" />
-                  <Text style={styles.quizBadgeText}>DAILY CHALLENGE</Text>
-                </View>
-                <Text style={styles.quizCardTitle}>Zoo Master Quiz</Text>
-                <Text style={styles.quizCardDescription}>
-                  Test your animal knowledge and become a Zoo Master! 5 questions about our majestic residents.
-                </Text>
-                <View style={styles.startButton}>
-                  <Text style={styles.startButtonText}>Start Quiz</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#fff" />
-                </View>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#2E7D32" />
         </View>
+      ) : animals.length === 0 ? (
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>No animals found.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={animals}
+          keyExtractor={(item) => item._id}
+          renderItem={renderAnimalItem}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2E7D32']} />
+          }
+        />
       )}
     </View>
   );
@@ -216,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#666',
-    fontFamily: 'Dosis_600SemiBold',
+    
   },
   activeTabText: {
     color: '#fff',
@@ -233,92 +250,145 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     fontSize: 16,
-    fontFamily: 'Dosis_400Regular',
+    
   },
   listContainer: {
     padding: 16,
   },
-  educationContainer: {
+  educationTabWrapper: {
     flex: 1,
+    minHeight: 500,
+    backgroundColor: '#FAFAFA',
+  },
+  educationScrollView: {
+    flex: 1,
+  },
+  educationContent: {
+    padding: 16,
+    paddingBottom: 60,
+  },
+  eduHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    gap: 12,
+  },
+  eduHeaderTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    
   },
   row: {
     justifyContent: 'space-between',
   },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   emptyText: {
     fontSize: 16,
     color: '#666',
-    fontFamily: 'Dosis_500Medium',
+    
   },
-  educationContainer: {
-    flex: 1,
-    padding: 16,
+  sectionHeader: {
+    marginTop: 32,
+    marginBottom: 16,
   },
-  quizMainCard: {
-    width: '100%',
-    height: 300,
-    borderRadius: 20,
-    overflow: 'hidden',
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    
+  },
+  infographicList: {
+    paddingBottom: 24,
+  },
+  infoCard: {
+    width: 220,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginRight: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
   },
-  quizCardImage: {
+  infoCardImage: {
+    width: '100%',
+    height: 140,
+    backgroundColor: '#f5f5f5',
+  },
+  infoCardContent: {
+    padding: 12,
+  },
+  infoCardType: {
+    fontSize: 10,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  infoCardTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#333',
+    
+  },
+  quizGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  quizSmallCard: {
+    width: cardWidth,
+    height: 180,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    marginBottom: 4,
+  },
+  quizSmallImage: {
     width: '100%',
     height: '100%',
     justifyContent: 'flex-end',
   },
-  quizCardOverlay: {
-    padding: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  quizSmallOverlay: {
+    padding: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
-  quizBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 12,
-    gap: 6,
-  },
-  quizBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-    letterSpacing: 1.5,
-  },
-  quizCardTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    fontFamily: 'Dosis_700Bold',
-    marginBottom: 8,
-  },
-  quizCardDescription: {
-    fontSize: 14,
-    color: '#eee',
-    fontFamily: 'Dosis_500Medium',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  quizSmallBadge: {
+    width: 24,
+    height: 24,
     borderRadius: 12,
-    alignSelf: 'flex-start',
-    gap: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
   },
-  startButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  quizSmallTitle: {
+    fontSize: 14,
     fontWeight: 'bold',
-    fontFamily: 'Dosis_700Bold',
+    color: '#fff',
+    
+  },
+  quizSmallSub: {
+    fontSize: 10,
+    color: '#ddd',
+    
   },
   squareCard: {
     width: cardWidth,
@@ -357,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#fff',
-    fontFamily: 'Dosis_700Bold',
+    
     marginBottom: 2,
   },
   educationCardSubtitle: {

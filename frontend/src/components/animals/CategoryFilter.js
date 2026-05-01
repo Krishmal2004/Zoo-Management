@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
-const CATEGORIES = ['All', 'Mammal', 'Bird', 'Reptile', 'Amphibian', 'Fish', 'Insect'];
+const CATEGORIES = ['All', 'Mammal', 'Bird', 'Reptile', 'Amphibian', 'Fish', 'Insect', 'Education'];
 
 const CategoryFilter = ({ selectedCategory, onSelectCategory }) => {
   return (

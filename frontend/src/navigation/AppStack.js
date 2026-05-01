@@ -10,6 +10,8 @@ import AnimalsListScreen from '../screens/animals/AnimalsListScreen';
 import AnimalDetailScreen from '../screens/animals/AnimalDetailScreen';
 import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
 import QuizScreen from '../screens/animals/QuizScreen';
+import InfographicDetailScreen from '../screens/animals/InfographicDetailScreen';
+import EducationScreen from '../screens/animals/EducationScreen';
 import StorePlaceholder from '../screens/store/StorePlaceholder';
 import { stackScreenOptions } from './screenOptions';
 
@@ -27,9 +29,10 @@ export default function AppStack() {
       <Stack.Screen name="Animals" component={AnimalsListScreen} options={{ title: 'Animal Information and Education' }} />
       <Stack.Screen name="AnimalDetailScreen" component={AnimalDetailScreen} options={{ title: 'Animal Details' }} />
       <Stack.Screen name="QuizScreen" component={QuizScreen} options={{ title: 'Zoo Challenge', headerShown: false }} />
+      <Stack.Screen name="InfographicDetail" component={InfographicDetailScreen} options={{ title: 'Animal Infographic', headerShown: false }} />
+      <Stack.Screen name="Education" component={EducationScreen} options={{ title: 'Education Hub' }} />
       <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
       <Stack.Screen name="Store" component={StorePlaceholder} options={{ title: 'Online Store' }} />
     </Stack.Navigator>
   );
 }
-
