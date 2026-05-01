@@ -109,7 +109,7 @@ export default function AnimalListScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#E8F5E9',
   },
   header: {
     backgroundColor: '#FFF',

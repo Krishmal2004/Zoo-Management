@@ -238,7 +238,7 @@ export default function PhotoUploadScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#E8F5E9' },
   scroll: { padding: 20 },
   header: { marginBottom: 30 },
   title: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A' },

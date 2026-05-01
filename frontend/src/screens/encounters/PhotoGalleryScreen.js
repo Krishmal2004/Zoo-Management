@@ -167,7 +167,7 @@ export default function PhotoGalleryScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  container: { flex: 1, backgroundColor: '#E8F5E9' },
   header: { padding: 25, backgroundColor: '#FFF', borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 4 },
   title: { fontSize: 26, fontWeight: 'bold', color: '#1A1A1A' },
   subtitle: { fontSize: 15, color: '#666', marginTop: 4 },

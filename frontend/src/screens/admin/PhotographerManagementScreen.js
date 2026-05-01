@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import apiClient from '../../api/client';
 
+import { theme } from '../../constants/theme';
+
 export default function PhotographerManagementScreen() {
   const [photographers, setPhotographers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +137,7 @@ export default function PhotographerManagementScreen() {
         />
       </View>
 
-      {loading ? <ActivityIndicator size="large" color="#2196F3" style={{ marginTop: 50 }} /> : (
+      {loading ? <ActivityIndicator size="large" color={theme.colors.accentGreen} style={{ marginTop: 50 }} /> : (
         <FlatList
           data={filteredPhotographers}
           keyExtractor={item => item._id}
@@ -214,7 +216,7 @@ export default function PhotographerManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
+  container: { flex: 1, backgroundColor: '#E8F5E9' },
   header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#FFF', elevation: 2, alignItems: 'center' },
   searchContainer: { padding: 15, paddingTop: 10 },
   searchBar: { backgroundColor: '#FFF', borderRadius: 10, padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3, fontSize: 14, borderWidth: 1, borderColor: '#EEE' },

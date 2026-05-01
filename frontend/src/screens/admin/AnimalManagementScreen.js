@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
+import { theme } from '../../constants/theme';
 import { getApiBaseUrl, getStaticBaseUrl } from '../../api/getApiBaseUrl';
 import { getToken } from '../../services/tokenStorage';
 
@@ -358,10 +359,10 @@ export default function AnimalManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
-  mainHeader: { padding: 25, backgroundColor: '#FFF', borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 5, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  searchContainer: { padding: 15, paddingTop: 10 },
-  searchBar: { backgroundColor: '#FFF', borderRadius: 10, padding: 12, elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 3, fontSize: 14, borderWidth: 1, borderColor: '#EEE' },
+  container: { flex: 1, backgroundColor: '#E8F5E9' },
+  mainHeader: { padding: 25, backgroundColor: '#FFF', borderBottomLeftRadius: 30, borderBottomRightRadius: 30, elevation: 5, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 },
+  searchContainer: { padding: 20, marginTop: -15, zIndex: 5 },
+  searchBar: { backgroundColor: '#FFF', borderRadius: 15, padding: 15, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5, fontSize: 16, borderWidth: 1, borderColor: '#EEE' },
   greeting: { fontSize: 24, fontWeight: 'bold', color: '#1A1A1A' },
   stats: { fontSize: 13, color: '#4CAF50', fontWeight: '600' },
   mainAddBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 15, paddingVertical: 10, borderRadius: 15 },
@@ -403,5 +404,5 @@ const styles = StyleSheet.create({
   deleteCancel: { flex: 1, padding: 15, alignItems: 'center', marginRight: 10, borderRadius: 15, backgroundColor: '#F0F2F5' },
   deleteCancelText: { fontWeight: 'bold', color: '#666' },
   deleteConfirm: { flex: 1, padding: 15, alignItems: 'center', borderRadius: 15, backgroundColor: '#FF5252' },
-  deleteConfirmText: { fontWeight: 'bold', color: '#FFF' },
+  deleteConfirmText: { color: '#FFF', fontWeight: 'bold' },
 });

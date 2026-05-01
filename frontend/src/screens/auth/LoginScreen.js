@@ -1,21 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Alert, 
-  SafeAreaView, 
-  TextInput, 
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import ScreenContainer from '../../components/ui/ScreenContainer';
+import TextField from '../../components/ui/TextField';
+import PrimaryButton from '../../components/ui/PrimaryButton';
 import { useAuth } from '../../hooks/useAuth';
 import { validateLoginForm } from '../../utils/validation';
-
-const { width } = Dimensions.get('window');
+import { theme } from '../../constants/theme';
 
 export default function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -40,113 +30,71 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-        style={styles.flex}
-      >
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoEmoji}>🦁</Text>
-          </View>
-          <Text style={styles.title}>Zoo Management</Text>
-          <Text style={styles.subtitle}>Sign in to your staff or visitor account</Text>
-        </View>
+    <ScreenContainer backgroundColor="#E8F5E9">
+      <View style={styles.header}>
+        <Text style={styles.title}>Sign in</Text>
+        <Text style={styles.sub}>Welcome back! Please enter your details.</Text>
+      </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput 
-              style={[styles.input, errors.email && styles.inputError]} 
-              value={email} 
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-          </View>
+      <TextField
+        label="Email address"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="you@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={errors.email}
+      />
+      <TextField
+        label="Password"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="••••••••"
+        secureTextEntry
+        error={errors.password}
+      />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput 
-              style={[styles.input, errors.password && styles.inputError]} 
-              value={password} 
-              onChangeText={setPassword}
-              placeholder="••••••••"
-              secureTextEntry
-            />
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-          </View>
+      <PrimaryButton title="Sign in" onPress={onSubmit} loading={submitting} style={styles.btn} />
 
-          <TouchableOpacity 
-            style={[styles.loginBtn, submitting && styles.disabledBtn]} 
-            onPress={onSubmit}
-            disabled={submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.loginBtnText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('Register')} 
-            style={styles.registerLink}
-          >
-            <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkBold}>Register</Text></Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <TouchableOpacity onPress={() => navigation.navigate('Register')} style={styles.linkWrap}>
+        <Text style={styles.linkMuted}>Don't have an account? </Text>
+        <Text style={styles.linkBold}>Register now</Text>
+      </TouchableOpacity>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
-  flex: { flex: 1, padding: 30, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 40 },
-  logoContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 40,
+  header: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.lg,
+  },
+  title: {
+    fontSize: theme.fontSize.hero,
+    fontWeight: '700',
+    color: theme.colors.primaryText,
+  },
+  sub: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.primaryText,
+    opacity: 0.85,
+  },
+  btn: {
+    marginTop: theme.spacing.md,
+  },
+  linkWrap: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20
+    marginTop: theme.spacing.lg,
+    flexWrap: 'wrap',
   },
-  logoEmoji: { fontSize: 40 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#1A1A1A', marginBottom: 10 },
-  subtitle: { fontSize: 14, color: '#666', textAlign: 'center' },
-  form: { width: '100%' },
-  inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: 'bold', color: '#555', marginBottom: 8, marginLeft: 4 },
-  input: { 
-    backgroundColor: '#F9F9F9', 
-    borderRadius: 15, 
-    padding: 18, 
-    fontSize: 16, 
-    borderWidth: 1, 
-    borderColor: '#EEE' 
+  linkMuted: {
+    color: theme.colors.black,
+    fontSize: theme.fontSize.body,
   },
-  inputError: { borderColor: '#FF5252' },
-  errorText: { color: '#FF5252', fontSize: 12, marginTop: 5, marginLeft: 5 },
-  loginBtn: { 
-    backgroundColor: '#4CAF50', 
-    padding: 18, 
-    borderRadius: 15, 
-    alignItems: 'center', 
-    marginTop: 10,
-    elevation: 3,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+  linkBold: {
+    color: theme.colors.linkGreen,
+    fontWeight: '700',
+    fontSize: theme.fontSize.body,
   },
-  loginBtnText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
-  disabledBtn: { opacity: 0.7 },
-  registerLink: { marginTop: 25, alignItems: 'center' },
-  linkText: { fontSize: 15, color: '#666' },
-  linkBold: { color: '#4CAF50', fontWeight: 'bold' },
 });

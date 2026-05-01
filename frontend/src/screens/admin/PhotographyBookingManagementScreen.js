@@ -142,7 +142,7 @@ export default function PhotographyBookingManagementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  container: { flex: 1, backgroundColor: '#E8F5E9' },
   header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE' },
   title: { fontSize: 22, fontWeight: 'bold' },
   refresh: { color: '#2196F3', fontWeight: 'bold' },

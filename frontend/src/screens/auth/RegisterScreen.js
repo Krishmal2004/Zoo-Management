@@ -43,7 +43,7 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <ScreenContainer scroll backgroundColor={theme.colors.backgroundAlt}>
+    <ScreenContainer scroll backgroundColor="#E8F5E9">
       <Text style={styles.title}>Create an account</Text>
       <Text style={styles.sub}>Join the zoo community with your details below.</Text>
 
