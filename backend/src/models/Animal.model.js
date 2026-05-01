@@ -14,6 +14,10 @@ const educationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  imageUrl: {
+    type: String,
+    required: true,
+  },
   thumbnail: {
     type: String,
   },
@@ -52,6 +56,16 @@ const animalSchema = new mongoose.Schema(
     diet: {
       type: String,
       required: true,
+    },
+    lifespan: {
+      type: String,
+      required: true,
+      default: 'Unknown'
+    },
+    weight: {
+      type: String,
+      required: true,
+      default: 'Unknown'
     },
     funFacts: {
       type: [String],

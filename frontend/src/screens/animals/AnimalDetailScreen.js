@@ -75,6 +75,16 @@ const AnimalDetailScreen = ({ route, navigation }) => {
             <Text style={styles.infoLabel}>Habitat:</Text>
             <Text style={styles.infoValue}>{animal.habitat}</Text>
           </View>
+          <View style={styles.infoRow}>
+            <Ionicons name="time-outline" size={20} color="#2E7D32" />
+            <Text style={styles.infoLabel}>Lifespan:</Text>
+            <Text style={styles.infoValue}>{animal.lifespan || 'Unknown'}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Ionicons name="barbell-outline" size={20} color="#2E7D32" />
+            <Text style={styles.infoLabel}>Weight:</Text>
+            <Text style={styles.infoValue}>{animal.weight || 'Unknown'}</Text>
+          </View>
         </View>
 
         {animal.funFacts && animal.funFacts.length > 0 && (

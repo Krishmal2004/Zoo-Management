@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking } from 'react-native';
+import { View, StyleSheet, FlatList, TextInput, ActivityIndicator, Text, TouchableOpacity, Linking, ImageBackground, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
+const cardWidth = width / 2 - 24;
 import { fetchAnimals } from '../../api/animalsApi';
 import AnimalCard from '../../components/animals/AnimalCard';
 import CategoryFilter from '../../components/animals/CategoryFilter';
@@ -66,20 +69,24 @@ const AnimalsListScreen = ({ navigation }) => {
     }
   };
 
-  const renderEducationItem = ({ item }) => (
-    <TouchableOpacity style={styles.educationCard} onPress={() => openUrl(item.url)}>
-      <Ionicons 
-        name={getIconForType(item.type)} 
-        size={40} 
-        color="#2E7D32" 
-      />
-      <View style={styles.educationInfo}>
-        <Text style={styles.educationTitle}>{item.title}</Text>
-        <Text style={styles.educationType}>{item.type.toUpperCase()} • {item.animalName}</Text>
-      </View>
-      <Ionicons name="chevron-forward" size={24} color="#999" />
-    </TouchableOpacity>
-  );
+  const renderEducationItem = ({ item }) => {
+    const fallbackImage = 'https://via.placeholder.com/300';
+    const cardImage = item.imageUrl || fallbackImage;
+    return (
+      <TouchableOpacity style={styles.squareCard} onPress={() => openUrl(item.url)} activeOpacity={0.8}>
+        <ImageBackground source={{ uri: cardImage }} style={styles.cardImageBackground} resizeMode="cover">
+          <View style={styles.cardOverlay}>
+            <View style={styles.educationTypeRow}>
+              <Ionicons name={getIconForType(item.type)} size={16} color="#fff" style={{ marginRight: 4 }} />
+              <Text style={styles.educationTypeBadge}>{item.type.toUpperCase()}</Text>
+            </View>
+            <Text style={styles.educationCardTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.educationCardSubtitle} numberOfLines={1}>{item.animalName}</Text>
+          </View>
+        </ImageBackground>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -149,6 +156,8 @@ const AnimalsListScreen = ({ navigation }) => {
               data={educationItems}
               keyExtractor={(item, index) => `${item.animalName}-${index}`}
               renderItem={renderEducationItem}
+              numColumns={2}
+              columnWrapperStyle={styles.row}
               contentContainerStyle={styles.listContainer}
               showsVerticalScrollIndicator={false}
             />
@@ -224,36 +233,50 @@ const styles = StyleSheet.create({
     color: '#666',
     fontFamily: 'Dosis_500Medium',
   },
-  educationCard: {
+  squareCard: {
+    width: cardWidth,
+    height: cardWidth,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  cardImageBackground: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  cardOverlay: {
+    padding: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+  },
+  educationTypeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
-  },
-  educationInfo: {
-    flex: 1,
-    marginLeft: 16,
-  },
-  educationTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
     marginBottom: 4,
-    fontFamily: 'Dosis_700Bold',
   },
-  educationType: {
-    fontSize: 12,
-    color: '#666',
+  educationTypeBadge: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  educationCardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'Dosis_700Bold',
+    marginBottom: 2,
+  },
+  educationCardSubtitle: {
+    fontSize: 12,
+    color: '#ddd',
+    fontStyle: 'italic',
   },
 });
 
