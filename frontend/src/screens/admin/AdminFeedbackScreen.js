@@ -94,7 +94,7 @@ export default function AdminFeedbackScreen() {
       } else {
         await feedbackApi.replyToReview(selectedItem._id, replyText);
       }
-      Alert.alert('Success', 'Reply sent successfully');
+      Alert.alert('Success', 'Reply updated successfully');
       setShowReplyModal(false);
       setReplyText('');
       fetchData();
@@ -105,6 +105,34 @@ export default function AdminFeedbackScreen() {
     }
   };
 
+  const handleDeleteReply = (item) => {
+    Alert.alert(
+      'Delete Response',
+      'Are you sure you want to remove this response?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              if (activeTab === 'Feedback') {
+                await feedbackApi.replyToFeedback(item._id, '');
+              } else if (activeTab === 'Inquiry') {
+                await feedbackApi.replyToInquiry(item._id, '');
+              } else {
+                await feedbackApi.replyToReview(item._id, '');
+              }
+              fetchData();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete response');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderReplySection = (reply) => (
     reply ? (
       <View style={styles.replyBox}>
@@ -112,6 +140,34 @@ export default function AdminFeedbackScreen() {
         <Text style={styles.replyText}>{reply}</Text>
       </View>
     ) : null
+  );
+
+  const renderActions = (item) => (
+    <View style={styles.actionContainer}>
+      {item.adminReply ? (
+        <>
+          <TouchableOpacity 
+            style={[styles.actionBtn, styles.editActionBtn]} 
+            onPress={() => { setSelectedItem(item); setReplyText(item.adminReply); setShowReplyModal(true); }}
+          >
+            <Text style={styles.editActionBtnText}>Edit Reply</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionBtn, styles.deleteActionBtn]} 
+            onPress={() => handleDeleteReply(item)}
+          >
+            <Text style={styles.deleteActionBtnText}>Delete Reply</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <TouchableOpacity 
+          style={styles.replyBtn} 
+          onPress={() => { setSelectedItem(item); setReplyText(''); setShowReplyModal(true); }}
+        >
+          <Text style={styles.replyBtnText}>Reply</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 
   const renderFeedback = (item) => (
@@ -124,12 +180,7 @@ export default function AdminFeedbackScreen() {
       <Text style={styles.subject}>{item.subject}</Text>
       <Text style={styles.message}>{item.message}</Text>
       {renderReplySection(item.adminReply)}
-      <TouchableOpacity 
-        style={styles.replyBtn} 
-        onPress={() => { setSelectedItem(item); setReplyText(item.adminReply || ''); setShowReplyModal(true); }}
-      >
-        <Text style={styles.replyBtnText}>{item.adminReply ? 'Edit Reply' : 'Reply'}</Text>
-      </TouchableOpacity>
+      {renderActions(item)}
     </View>
   );
 
@@ -155,12 +206,7 @@ export default function AdminFeedbackScreen() {
         />
       )}
       {renderReplySection(item.adminReply)}
-      <TouchableOpacity 
-        style={styles.replyBtn} 
-        onPress={() => { setSelectedItem(item); setReplyText(item.adminReply || ''); setShowReplyModal(true); }}
-      >
-        <Text style={styles.replyBtnText}>{item.adminReply ? 'Edit Reply' : 'Reply'}</Text>
-      </TouchableOpacity>
+      {renderActions(item)}
     </View>
   );
 
@@ -173,12 +219,7 @@ export default function AdminFeedbackScreen() {
       <Text style={styles.stars}>{'⭐'.repeat(item.rating)}</Text>
       <Text style={styles.message}>{item.message}</Text>
       {renderReplySection(item.adminReply)}
-      <TouchableOpacity 
-        style={styles.replyBtn} 
-        onPress={() => { setSelectedItem(item); setReplyText(item.adminReply || ''); setShowReplyModal(true); }}
-      >
-        <Text style={styles.replyBtnText}>{item.adminReply ? 'Edit Reply' : 'Reply'}</Text>
-      </TouchableOpacity>
+      {renderActions(item)}
     </View>
   );
 
@@ -428,6 +469,36 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     fontWeight: '700',
     fontSize: theme.fontSize.sm,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: theme.spacing.md,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: theme.radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editActionBtn: {
+    backgroundColor: theme.colors.backgroundAlt,
+    borderWidth: 1,
+    borderColor: theme.colors.accentGreen,
+  },
+  editActionBtnText: {
+    color: theme.colors.accentGreen,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  deleteActionBtn: {
+    backgroundColor: '#FFEBEE',
+  },
+  deleteActionBtnText: {
+    color: theme.colors.error,
+    fontWeight: '700',
+    fontSize: 12,
   },
   replyBox: {
     marginTop: theme.spacing.md,
