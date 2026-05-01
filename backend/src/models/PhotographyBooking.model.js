@@ -13,7 +13,7 @@ const photographyBookingSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Contact info is required'],
       trim: true,
-      minlength: [5, 'Contact info must be at least 5 characters'],
+      minlength: [3, 'Contact info must be at least 3 characters'],
       maxlength: [200, 'Contact info cannot exceed 200 characters'],
     },
     date: {

@@ -1,10 +1,5 @@
 const mongoose = require('mongoose');
 
-/**
- * FeedingBooking – records a visitor's booking for an animal feeding session.
- * The timeSlot field is a plain string in "HH:mm - HH:mm" format (no foreign-key
- * overhead needed for feeding sessions).
- */
 const feedingBookingSchema = new mongoose.Schema(
   {
     visitorName: {
@@ -18,17 +13,13 @@ const feedingBookingSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Contact info is required'],
       trim: true,
-      minlength: [5, 'Contact info must be at least 5 characters'],
+      minlength: [3, 'Contact info must be at least 3 characters'], // Relaxed from 5
       maxlength: [200, 'Contact info cannot exceed 200 characters'],
     },
     animalName: {
       type: String,
       required: [true, 'Animal name is required'],
       trim: true,
-      enum: {
-        values: ['Parrots', 'Deer', 'Giraffe', 'Zebra'],
-        message: 'Animal must be one of: Parrots, Deer, Giraffe, Zebra',
-      },
     },
     date: {
       type: Date,
@@ -37,7 +28,6 @@ const feedingBookingSchema = new mongoose.Schema(
     timeSlot: {
       type: String,
       required: [true, 'Time slot is required'],
-      // Format: "HH:mm - HH:mm", e.g. "09:00 - 10:00"
       match: [
         /^([01]\d|2[0-3]):([0-5]\d)\s*-\s*([01]\d|2[0-3]):([0-5]\d)$/,
         'Time slot must be in HH:mm - HH:mm format',
