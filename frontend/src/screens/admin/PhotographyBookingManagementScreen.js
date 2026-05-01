@@ -6,136 +6,168 @@ import {
   FlatList, 
   TouchableOpacity, 
   Alert, 
-  ActivityIndicator 
+  ActivityIndicator,
+  SafeAreaView,
+  RefreshControl
 } from 'react-native';
 import apiClient from '../../api/client';
 
 export default function PhotographyBookingManagementScreen() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('All');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchBookings();
+    fetchData();
   }, []);
 
-  const fetchBookings = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/photography-bookings');
-      if (response.data.success) {
-        setBookings(response.data.data);
+      const [photoRes, feedRes] = await Promise.all([
+        apiClient.get('/photography-bookings').catch(() => ({ data: { success: false } })),
+        apiClient.get('/feeding-bookings').catch(() => ({ data: { success: false } }))
+      ]);
+
+      let combined = [];
+      if (photoRes.data?.success) {
+        combined = [...combined, ...photoRes.data.data.map(b => ({ ...b, category: 'Photography' }))];
       }
+      if (feedRes.data?.success) {
+        combined = [...combined, ...feedRes.data.data.map(b => ({ ...b, category: 'Feeding' }))];
+      }
+
+      combined.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        return dateB - dateA;
+      });
+
+      setBookings(combined);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error('Fetch Error:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleStatusUpdate = async (id, newStatus) => {
+  const handleStatus = async (item, status) => {
     try {
-      await apiClient.patch(`/photography-bookings/${id}`, { status: newStatus });
-      Alert.alert('Success', `Booking marked as ${newStatus}.`);
-      fetchBookings();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update booking status.');
+      const endpoint = item.category === 'Feeding' ? `/feeding-bookings/${item._id}` : `/photography-bookings/${item._id}`;
+      await apiClient.patch(endpoint, { status: status.toLowerCase() });
+      Alert.alert('Success', `Status changed to ${status}`);
+      fetchData();
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update status.');
     }
   };
 
-  const renderBooking = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.visitorName}>{item.visitorName}</Text>
-        <View style={[styles.statusBadge, styles[`status${item.status}`]]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+  const renderBooking = ({ item }) => {
+    const statusKey = `status${(item.status || 'booked').toLowerCase()}`;
+    
+    // SAFE TIME EXTRACTION (Prevents "Object as React child" error)
+    let displayTime = 'TBD';
+    if (typeof item.timeSlot === 'object' && item.timeSlot !== null) {
+      displayTime = `${item.timeSlot.startTime || ''} - ${item.timeSlot.endTime || ''}`;
+    } else if (typeof item.timeSlot === 'string') {
+      displayTime = item.timeSlot;
+    } else if (item.time) {
+      displayTime = item.time;
+    }
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View>
+            <Text style={styles.name}>{item.visitorName || 'Guest'}</Text>
+            <Text style={[styles.badge, item.category === 'Feeding' ? styles.feedBadge : styles.photoBadge]}>{item.category}</Text>
+          </View>
+          <View style={[styles.statusBox, styles[statusKey] || styles.statusbooked]}>
+            <Text style={styles.statusText}>{(item.status || 'Booked').toUpperCase()}</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRow}>
+          <Text style={styles.infoText}>📅 {item.date}</Text>
+          <Text style={styles.infoText}>⏰ {displayTime}</Text>
+        </View>
+        
+        <Text style={styles.detail}>🦁 {item.animalName || item.animal?.name || 'Encounter'}</Text>
+        {item.category === 'Photography' && (
+          <Text style={styles.detail}>📸 Staff: {item.photographer?.name || 'Assigned'}</Text>
+        )}
+        <Text style={styles.detail}>📞 {item.contactInfo || 'No contact'}</Text>
+
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.btnDone} onPress={() => handleStatus(item, 'completed')}>
+            <Text style={styles.btnText}>Complete</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.btnCancel} onPress={() => handleStatus(item, 'cancelled')}>
+            <Text style={styles.btnText}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      
-      <Text style={styles.detail}>📅 {new Date(item.date).toLocaleDateString()} at {item.time}</Text>
-      <Text style={styles.detail}>🦁 Animal: {item.animal?.name || 'Unknown'}</Text>
-      <Text style={styles.detail}>📸 Photographer: {item.photographer?.name || 'Assigned'}</Text>
-      <Text style={styles.detail}>📞 Contact: {item.contactInfo}</Text>
-
-      {item.status === 'booked' && (
-        <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.approveBtn} 
-            onPress={() => handleStatusUpdate(item._id, 'completed')}
-          >
-            <Text style={styles.approveText}>Mark Completed</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.rejectBtn} 
-            onPress={() => handleStatusUpdate(item._id, 'cancelled')}
-          >
-            <Text style={styles.rejectText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  );
+    );
+  };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>All Bookings</Text>
-        <TouchableOpacity style={styles.refreshBtn} onPress={fetchBookings}>
-          <Text style={styles.refreshText}>🔄 Refresh</Text>
-        </TouchableOpacity>
+        <Text style={styles.title}>Booking Admin</Text>
+        <TouchableOpacity onPress={fetchData}><Text style={styles.refresh}>🔄 Sync</Text></TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#2196F3" style={styles.loader} />
-      ) : (
+      <View style={styles.tabs}>
+        {['All', 'Feeding', 'Photography'].map(t => (
+          <TouchableOpacity key={t} onPress={() => setFilter(t)} style={[styles.tab, filter === t && styles.activeTab]}>
+            <Text style={[styles.tabText, filter === t && styles.activeTabText]}>{t}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {loading && !refreshing ? <ActivityIndicator size="large" color="#2196F3" style={{ marginTop: 50 }} /> : (
         <FlatList
-          data={bookings}
-          keyExtractor={(item) => item._id}
+          data={bookings.filter(b => filter === 'All' || b.category === filter)}
+          keyExtractor={item => item._id}
           renderItem={renderBooking}
-          contentContainerStyle={styles.list}
-          ListEmptyComponent={<Text style={styles.emptyText}>No bookings found.</Text>}
+          contentContainerStyle={{ padding: 15 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} />}
+          ListEmptyComponent={<Text style={styles.empty}>No bookings to display.</Text>}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F7FA' },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    padding: 20, 
-    backgroundColor: '#FFF' 
-  },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  refreshBtn: { padding: 5 },
-  refreshText: { color: '#2196F3', fontWeight: '600' },
-  list: { padding: 15 },
-  card: { 
-    backgroundColor: '#FFF', 
-    borderRadius: 12, 
-    padding: 15, 
-    marginBottom: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  visitorName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', padding: 20, backgroundColor: '#FFF', borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  title: { fontSize: 22, fontWeight: 'bold' },
+  refresh: { color: '#2196F3', fontWeight: 'bold' },
+  tabs: { flexDirection: 'row', backgroundColor: '#FFF', padding: 10, justifyContent: 'space-around', borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  tab: { paddingVertical: 8, paddingHorizontal: 20, borderRadius: 20 },
+  activeTab: { backgroundColor: '#2196F3' },
+  tabText: { fontWeight: 'bold', color: '#666', fontSize: 13 },
+  activeTabText: { color: '#FFF' },
+  card: { backgroundColor: '#FFF', borderRadius: 16, padding: 15, marginBottom: 15, elevation: 3 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  name: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+  badge: { fontSize: 10, fontWeight: 'bold', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 5, marginTop: 4, alignSelf: 'flex-start' },
+  feedBadge: { backgroundColor: '#FFF3E0', color: '#E65100' },
+  photoBadge: { backgroundColor: '#E3F2FD', color: '#1565C0' },
+  statusBox: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusbooked: { backgroundColor: '#E3F2FD' },
   statuscompleted: { backgroundColor: '#E8F5E9' },
   statuscancelled: { backgroundColor: '#FFEBEE' },
-  statusText: { fontSize: 10, fontWeight: 'bold', color: '#555' },
+  statusText: { fontSize: 10, fontWeight: 'bold', color: '#444' },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, backgroundColor: '#F8F9FA', padding: 8, borderRadius: 8 },
+  infoText: { fontSize: 13, color: '#555', fontWeight: 'bold' },
   detail: { fontSize: 14, color: '#666', marginBottom: 4 },
-  actions: { flexDirection: 'row', marginTop: 15, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 15 },
-  approveBtn: { flex: 1, backgroundColor: '#E8F5E9', padding: 10, borderRadius: 8, alignItems: 'center', marginRight: 10 },
-  approveText: { color: '#2E7D32', fontWeight: 'bold' },
-  rejectBtn: { flex: 1, backgroundColor: '#FFEBEE', padding: 10, borderRadius: 8, alignItems: 'center' },
-  rejectText: { color: '#C62828', fontWeight: 'bold' },
-  loader: { marginTop: 50 },
-  emptyText: { textAlign: 'center', marginTop: 50, color: '#999' },
+  actions: { flexDirection: 'row', marginTop: 15, gap: 10 },
+  btnDone: { flex: 1, backgroundColor: '#4CAF50', padding: 12, borderRadius: 10, alignItems: 'center' },
+  btnCancel: { flex: 1, backgroundColor: '#F44336', padding: 12, borderRadius: 10, alignItems: 'center' },
+  btnText: { color: '#FFF', fontWeight: 'bold' },
+  empty: { textAlign: 'center', marginTop: 50, color: '#999', fontSize: 16 },
 });

@@ -10,7 +10,9 @@ import {
   Alert, 
   ActivityIndicator,
   SafeAreaView,
-  FlatList
+  FlatList,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
@@ -23,23 +25,21 @@ export default function PhotoUploadScreen({ route, navigation }) {
   
   const [images, setImages] = useState([]);
   const [caption, setCaption] = useState('');
+  const [description, setDescription] = useState('');
+  const [bestMoment, setBestMoment] = useState('');
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!bookingId) {
-      fetchBookings();
-    }
+    if (!bookingId) fetchBookings();
   }, [bookingId]);
 
   const fetchBookings = async () => {
     try {
       setLoadingBookings(true);
       const response = await apiClient.get('/photography-bookings');
-      if (response.data.success) {
-        setBookings(response.data.data);
-      }
+      if (response.data.success) setBookings(response.data.data);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error(error);
     } finally {
       setLoadingBookings(false);
     }
@@ -48,14 +48,14 @@ export default function PhotoUploadScreen({ route, navigation }) {
   const pickImages = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      Alert.alert('Permission Needed', 'Access to photos is required for uploading.');
       return;
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
-      quality: 0.8,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
@@ -64,18 +64,12 @@ export default function PhotoUploadScreen({ route, navigation }) {
   };
 
   const removeImage = (index) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setImages(newImages);
+    setImages(images.filter((_, i) => i !== index));
   };
 
   const handleUpload = async () => {
-    if (!bookingId) {
-      Alert.alert('Error', 'Please select a booking first.');
-      return;
-    }
-    if (images.length === 0) {
-      Alert.alert('Error', 'Please select at least one image.');
+    if (!bookingId || images.length === 0) {
+      Alert.alert('Details Missing', 'Please select a visitor and pick at least one photo.');
       return;
     }
 
@@ -84,253 +78,145 @@ export default function PhotoUploadScreen({ route, navigation }) {
       const formData = new FormData();
       formData.append('booking', bookingId);
       formData.append('caption', caption);
+      formData.append('description', description);
+      formData.append('bestMoment', bestMoment);
 
       images.forEach((image, index) => {
         const uriParts = image.uri.split('.');
         const fileType = uriParts[uriParts.length - 1];
-
         formData.append('photos', {
           uri: image.uri,
-          name: `photo_${index}.${fileType}`,
+          name: `mem_${index}.${fileType}`,
           type: `image/${fileType}`,
         });
       });
 
       const response = await apiClient.post('/photos/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       if (response.data.success) {
-        Alert.alert('Success', 'Photos uploaded successfully!');
-        setImages([]);
-        setCaption('');
+        Alert.alert('Success!', 'Memories have been uploaded beautifully.');
         navigation.goBack();
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      Alert.alert('Error', 'Failed to upload photos. Please check your connection.');
+      Alert.alert('Error', 'Failed to upload memories. Check your internet connection.');
     } finally {
       setUploading(false);
     }
   };
 
-  const renderBookingItem = ({ item }) => (
+  const renderBooking = ({ item }) => (
     <TouchableOpacity 
-      style={[styles.bookingCard, bookingId === item._id && styles.selectedBooking]}
-      onPress={() => {
-        setBookingId(item._id);
-        setVisitorName(item.visitorName);
-      }}
+      style={[styles.bookingCard, bookingId === item._id && styles.activeBooking]}
+      onPress={() => { setBookingId(item._id); setVisitorName(item.visitorName); }}
     >
-      <Text style={styles.bookingName}>{item.visitorName}</Text>
-      <Text style={styles.bookingDate}>{new Date(item.date).toLocaleDateString()} at {item.time}</Text>
+      <Text style={[styles.bookingName, bookingId === item._id && styles.activeText]}>{item.visitorName}</Text>
+      <Text style={[styles.bookingDate, bookingId === item._id && styles.activeText]}>{item.date}</Text>
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Photographer Tools</Text>
-          <Text style={styles.subtitle}>Select a booking and upload photos</Text>
-        </View>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Upload Memories</Text>
+            <Text style={styles.subtitle}>Select a visitor and share their special moments</Text>
+          </View>
 
-        {!route.params?.bookingId && (
+          {!route.params?.bookingId && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>1. Select Visitor</Text>
+              {loadingBookings ? <ActivityIndicator color="#2196F3" /> : (
+                <FlatList
+                  horizontal
+                  data={bookings}
+                  keyExtractor={item => item._id}
+                  renderItem={renderBooking}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingVertical: 10 }}
+                />
+              )}
+            </View>
+          )}
+
           <View style={styles.section}>
-            <Text style={styles.label}>1. Select Booking</Text>
-            {loadingBookings ? (
-              <ActivityIndicator color="#2196F3" />
-            ) : (
-              <FlatList
-                data={bookings}
-                renderItem={renderBookingItem}
-                keyExtractor={(item) => item._id}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.bookingList}
-                ListEmptyComponent={<Text style={styles.emptyText}>No recent bookings found.</Text>}
-              />
-            )}
+            <Text style={styles.sectionTitle}>2. Choose Beautiful Photos</Text>
+            <TouchableOpacity style={styles.pickBtn} onPress={pickImages}>
+              <Text style={styles.pickBtnText}>📷 Select Memories</Text>
+            </TouchableOpacity>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.previewScroll}>
+              {images.map((img, idx) => (
+                <View key={idx} style={styles.previewWrapper}>
+                  <Image source={{ uri: img.uri }} style={styles.previewImg} />
+                  <TouchableOpacity style={styles.removeBtn} onPress={() => removeImage(idx)}>
+                    <Text style={styles.removeBtnText}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </ScrollView>
           </View>
-        )}
 
-        <View style={styles.section}>
-          <Text style={styles.label}>2. Select Photos</Text>
-          <TouchableOpacity style={styles.pickerButton} onPress={pickImages}>
-            <Text style={styles.pickerButtonText}>Choose from Gallery</Text>
-          </TouchableOpacity>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>3. Add Captions & Stories</Text>
+            <Text style={styles.label}>Memorable Title</Text>
+            <TextInput style={styles.input} value={caption} onChangeText={setCaption} placeholder="e.g. A Day with the Giraffes" />
+            
+            <Text style={styles.label}>Best Moment Highlight</Text>
+            <TextInput style={styles.input} value={bestMoment} onChangeText={setBestMoment} placeholder="e.g. The first giraffe kiss" />
 
-          <View style={styles.previewContainer}>
-            {images.map((image, index) => (
-              <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri: image.uri }} style={styles.previewImage} />
-                <TouchableOpacity 
-                  style={styles.removeIcon} 
-                  onPress={() => removeImage(index)}
-                >
-                  <Text style={styles.removeText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+            <Text style={styles.label}>Tell the Story</Text>
+            <TextInput 
+              style={[styles.input, styles.textArea]} 
+              value={description} 
+              onChangeText={setDescription} 
+              placeholder="Describe the beautiful moments in detail..."
+              multiline
+              numberOfLines={4}
+            />
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>3. Details & Upload</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Photo caption (e.g., Feeding the Giraffes)"
-            value={caption}
-            onChangeText={setCaption}
-          />
           <TouchableOpacity 
-            style={[styles.uploadButton, (uploading || !bookingId || images.length === 0) && styles.disabledButton]} 
+            style={[styles.submitBtn, (uploading || !bookingId || images.length === 0) && styles.disabledBtn]} 
             onPress={handleUpload}
             disabled={uploading || !bookingId || images.length === 0}
           >
-            {uploading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.uploadButtonText}>
-                {bookingId ? `Upload to ${visitorName}` : 'Select Booking First'}
-              </Text>
+            {uploading ? <ActivityIndicator color="#FFF" /> : (
+              <Text style={styles.submitBtnText}>✨ Save & Share Memories</Text>
             )}
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F7FA',
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  header: {
-    marginBottom: 25,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: 25,
-  },
-  label: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 12,
-  },
-  bookingList: {
-    paddingVertical: 5,
-  },
-  bookingCard: {
-    backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 12,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#EEE',
-    minWidth: 150,
-  },
-  selectedBooking: {
-    borderColor: '#2196F3',
-    backgroundColor: '#E3F2FD',
-  },
-  bookingName: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
-  },
-  bookingDate: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  pickerButton: {
-    backgroundColor: '#FFF',
-    borderWidth: 1,
-    borderColor: '#2196F3',
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  pickerButtonText: {
-    color: '#2196F3',
-    fontWeight: 'bold',
-  },
-  previewContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginHorizontal: -5,
-  },
-  imageWrapper: {
-    width: '30%',
-    aspectRatio: 1,
-    margin: 5,
-    borderRadius: 8,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  previewImage: {
-    width: '100%',
-    height: '100%',
-  },
-  removeIcon: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'rgba(255,0,0,0.7)',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  removeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  input: {
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#DDD',
-    marginBottom: 15,
-  },
-  uploadButton: {
-    backgroundColor: '#4CAF50',
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  uploadButtonText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  disabledButton: {
-    backgroundColor: '#CCC',
-  },
-  emptyText: {
-    color: '#999',
-    fontStyle: 'italic',
-  },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  scroll: { padding: 20 },
+  header: { marginBottom: 30 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#1A1A1A' },
+  subtitle: { fontSize: 16, color: '#666', marginTop: 4 },
+  section: { marginBottom: 30 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 },
+  bookingCard: { backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginRight: 12, borderWidth: 1, borderColor: '#EEE', width: 140 },
+  activeBooking: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
+  bookingName: { fontWeight: 'bold', fontSize: 15, color: '#333' },
+  bookingDate: { fontSize: 11, color: '#666', marginTop: 4 },
+  activeText: { color: '#FFF' },
+  pickBtn: { backgroundColor: '#FFF', borderStyle: 'dashed', borderWidth: 2, borderColor: '#2196F3', padding: 20, borderRadius: 15, alignItems: 'center', marginBottom: 15 },
+  pickBtnText: { color: '#2196F3', fontWeight: 'bold', fontSize: 16 },
+  previewScroll: { flexDirection: 'row' },
+  previewWrapper: { width: 100, height: 100, marginRight: 10, borderRadius: 10, overflow: 'hidden', position: 'relative' },
+  previewImg: { width: '100%', height: '100%' },
+  removeBtn: { position: 'absolute', top: 5, right: 5, backgroundColor: 'rgba(255,0,0,0.8)', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  removeBtnText: { color: '#FFF', fontWeight: 'bold' },
+  label: { fontSize: 13, fontWeight: 'bold', color: '#666', marginBottom: 8, marginTop: 10 },
+  input: { backgroundColor: '#FFF', borderRadius: 10, padding: 15, fontSize: 15, borderWidth: 1, borderColor: '#EEE', marginBottom: 10 },
+  textArea: { height: 100, textAlignVertical: 'top' },
+  submitBtn: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 10 },
+  submitBtnText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+  disabledBtn: { backgroundColor: '#CCC' },
 });
