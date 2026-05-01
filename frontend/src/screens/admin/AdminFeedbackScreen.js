@@ -1,15 +1,29 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity, Image, TextInput } from 'react-native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
 import { getApiBaseUrl } from '../../api/getApiBaseUrl';
 
+const TYPES = [
+  'All',
+  'Entry Tickets and Show Booking',
+  'Event Booking',
+  'Animal Encounter and Photography',
+  'Animal Information and Education',
+  'Online Store',
+  'General',
+];
+
 export default function AdminFeedbackScreen() {
   const [activeTab, setActiveTab] = useState('Feedback');
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('All');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -36,6 +50,28 @@ export default function AdminFeedbackScreen() {
     fetchData();
   }, [fetchData]);
 
+  // Handle Filtering and Searching
+  useEffect(() => {
+    let result = data;
+
+    // Filter by type (only for Feedback and Inquiry)
+    if (filterType !== 'All' && activeTab !== 'Review') {
+      result = result.filter(item => item.type === filterType);
+    }
+
+    // Search by User Name or Subject
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        item.userId?.fullName?.toLowerCase().includes(query) ||
+        item.subject?.toLowerCase().includes(query) ||
+        item.message?.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredData(result);
+  }, [data, searchQuery, filterType, activeTab]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchData();
@@ -48,7 +84,7 @@ export default function AdminFeedbackScreen() {
         <Text style={styles.userName}>{item.userId?.fullName || 'Unknown User'}</Text>
         <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>
       </View>
-      <Text style={styles.type}>{item.type}</Text>
+      <Text style={styles.itemType}>{item.type}</Text>
       <Text style={styles.subject}>{item.subject}</Text>
       <Text style={styles.message}>{item.message}</Text>
     </View>
@@ -61,7 +97,7 @@ export default function AdminFeedbackScreen() {
         <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>
       </View>
       <View style={styles.inquiryMeta}>
-        <Text style={styles.type}>{item.type}</Text>
+        <Text style={styles.itemType}>{item.type}</Text>
         <View style={[styles.statusBadge, item.status === 'RESOLVED' ? styles.statusResolved : styles.statusNew]}>
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
@@ -102,15 +138,52 @@ export default function AdminFeedbackScreen() {
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
-            onPress={() => setActiveTab(tab)}
+            onPress={() => {
+              setActiveTab(tab);
+              setFilterType('All'); // Reset filter on tab change
+            }}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}s</Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search by name or subject..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      {activeTab !== 'Review' && (
+        <View style={styles.filterContainer}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={TYPES}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.filterChip, filterType === item && styles.activeFilterChip]}
+                onPress={() => setFilterType(item)}
+              >
+                <Text style={[styles.filterChipText, filterType === item && styles.activeFilterChipText]}>
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={styles.filterList}
+          />
+        </View>
+      )}
+
       <FlatList
-        data={data}
+        data={filteredData}
         renderItem={renderItem}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
@@ -118,7 +191,7 @@ export default function AdminFeedbackScreen() {
         ListEmptyComponent={
           !loading && (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No {activeTab.toLowerCase()}s found</Text>
+              <Text style={styles.emptyText}>No results found</Text>
             </View>
           )
         }
@@ -186,13 +259,63 @@ const styles = StyleSheet.create({
     color: theme.colors.primaryText,
     opacity: 0.5,
   },
+  searchContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.md,
+    paddingHorizontal: theme.spacing.md,
+    height: 46,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  searchIcon: {
+    marginRight: 8,
+    fontSize: 16,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: theme.fontSize.body,
+    color: theme.colors.black,
+  },
+  filterContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  filterList: {
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: theme.colors.white,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  activeFilterChip: {
+    backgroundColor: theme.colors.accentGreen,
+    borderColor: theme.colors.accentGreen,
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.primaryText,
+    opacity: 0.7,
+  },
+  activeFilterChipText: {
+    color: theme.colors.white,
+    opacity: 1,
+  },
   inquiryMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
   },
-  type: {
+  itemType: {
     fontSize: 11,
     fontWeight: '700',
     color: theme.colors.primaryText,

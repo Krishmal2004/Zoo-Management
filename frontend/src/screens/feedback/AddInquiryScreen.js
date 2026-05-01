@@ -7,7 +7,14 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
 
-const INQUIRY_TYPES = ['General', 'Ticket Issue', 'Event Info', 'Other'];
+const INQUIRY_TYPES = [
+  'Entry Tickets and Show Booking',
+  'Event Booking',
+  'Animal Encounter and Photography',
+  'Animal Information and Education',
+  'Online Store',
+  'General',
+];
 
 export default function AddInquiryScreen({ navigation }) {
   const [type, setType] = useState('');
