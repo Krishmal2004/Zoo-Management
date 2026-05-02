@@ -23,6 +23,13 @@ export function buildUserDrawerMenuItems(navigation) {
       onPress: () => navigation.navigate('UserProfileDetails'),
     },
     {
+      key: 'my-photography-feeding-bookings',
+      label: 'My Photography and Feeding Bookings',
+      accessibilityLabel: 'My photography and feeding bookings',
+      titleStyle: drawerTitleStyle,
+      onPress: () => navigation.navigate('MyBookings'),
+    },
+    {
       key: 'my-tickets',
       label: 'My Tickets',
       accessibilityLabel: 'My tickets',

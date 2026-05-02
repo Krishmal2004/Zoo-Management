@@ -1,45 +1,4 @@
-<<<<<<< HEAD
 const express = require('express');
-const {
-  getAllEvents,
-  getEventById,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-} = require('../controllers/events.controller');
-const { protect, restrictTo } = require('../middleware/auth.middleware');
-const { requireDatabase } = require('../middleware/db.middleware');
-
-const router = express.Router();
-
-router.use(requireDatabase);
-
-router
-  .route('/')
-  .get(getAllEvents)
-  .post(protect, restrictTo('admin'), createEvent);
-
-router
-  .route('/:id')
-  .get(getEventById)
-  .put(protect, restrictTo('admin'), updateEvent)
-  .delete(protect, restrictTo('admin'), deleteEvent);
-
-module.exports = router;
-=======
-<<<<<<< HEAD
-const express = require('express');
-const eventsController = require('../controllers/events.controller');
-
-const router = express.Router();
-
-router.get('/', eventsController.getModuleInfo);
-
-module.exports = router;
-=======
-const express = require("express");
-const router = express.Router();
-
 const {
   createEvent,
   getAllEvents,
@@ -51,33 +10,28 @@ const {
   cancelBooking,
   getAllBookings,
   updateBookingStatus,
-} = require("../controllers/events.controller");
+} = require('../controllers/events.controller');
 
-const { protect, restrictTo } = require("../middleware/auth.middleware");
-const { createUpload } = require("../middleware/upload.middleware");
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+const { createUpload } = require('../middleware/upload.middleware');
 
-const upload = createUpload("events");
+const router = express.Router();
 
-// ─── Public Event Routes ───────────────────────────────────────────────────────
-router.get("/", getAllEvents);
+const upload = createUpload('events');
 
-// ─── Booking Routes (MUST be before /:id to avoid route conflict) ─────────────
-router.get("/bookings/my",                  protect, getMyBookings);
-router.get("/bookings/all",                 protect, restrictTo("admin"), getAllBookings);
-router.patch("/bookings/:bookingId/cancel", protect, cancelBooking);
-router.patch("/bookings/:bookingId/status", protect, restrictTo("admin"), updateBookingStatus);
+router.get('/', getAllEvents);
 
-// ─── Single Event Route (/:id must be AFTER /bookings routes) ─────────────────
-router.get("/:id", getEventById);
+router.get('/bookings/my', protect, getMyBookings);
+router.get('/bookings/all', protect, restrictTo('admin'), getAllBookings);
+router.patch('/bookings/:bookingId/cancel', protect, cancelBooking);
+router.patch('/bookings/:bookingId/status', protect, restrictTo('admin'), updateBookingStatus);
 
-// ─── Admin Event Routes ────────────────────────────────────────────────────────
-router.post("/",      protect, restrictTo("admin"), upload.single("image"), createEvent);
-router.put("/:id",    protect, restrictTo("admin"), upload.single("image"), updateEvent);
-router.delete("/:id", protect, restrictTo("admin"), deleteEvent);
+router.get('/:id', getEventById);
 
-// ─── Book an Event ─────────────────────────────────────────────────────────────
-router.post("/:id/book", protect, bookEvent);
+router.post('/', protect, restrictTo('admin'), upload.single('image'), createEvent);
+router.put('/:id', protect, restrictTo('admin'), upload.single('image'), updateEvent);
+router.delete('/:id', protect, restrictTo('admin'), deleteEvent);
+
+router.post('/:id/book', protect, bookEvent);
 
 module.exports = router;
->>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
->>>>>>> main

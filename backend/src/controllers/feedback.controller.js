@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-const asyncHandler = require('../utils/asyncHandler');
-const AppError = require('../utils/AppError');
-const Feedback = require('../models/Feedback.model');
-
-// GET /api/feedback
-exports.getAllFeedback = asyncHandler(async (req, res) => {
-  const { status, category } = req.query;
-  const filter = {};
-  if (status) filter.status = status;
-  if (category) filter.category = category;
-  const feedback = await Feedback.find(filter).sort({ createdAt: -1 });
-  res.status(200).json({ success: true, count: feedback.length, data: feedback });
-});
-
-// GET /api/feedback/:id
-exports.getFeedbackById = asyncHandler(async (req, res) => {
-  const feedback = await Feedback.findById(req.params.id);
-  if (!feedback) throw new AppError('Feedback not found', 404);
-  res.status(200).json({ success: true, data: feedback });
-});
-
-// POST /api/feedback  (public — visitors submit)
-exports.createFeedback = asyncHandler(async (req, res) => {
-  const feedback = await Feedback.create(req.body);
-  res.status(201).json({ success: true, data: feedback });
-});
-
-// PATCH /api/feedback/:id/status  (admin only — update status + note)
-exports.updateFeedbackStatus = asyncHandler(async (req, res) => {
-  const { status, adminNote } = req.body;
-  const feedback = await Feedback.findByIdAndUpdate(
-    req.params.id,
-    { $set: { status, adminNote: adminNote || '' } },
-    { new: true, runValidators: true }
-  );
-  if (!feedback) throw new AppError('Feedback not found', 404);
-  res.status(200).json({ success: true, data: feedback });
-});
-
-// DELETE /api/feedback/:id  (admin only)
-exports.deleteFeedback = asyncHandler(async (req, res) => {
-  const feedback = await Feedback.findByIdAndDelete(req.params.id);
-  if (!feedback) throw new AppError('Feedback not found', 404);
-  res.status(200).json({ success: true, data: {} });
-=======
 const path = require('path');
 const fs = require('fs');
 const asyncHandler = require('../utils/asyncHandler');
@@ -51,8 +5,6 @@ const AppError = require('../utils/AppError');
 const Feedback = require('../models/Feedback.model');
 const Inquiry = require('../models/Inquiry.model');
 const Review = require('../models/Review.model');
-
-// --- FEEDBACK ---
 
 exports.createFeedback = asyncHandler(async (req, res) => {
   const { type, subject, message } = req.body;
@@ -75,7 +27,7 @@ exports.createFeedback = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getMyFeedbacks = asyncHandler(async (req, res, next) => {
+exports.getMyFeedbacks = asyncHandler(async (req, res) => {
   const feedbacks = await Feedback.find({ userId: req.user._id }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -92,17 +44,22 @@ exports.updateFeedback = asyncHandler(async (req, res, next) => {
     { new: true, runValidators: true }
   );
 
-  if (!feedback) return next(new AppError('No feedback found with that ID or you do not have permission', 404));
+  if (!feedback)
+    return next(new AppError('No feedback found with that ID or you do not have permission', 404));
 
   res.status(200).json({ success: true, data: { feedback } });
 });
 
 exports.deleteFeedback = asyncHandler(async (req, res, next) => {
-  const feedback = await Feedback.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+  const feedback = await Feedback.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.user._id,
+  });
 
-  if (!feedback) return next(new AppError('No feedback found with that ID or you do not have permission', 404));
+  if (!feedback)
+    return next(new AppError('No feedback found with that ID or you do not have permission', 404));
 
-  res.status(204).json({ success: true, data: null });
+  res.status(204).send();
 });
 
 exports.getAllFeedbacks = asyncHandler(async (req, res) => {
@@ -115,9 +72,7 @@ exports.getAllFeedbacks = asyncHandler(async (req, res) => {
   });
 });
 
-// --- INQUIRIES ---
-
-exports.createInquiry = asyncHandler(async (req, res, next) => {
+exports.createInquiry = asyncHandler(async (req, res) => {
   const { type, subject, message } = req.body;
   const imageUrl = req.file ? `/uploads/feedback/${req.file.filename}` : undefined;
 
@@ -140,7 +95,7 @@ exports.createInquiry = asyncHandler(async (req, res, next) => {
   });
 });
 
-exports.getMyInquiries = asyncHandler(async (req, res, next) => {
+exports.getMyInquiries = asyncHandler(async (req, res) => {
   const inquiries = await Inquiry.find({ userId: req.user._id }).sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -153,7 +108,8 @@ exports.getMyInquiries = asyncHandler(async (req, res, next) => {
 exports.updateInquiry = asyncHandler(async (req, res, next) => {
   const inquiry = await Inquiry.findOne({ _id: req.params.id, userId: req.user._id });
 
-  if (!inquiry) return next(new AppError('No inquiry found with that ID or you do not have permission', 404));
+  if (!inquiry)
+    return next(new AppError('No inquiry found with that ID or you do not have permission', 404));
 
   inquiry.type = req.body.type || inquiry.type;
   inquiry.subject = req.body.subject || inquiry.subject;
@@ -173,16 +129,20 @@ exports.updateInquiry = asyncHandler(async (req, res, next) => {
 });
 
 exports.deleteInquiry = asyncHandler(async (req, res, next) => {
-  const inquiry = await Inquiry.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+  const inquiry = await Inquiry.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.user._id,
+  });
 
-  if (!inquiry) return next(new AppError('No inquiry found with that ID or you do not have permission', 404));
+  if (!inquiry)
+    return next(new AppError('No inquiry found with that ID or you do not have permission', 404));
 
   if (inquiry.imageUrl) {
     const filePath = path.join(__dirname, `../../public${inquiry.imageUrl}`);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
 
-  res.status(204).json({ success: true, data: null });
+  res.status(204).send();
 });
 
 exports.getAllInquiries = asyncHandler(async (req, res) => {
@@ -194,8 +154,6 @@ exports.getAllInquiries = asyncHandler(async (req, res) => {
     data: { inquiries },
   });
 });
-
-// --- REVIEWS ---
 
 exports.createReview = asyncHandler(async (req, res) => {
   const { rating, message } = req.body;
@@ -234,17 +192,22 @@ exports.updateReview = asyncHandler(async (req, res, next) => {
     { new: true, runValidators: true }
   );
 
-  if (!review) return next(new AppError('No review found with that ID or you do not have permission', 404));
+  if (!review)
+    return next(new AppError('No review found with that ID or you do not have permission', 404));
 
   res.status(200).json({ success: true, data: { review } });
 });
 
 exports.deleteReview = asyncHandler(async (req, res, next) => {
-  const review = await Review.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+  const review = await Review.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.user._id,
+  });
 
-  if (!review) return next(new AppError('No review found with that ID or you do not have permission', 404));
+  if (!review)
+    return next(new AppError('No review found with that ID or you do not have permission', 404));
 
-  res.status(204).json({ success: true, data: null });
+  res.status(204).send();
 });
 
 exports.getAllReviews = asyncHandler(async (req, res) => {
@@ -256,8 +219,6 @@ exports.getAllReviews = asyncHandler(async (req, res) => {
     data: { reviews },
   });
 });
-
-// --- ADMIN REPLIES ---
 
 exports.replyToFeedback = asyncHandler(async (req, res, next) => {
   const feedback = await Feedback.findByIdAndUpdate(
@@ -293,5 +254,4 @@ exports.replyToReview = asyncHandler(async (req, res, next) => {
   if (!review) return next(new AppError('No review found with that ID', 404));
 
   res.status(200).json({ success: true, data: { review } });
->>>>>>> main
 });
