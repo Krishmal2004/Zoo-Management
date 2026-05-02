@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -26,8 +27,20 @@ export default function App() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded && !fontError) {
-    return null;
+  if (fontError) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Error loading fonts: {fontError.message}</Text>
+      </View>
+    );
+  }
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ECF3EC' }}>
+        <ActivityIndicator size="large" color="#2E7D32" />
+      </View>
+    );
   }
 
   return (
