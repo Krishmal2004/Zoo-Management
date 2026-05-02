@@ -1,4 +1,5 @@
 import axios from 'axios';
+import apiClient from './client';
 import { getApiBaseUrl } from './getApiBaseUrl';
 
 const getBaseUrl = () => {
@@ -68,4 +69,20 @@ export const fetchRandomFact = async () => {
     console.error('Error fetching random fact:', error);
     throw error;
   }
+};
+import apiClient from './client';
+
+export const createAnimal = async (animalData) => {
+  const response = await apiClient.post('/animals', animalData);
+  return response.data;
+};
+
+export const updateAnimal = async (id, animalData) => {
+  const response = await apiClient.put(`/animals/${id}`, animalData);
+  return response.data;
+};
+
+export const deleteAnimal = async (id) => {
+  const response = await apiClient.delete(`/animals/${id}`);
+  return response.data;
 };

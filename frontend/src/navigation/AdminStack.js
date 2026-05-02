@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import UserManagementScreen from '../screens/admin/UserManagementScreen';
+import AdminAnimalInformationEducationScreen from '../screens/admin/AdminAnimalInformationEducationScreen';
 import AdminModulePlaceholderScreen from '../screens/admin/AdminModulePlaceholderScreen';
 import { stackScreenOptions } from './screenOptions';
 
@@ -27,7 +28,7 @@ export default function AdminStack() {
       />
       <Stack.Screen
         name="AdminAnimalInformationEducation"
-        component={AdminModulePlaceholderScreen}
+        component={AdminAnimalInformationEducationScreen}
         options={adminModulePlaceholderOptions}
       />
       <Stack.Screen name="AdminOnlineStore" component={AdminModulePlaceholderScreen} options={adminModulePlaceholderOptions} />

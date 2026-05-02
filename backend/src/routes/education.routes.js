@@ -8,9 +8,11 @@ const {
   deleteEducation,
 } = require('../controllers/education.controller');
 
-router.route('/').get(getAllEducation).post(createEducation);
+const { protect, restrictTo } = require('../middleware/auth.middleware');
 
-router.route('/:id').put(updateEducation).delete(deleteEducation);
+router.route('/').get(getAllEducation).post(protect, restrictTo('admin'), createEducation);
+
+router.route('/:id').put(protect, restrictTo('admin'), updateEducation).delete(protect, restrictTo('admin'), deleteEducation);
 
 router.get('/animal/:animalId', getEducationByAnimal);
 
