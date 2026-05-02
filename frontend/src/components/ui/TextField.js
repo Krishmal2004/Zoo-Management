@@ -12,6 +12,7 @@ export default function TextField({
   autoCapitalize = 'none',
   error,
   editable = true,
+  maxLength,
 }) {
   return (
     <View style={styles.wrap}>
@@ -26,6 +27,7 @@ export default function TextField({
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         editable={editable}
+        maxLength={maxLength}
       />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>

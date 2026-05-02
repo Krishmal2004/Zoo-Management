@@ -25,12 +25,12 @@ export function validateFullName(fullName) {
   return null;
 }
 
-/** Phone: required; count only digits; max 10 (matches server). */
+/** Phone: required; must be exactly 10 digits. */
 export function validatePhone(phone) {
   if (!phone || !String(phone).trim()) return 'Phone is required';
   const digits = String(phone).replace(/\D/g, '');
   if (digits.length === 0) return 'Enter a valid phone number';
-  if (digits.length > 10) return 'Phone must have at most 10 digits';
+  if (digits.length !== 10) return 'Phone number must be exactly 10 digits';
   return null;
 }
 

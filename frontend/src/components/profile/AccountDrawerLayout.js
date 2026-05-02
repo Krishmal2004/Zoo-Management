@@ -41,6 +41,7 @@ function AccountField({
   secureTextEntry,
   textContentType,
   autoComplete,
+  maxLength,
 }) {
   return (
     <View style={fieldStyles.wrap}>
@@ -55,6 +56,7 @@ function AccountField({
         secureTextEntry={secureTextEntry}
         textContentType={textContentType}
         autoComplete={autoComplete}
+        maxLength={maxLength}
         placeholderTextColor={`${theme.colors.primaryText}99`}
       />
     </View>
@@ -514,6 +516,7 @@ export default function AccountDrawerLayout({
                     value={draftPhone}
                     onChangeText={setDraftPhone}
                     keyboardType="phone-pad"
+                    maxLength={10}
                   />
                   {saveError ? <Text style={styles.saveError}>{saveError}</Text> : null}
                   <PrimaryButton

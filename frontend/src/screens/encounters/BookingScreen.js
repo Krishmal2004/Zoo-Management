@@ -23,6 +23,7 @@ export default function BookingScreen({ route, navigation }) {
   const [bookingType, setBookingType] = useState(initialType || 'Feeding');
   const [visitorName, setVisitorName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); 
   
   const [allSlots, setAllSlots] = useState([]);
@@ -75,12 +76,14 @@ export default function BookingScreen({ route, navigation }) {
   });
 
   const handleConfirmBooking = async () => {
+    setPhoneError('');
     if (!visitorName.trim() || visitorName.trim().length < 2) {
       Alert.alert('Required', 'Please enter your name.');
       return;
     }
-    if (!contactInfo.trim() || contactInfo.trim().length < 3) {
-      Alert.alert('Required', 'Please enter your contact number.');
+    const digits = contactInfo.replace(/\D/g, '');
+    if (digits.length !== 10) {
+      setPhoneError('Phone number must be exactly 10 digits.');
       return;
     }
     if (!selectedSlotId) {
@@ -197,8 +200,16 @@ export default function BookingScreen({ route, navigation }) {
             <Text style={styles.label}>Full Name</Text>
             <TextInput style={styles.input} value={visitorName} onChangeText={setVisitorName} placeholder="Your name" />
             
-            <Text style={styles.label}>Contact Detail</Text>
-            <TextInput style={styles.input} value={contactInfo} onChangeText={setContactInfo} placeholder="Phone or Email" />
+            <Text style={styles.label}>Phone Number</Text>
+            <TextInput 
+              style={[styles.input, phoneError ? { borderColor: '#F44336', borderWidth: 1 } : null]} 
+              value={contactInfo} 
+              onChangeText={(val) => { setContactInfo(val); setPhoneError(''); }} 
+              placeholder="10-digit phone number"
+              keyboardType="default"
+              maxLength={10}
+            />
+            {phoneError ? <Text style={{ color: '#F44336', fontSize: 12, marginTop: -10, marginBottom: 10, marginLeft: 5 }}>{phoneError}</Text> : null}
 
             <Text style={styles.label}>Select Date</Text>
             <TextInput style={styles.input} value={date} onChangeText={setDate} />

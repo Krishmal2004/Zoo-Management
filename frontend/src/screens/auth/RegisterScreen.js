@@ -67,9 +67,10 @@ export default function RegisterScreen({ navigation }) {
         label="Phone"
         value={phone}
         onChangeText={setPhone}
-        placeholder="Up to 10 digits"
+        placeholder="10-digit phone number"
         keyboardType="phone-pad"
         error={errors.phone}
+        maxLength={10}
       />
       <TextField
         label="Password"
