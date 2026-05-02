@@ -31,6 +31,12 @@ const getAllCategories = async () => {
       name: 'Books & Magazines',
       description: 'Educational books and interesting wildlife magazines.',
       image: 'https://www.alderneywildlife.org/sites/default/files/styles/large/public/2023-03/fotor_2023-3-15_13_47_45.jpg?itok=cthLfpWX'
+    },
+    {
+      _id: 'Other',
+      name: 'Other',
+      description: 'Miscellaneous items for zoo lovers.',
+      image: 'https://www.akronzoo.org/sites/default/files/styles/uncropped_xl/public/assets/basic/Gift%20Shop.jpg?itok=oSY1yYdN'
     }
   ];
 
