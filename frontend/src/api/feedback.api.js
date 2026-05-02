@@ -1,14 +1,5 @@
 import apiClient from './client';
 
-<<<<<<< HEAD
-export const getFeedback = (params = {}) => apiClient.get('/feedback', { params }).then(r => r.data);
-export const getFeedbackById = (id) => apiClient.get(`/feedback/${id}`).then(r => r.data);
-export const submitFeedback = (data) => apiClient.post('/feedback', data).then(r => r.data);
-export const updateFeedbackStatus = (id, status, adminNote = '') =>
-  apiClient.patch(`/feedback/${id}/status`, { status, adminNote }).then(r => r.data);
-export const deleteFeedback = (id) => apiClient.delete(`/feedback/${id}`).then(r => r.data);
-=======
-// Feedback
 export async function createFeedback(payload) {
   const res = await apiClient.post('/feedback', payload);
   return res.data;
@@ -24,13 +15,8 @@ export async function getAllFeedbacks() {
   return res.data;
 }
 
-// Inquiries
 export async function createInquiry(formData) {
-  const res = await apiClient.post('/feedback/inquiries', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const res = await apiClient.post('/feedback/inquiries', formData);
   return res.data;
 }
 
@@ -44,7 +30,6 @@ export async function getAllInquiries() {
   return res.data;
 }
 
-// Reviews
 export async function createReview(payload) {
   const res = await apiClient.post('/feedback/reviews', payload);
   return res.data;
@@ -60,7 +45,6 @@ export async function getAllReviews() {
   return res.data;
 }
 
-// Update & Delete
 export async function updateFeedback(id, payload) {
   const res = await apiClient.patch(`/feedback/${id}`, payload);
   return res.data;
@@ -72,11 +56,7 @@ export async function deleteFeedback(id) {
 }
 
 export async function updateInquiry(id, formData) {
-  const res = await apiClient.patch(`/feedback/inquiries/${id}`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const res = await apiClient.patch(`/feedback/inquiries/${id}`, formData);
   return res.data;
 }
 
@@ -95,7 +75,6 @@ export async function deleteReview(id) {
   return res.data;
 }
 
-// Admin Replies
 export async function replyToFeedback(id, reply) {
   const res = await apiClient.post(`/feedback/${id}/reply`, { reply });
   return res.data;
@@ -110,4 +89,3 @@ export async function replyToReview(id, reply) {
   const res = await apiClient.post(`/feedback/reviews/${id}/reply`, { reply });
   return res.data;
 }
->>>>>>> main

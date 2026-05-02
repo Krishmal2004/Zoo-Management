@@ -1,42 +1,3 @@
-<<<<<<< HEAD
-const express = require('express');
-const {
-  getAllItems,
-  getItemById,
-  createItem,
-  updateItem,
-  deleteItem,
-} = require('../controllers/store.controller');
-const { protect, restrictTo } = require('../middleware/auth.middleware');
-const { requireDatabase } = require('../middleware/db.middleware');
-
-const router = express.Router();
-
-router.use(requireDatabase);
-
-router
-  .route('/')
-  .get(getAllItems)
-  .post(protect, restrictTo('admin'), createItem);
-
-router
-  .route('/:id')
-  .get(getItemById)
-  .put(protect, restrictTo('admin'), updateItem)
-  .delete(protect, restrictTo('admin'), deleteItem);
-
-module.exports = router;
-=======
-<<<<<<< HEAD
-const express = require('express');
-const storeController = require('../controllers/store.controller');
-
-const router = express.Router();
-
-router.get('/', storeController.getModuleInfo);
-
-module.exports = router;
-=======
 const express = require('express');
 const storeController = require('../controllers/store.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
@@ -51,10 +12,20 @@ router.delete('/categories/:id', protect, restrictTo('admin'), storeController.d
 
 router.get('/products', storeController.getAllProducts);
 router.get('/products/:id', storeController.getProductById);
-router.post('/products', protect, restrictTo('admin'), createUpload('products').single('image'), storeController.createProduct);
-router.put('/products/:id', protect, restrictTo('admin'), createUpload('products').single('image'), storeController.updateProduct);
+router.post(
+  '/products',
+  protect,
+  restrictTo('admin'),
+  createUpload('products').single('image'),
+  storeController.createProduct
+);
+router.put(
+  '/products/:id',
+  protect,
+  restrictTo('admin'),
+  createUpload('products').single('image'),
+  storeController.updateProduct
+);
 router.delete('/products/:id', protect, restrictTo('admin'), storeController.deleteProduct);
 
 module.exports = router;
->>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
->>>>>>> main

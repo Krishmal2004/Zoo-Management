@@ -1,17 +1,40 @@
 import axios from 'axios';
-import { getTunnelModeApiMisconfigMessage } from '../api/getApiBaseUrl';
+import {
+  getApiBaseUrl,
+  getTunnelModeApiMisconfigMessage,
+} from '../api/getApiBaseUrl';
+
+function portFromApiBaseUrl(base) {
+  try {
+    const u = new URL(base.includes('://') ? base : `http://${base}`);
+    return u.port || '5000';
+  } catch {
+    return String(Number(process.env.EXPO_PUBLIC_API_PORT) || 5000);
+  }
+}
+
+function isUnreachableWithoutResponse(err) {
+  if (!axios.isAxiosError(err) || err.response) return false;
+  const msg = `${err.code || ''} ${err.message || ''}`.toLowerCase();
+  return (
+    err.code === 'ERR_NETWORK' ||
+    err.code === 'ECONNABORTED' ||
+    msg.includes('network error') ||
+    msg.includes('timeout') ||
+    msg.includes('timed out') ||
+    msg.includes('failed to connect') ||
+    msg.includes('connection refused') ||
+    msg.includes('connrefused') ||
+    msg.includes('connection_timed_out')
+  );
+}
 
 /**
  * User-facing copy for failed login/register requests.
  * When Metro uses --tunnel, the API on :5000 is not tunneled unless configured.
  */
 export function describeAuthRequestError(err, fallbackTitle) {
-  const isNetwork =
-    axios.isAxiosError(err) &&
-    !err.response &&
-    (err.code === 'ERR_NETWORK' || /network error/i.test(String(err.message)));
-
-  if (__DEV__ && isNetwork) {
+  if (__DEV__ && isUnreachableWithoutResponse(err)) {
     const tunnelHint = getTunnelModeApiMisconfigMessage();
     if (tunnelHint) {
       return {
@@ -19,6 +42,22 @@ export function describeAuthRequestError(err, fallbackTitle) {
         message: tunnelHint,
       };
     }
+
+    const base = getApiBaseUrl();
+    const apiPort = portFromApiBaseUrl(base);
+    return {
+      title: 'Cannot reach your API computer',
+      message:
+        `The phone could not complete a connection to:\n${base}\n\n` +
+        `Common fixes:\n` +
+        `• On your PC run the backend (\`npm run dev\`) and wait for "Listening on http://0.0.0.0…".\n` +
+        `• Same Wi‑Fi for phone and PC (guest networks often isolate devices).\n` +
+        `• On Windows allow Node.js through Defender Firewall for Private networks.\n` +
+        `• In PC Command Prompt run \`ipconfig\`: set \`frontend/.env\` to:\n` +
+        `   EXPO_PUBLIC_API_URL=http://<YOUR_IPV4_HERE>:${apiPort}/api\n` +
+        `  then restart Expo with \`npx expo start -c\`.\n` +
+        `• On the phone’s browser open \`http://<same-ip>:${apiPort}/api/health\` — you should see JSON.`,
+    };
   }
 
   if (axios.isAxiosError(err) && err.response?.status === 503) {

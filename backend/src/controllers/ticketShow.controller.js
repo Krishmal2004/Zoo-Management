@@ -1,43 +1,5 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
-<<<<<<< HEAD
-const Ticket = require('../models/Ticket.model');
-
-// GET /api/ticket-show
-exports.getAllTickets = asyncHandler(async (req, res) => {
-  const tickets = await Ticket.find().sort({ createdAt: -1 });
-  res.status(200).json({ success: true, count: tickets.length, data: tickets });
-});
-
-// GET /api/ticket-show/:id
-exports.getTicketById = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findById(req.params.id);
-  if (!ticket) throw new AppError('Ticket not found', 404);
-  res.status(200).json({ success: true, data: ticket });
-});
-
-// POST /api/ticket-show
-exports.createTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.create(req.body);
-  res.status(201).json({ success: true, data: ticket });
-});
-
-// PUT /api/ticket-show/:id
-exports.updateTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-  if (!ticket) throw new AppError('Ticket not found', 404);
-  res.status(200).json({ success: true, data: ticket });
-});
-
-// DELETE /api/ticket-show/:id
-exports.deleteTicket = asyncHandler(async (req, res) => {
-  const ticket = await Ticket.findByIdAndDelete(req.params.id);
-  if (!ticket) throw new AppError('Ticket not found', 404);
-  res.status(200).json({ success: true, data: {} });
-=======
 const TicketCatalog = require('../models/TicketCatalog.model');
 const TicketBooking = require('../models/TicketBooking.model');
 const DEFAULT_SHOW_DAILY_CAPACITY = 100;
@@ -86,7 +48,6 @@ async function normalizeSelectedItems(rawItems, category) {
   });
 }
 
-/** Prepared for Phase 2 — Ticket & Show Management */
 exports.getModuleInfo = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
@@ -141,7 +102,8 @@ exports.createBooking = asyncHandler(async (req, res) => {
       for (const bookedShowItem of booking.showItems || []) {
         if (!requestedShowCodes.includes(bookedShowItem.itemCode)) continue;
         const nextBookedQty =
-          (alreadyBookedByCode.get(bookedShowItem.itemCode) || 0) + Number(bookedShowItem.quantity || 0);
+          (alreadyBookedByCode.get(bookedShowItem.itemCode) || 0) +
+          Number(bookedShowItem.quantity || 0);
         alreadyBookedByCode.set(bookedShowItem.itemCode, nextBookedQty);
       }
     }
@@ -250,5 +212,4 @@ exports.verifyEntry = asyncHandler(async (req, res) => {
     message: 'Pass verified and marked as used',
     data: { booking, valid: true, alreadyUsed: false },
   });
->>>>>>> main
 });
