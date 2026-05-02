@@ -58,25 +58,11 @@ export function buildUserDrawerMenuItems(navigation) {
       onPress: () => navigation.navigate('MyGroupRequests'),
     },
     {
-      key: 'my-feedbacks',
-      label: 'Feedbacks',
-      accessibilityLabel: 'My feedbacks',
+      key: 'feedback-inquiries-reviews',
+      label: 'Feedback, Inquiries & Reviews',
+      accessibilityLabel: 'Feedback, inquiries, and reviews — open hub',
       titleStyle: drawerTitleStyle,
-      onPress: () => navigation.navigate('FeedbackList'),
-    },
-    {
-      key: 'my-inquiries',
-      label: 'Inquiries',
-      accessibilityLabel: 'My inquiries',
-      titleStyle: drawerTitleStyle,
-      onPress: () => navigation.navigate('InquiryList'),
-    },
-    {
-      key: 'my-reviews',
-      label: 'Reviews',
-      accessibilityLabel: 'My reviews',
-      titleStyle: drawerTitleStyle,
-      onPress: () => navigation.navigate('ReviewList'),
+      onPress: () => navigation.navigate('Feedback'),
     },
   ];
 }

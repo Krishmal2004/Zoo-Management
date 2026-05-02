@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Modal, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Alert, Modal, TouchableOpacity } from 'react-native';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { popOrParentGoBack } from '../../utils/popOrParentGoBack';
 import TextField from '../../components/ui/TextField';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
+import {
+  validateTypeSubjectMessage,
+  hasValidationErrors,
+  FEEDBACK_SUBJECT_MAX,
+  FEEDBACK_MESSAGE_MAX,
+} from '../../utils/validation';
 
 const FEEDBACK_TYPES = [
   'Entry Tickets and Show Booking',
@@ -25,24 +31,47 @@ export default function AddFeedbackScreen({ navigation, route }) {
   const [message, setMessage] = useState(existingFeedback?.message || '');
   const [loading, setLoading] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const clearFieldError = useCallback((key) => {
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
 
   const handleSubmit = async () => {
-    if (!type || !subject || !message) {
-      Alert.alert('Missing Fields', 'Please fill in all fields before submitting.');
+    const nextErrors = validateTypeSubjectMessage({
+      type,
+      subject,
+      message,
+      allowedTypes: FEEDBACK_TYPES,
+    });
+    setErrors(nextErrors);
+    if (hasValidationErrors(nextErrors)) {
+      Alert.alert('Check your entries', 'Please fix the fields highlighted below.');
       return;
     }
+
+    const payload = {
+      type: type.trim(),
+      subject: subject.trim(),
+      message: message.trim(),
+    };
 
     setLoading(true);
     try {
       if (isEditing) {
-        await feedbackApi.updateFeedback(existingFeedback._id, { type, subject, message });
-        Alert.alert('Success', 'Your feedback has been updated.', [
-          { text: 'OK', onPress: () => popOrParentGoBack(navigation) }
+        await feedbackApi.updateFeedback(existingFeedback._id, payload);
+        Alert.alert('Feedback updated', 'Your changes were saved.', [
+          { text: 'OK', onPress: () => popOrParentGoBack(navigation) },
         ]);
       } else {
-        await feedbackApi.createFeedback({ type, subject, message });
-        Alert.alert('Success', 'Your feedback has been submitted. Thank you!', [
-          { text: 'OK', onPress: () => popOrParentGoBack(navigation) }
+        await feedbackApi.createFeedback(payload);
+        Alert.alert('Feedback submitted', 'We have received your feedback.', [
+          { text: 'OK', onPress: () => popOrParentGoBack(navigation) },
         ]);
       }
     } catch (error) {
@@ -57,29 +86,46 @@ export default function AddFeedbackScreen({ navigation, route }) {
       <View style={styles.form}>
         <Text style={styles.label}>Feedback Type</Text>
         <TouchableOpacity
-          style={styles.pickerTrigger}
-          onPress={() => setShowTypeModal(true)}
+          style={[
+            styles.pickerTrigger,
+            errors.type ? styles.pickerTriggerError : styles.pickerTriggerSpaced,
+          ]}
+          onPress={() => {
+            clearFieldError('type');
+            setShowTypeModal(true);
+          }}
         >
           <Text style={[styles.pickerValue, !type && styles.pickerPlaceholder]}>
             {type || 'Select feedback type'}
           </Text>
           <Text style={styles.pickerChevron}>▾</Text>
         </TouchableOpacity>
+        {errors.type ? <Text style={styles.fieldError}>{errors.type}</Text> : null}
 
         <TextField
           label="Subject"
           value={subject}
-          onChangeText={setSubject}
+          onChangeText={(v) => {
+            setSubject(v);
+            clearFieldError('subject');
+          }}
           placeholder="What is this about?"
+          error={errors.subject}
+          maxLength={FEEDBACK_SUBJECT_MAX}
         />
 
         <TextField
           label="Message"
           value={message}
-          onChangeText={setMessage}
+          onChangeText={(v) => {
+            setMessage(v);
+            clearFieldError('message');
+          }}
           placeholder="Tell us more..."
           multiline
           numberOfLines={6}
+          error={errors.message}
+          maxLength={FEEDBACK_MESSAGE_MAX}
         />
 
         <PrimaryButton
@@ -109,6 +155,7 @@ export default function AddFeedbackScreen({ navigation, route }) {
                 style={styles.modalOption}
                 onPress={() => {
                   setType(t);
+                  clearFieldError('type');
                   setShowTypeModal(false);
                 }}
               >
@@ -141,6 +188,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  pickerTriggerSpaced: {
+    marginBottom: theme.spacing.md,
+  },
+  pickerTriggerError: {
+    borderColor: theme.colors.error,
+    marginBottom: theme.spacing.xs,
+  },
+  fieldError: {
+    fontFamily: theme.fonts.regular,
+    fontWeight: '400',
+    color: theme.colors.error,
+    fontSize: theme.fontSize.sm,
     marginBottom: theme.spacing.md,
   },
   pickerValue: {

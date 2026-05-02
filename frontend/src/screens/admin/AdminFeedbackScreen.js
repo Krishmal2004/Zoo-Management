@@ -11,6 +11,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import ScreenContainer from '../../components/ui/ScreenContainer';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
@@ -25,6 +26,42 @@ const TYPES = [
   'Online Store',
   'General',
 ];
+
+const TAB_META = {
+  Feedback: {
+    tabLabel: 'Feedbacks',
+    heroTitle: 'Feedback Management',
+    heroSubtitle: 'View and manage user-submitted feedback.',
+  },
+  Inquiry: {
+    tabLabel: 'Inquiries',
+    heroTitle: 'Inquiry Management',
+    heroSubtitle: 'Respond to and manage user inquiries.',
+  },
+  Review: {
+    tabLabel: 'Reviews',
+    heroTitle: 'Review Management',
+    heroSubtitle: 'Moderate and manage product and service reviews.',
+  },
+};
+
+function itemMatchesSearch(item, rawQuery) {
+  const q = String(rawQuery ?? '').trim().toLowerCase();
+  if (!q) return true;
+  const parts = [
+    item.userId?.fullName,
+    item.userId?.email,
+    item.type,
+    item.subject,
+    item.message,
+    item.status,
+    item.adminReply,
+    item.rating != null && item.rating !== '' ? String(item.rating) : null,
+  ]
+    .filter((x) => x != null && String(x).trim() !== '')
+    .map((x) => String(x).toLowerCase());
+  return parts.some((p) => p.includes(q));
+}
 
 export default function AdminFeedbackScreen() {
   const [activeTab, setActiveTab] = useState('Feedback');
@@ -73,14 +110,8 @@ export default function AdminFeedbackScreen() {
       result = result.filter((item) => item.type === filterType);
     }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (item) =>
-          item.userId?.fullName?.toLowerCase().includes(query) ||
-          item.subject?.toLowerCase().includes(query) ||
-          item.message?.toLowerCase().includes(query)
-      );
+    if (searchQuery.trim()) {
+      result = result.filter((item) => itemMatchesSearch(item, searchQuery));
     }
 
     setFilteredData(result);
@@ -228,7 +259,16 @@ export default function AdminFeedbackScreen() {
         <Text style={styles.userName}>{item.userId?.fullName || 'Unknown User'}</Text>
         <Text style={styles.date}>{new Date(item.createdAt).toLocaleDateString()}</Text>
       </View>
-      <Text style={styles.stars}>{'⭐'.repeat(item.rating)}</Text>
+      <View style={styles.starsRow} accessibilityLabel={`Rating ${item.rating} out of 5`}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Ionicons
+            key={i}
+            name={i <= item.rating ? 'star' : 'star-outline'}
+            size={16}
+            color={i <= item.rating ? theme.colors.ratingStar : theme.colors.ratingStarMuted}
+          />
+        ))}
+      </View>
       <Text style={styles.message}>{item.message}</Text>
       {renderReplySection(item.adminReply)}
       {renderActions(item)}
@@ -241,10 +281,15 @@ export default function AdminFeedbackScreen() {
     return renderReview(item);
   };
 
-  const uploadsOrigin = getApiBaseUrl().replace(/\/api\/?$/i, '');
+  const hero = TAB_META[activeTab];
 
   return (
     <ScreenContainer scroll={false} backgroundColor={theme.colors.backgroundAlt}>
+      <View style={styles.heroCard} accessibilityRole="header">
+        <Text style={styles.heroTitle}>{hero.heroTitle}</Text>
+        <Text style={styles.heroSubtitle}>{hero.heroSubtitle}</Text>
+      </View>
+
       <View style={styles.tabBar}>
         {['Feedback', 'Inquiry', 'Review'].map((tab) => (
           <TouchableOpacity
@@ -255,7 +300,9 @@ export default function AdminFeedbackScreen() {
               setFilterType('All');
             }}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}s</Text>
+            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+              {TAB_META[tab].tabLabel}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -264,7 +311,7 @@ export default function AdminFeedbackScreen() {
         <View style={styles.searchBox}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by name or subject..."
+            placeholder="Search by name, email, subject, message, status…"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -347,12 +394,43 @@ export default function AdminFeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
+  heroCard: {
+    backgroundColor: theme.colors.welcomeBackground,
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    borderColor: theme.colors.sage,
+    borderLeftWidth: 5,
+    borderLeftColor: theme.colors.accentGreen,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    shadowColor: '#0D2D1D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  heroTitle: {
+    fontFamily: theme.fonts.bold,
+    fontWeight: '700',
+    fontSize: theme.fontSize.title,
+    color: theme.colors.linkGreen,
+  },
+  heroSubtitle: {
+    marginTop: theme.spacing.xs,
+    fontFamily: theme.fonts.regular,
+    fontWeight: '400',
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.accentGreen,
+    lineHeight: Math.round(theme.fontSize.sm * 1.45),
+    opacity: 0.92,
+  },
   tabBar: {
     flexDirection: 'row',
     backgroundColor: theme.colors.white,
     padding: 4,
     borderRadius: theme.radii.md,
-    marginTop: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
   tab: {
@@ -622,7 +700,12 @@ const styles = StyleSheet.create({
     opacity: 0.8,
     lineHeight: 18,
   },
-  stars: { fontSize: 14, marginBottom: 4 },
+  starsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
   image: {
     width: '100%',
     height: 150,

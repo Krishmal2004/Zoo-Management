@@ -145,7 +145,7 @@ export default function InquiryListScreen({ navigation }) {
         ListEmptyComponent={
           !loading && (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>❓</Text>
+              <View style={styles.emptyMark} accessibilityElementsHidden />
               <Text style={styles.emptyText}>No inquiries submitted yet</Text>
             </View>
           )
@@ -303,9 +303,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 60,
   },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: theme.spacing.sm,
+  emptyMark: {
+    width: 48,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: theme.colors.accentGreen,
+    marginBottom: theme.spacing.md,
   },
   emptyText: {
     fontFamily: theme.fonts.regular,
