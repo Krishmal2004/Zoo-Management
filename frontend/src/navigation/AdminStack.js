@@ -8,6 +8,7 @@ import PhotographerManagementScreen from '../screens/admin/PhotographerManagemen
 import TimeSlotManagementScreen from '../screens/admin/TimeSlotManagementScreen';
 import PhotographyBookingManagementScreen from '../screens/admin/PhotographyBookingManagementScreen';
 import AnimalManagementScreen from '../screens/admin/AnimalManagementScreen';
+import AdminEntryTicketsHubScreen from '../screens/admin/AdminEntryTicketsHubScreen';
 import AdminTicketsShowsListScreen from '../screens/admin/AdminTicketsShowsListScreen';
 import AdminManageBookingsScreen from '../screens/admin/AdminManageBookingsScreen';
 import AdminManageGroupBookingsScreen from '../screens/admin/AdminManageGroupBookingsScreen';
@@ -44,7 +45,8 @@ export default function AdminStack() {
       <Stack.Screen name="PhotoUpload" component={PhotoUploadScreen} options={{ title: 'Upload Photos' }} />
       <Stack.Screen name="AnimalManagement" component={AnimalManagementScreen} options={{ title: 'Manage Encounter Animals' }} />
 
-      <Stack.Screen name="AdminEntryTicketsShowBooking" component={AdminTicketsShowsListScreen} options={noHeader} />
+      <Stack.Screen name="AdminEntryTicketsShowBooking" component={AdminEntryTicketsHubScreen} options={noHeader} />
+      <Stack.Screen name="AdminManageTicketsAndShows" component={AdminTicketsShowsListScreen} options={noHeader} />
       <Stack.Screen name="AdminManageBookings" component={AdminManageBookingsScreen} options={noHeader} />
       <Stack.Screen name="AdminManageGroupBookings" component={AdminManageGroupBookingsScreen} options={noHeader} />
       <Stack.Screen name="AdminScanTicket" component={AdminScanTicketScreen} options={noHeader} />
