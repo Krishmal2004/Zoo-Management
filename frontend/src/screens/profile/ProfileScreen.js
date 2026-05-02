@@ -5,11 +5,7 @@ import ModuleCard from '../../components/ui/ModuleCard';
 import { FEATURE_MODULES } from '../../constants/modules';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
-
-const drawerTitleStyle = {
-  fontSize: theme.fontSize.lg,
-  lineHeight: Math.round(theme.fontSize.lg * 1.35),
-};
+import { buildUserDrawerMenuItems } from './userDrawerMenu';
 
 function ProfileExploreBody({ navigation, firstName, moduleRows }) {
   return (
@@ -61,6 +57,7 @@ export default function ProfileScreen({ navigation }) {
     return rows;
   }, []);
 
+<<<<<<< HEAD
   const drawerMenuItems = useMemo(
     () => [
       {
@@ -87,6 +84,9 @@ export default function ProfileScreen({ navigation }) {
     ],
     [navigation]
   );
+=======
+  const drawerMenuItems = useMemo(() => buildUserDrawerMenuItems(navigation), [navigation]);
+>>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
 
   return (
     <AccountDrawerLayout

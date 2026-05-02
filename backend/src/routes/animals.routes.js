@@ -1,5 +1,6 @@
 const express = require('express');
 const animalsController = require('../controllers/animals.controller');
+<<<<<<< HEAD
 const { createUpload } = require('../middleware/upload.middleware');
 
 const router = express.Router();
@@ -18,5 +19,11 @@ router
   .patch(upload.any(), animalsController.updateAnimal)
   .delete(animalsController.deleteAnimal)
   .post(animalsController.deleteAnimal);
+=======
+
+const router = express.Router();
+
+router.get('/', animalsController.getModuleInfo);
+>>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
 
 module.exports = router;
