@@ -1,7 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const storeService = require('../services/store.service');
 
-
 exports.getAllCategories = asyncHandler(async (req, res) => {
   const categories = await storeService.getAllCategories();
   res.status(200).json({ success: true, data: categories });
@@ -40,7 +39,6 @@ exports.createProduct = asyncHandler(async (req, res) => {
     const imageUrl = `/uploads/products/${req.file.filename}`;
     req.body.images = [imageUrl];
   } else if (req.body.images && typeof req.body.images === 'string') {
-    // Fallback if images sent as string or empty
     req.body.images = req.body.images ? [req.body.images] : [];
   }
   if (req.body.sizes && typeof req.body.sizes === 'string') {
