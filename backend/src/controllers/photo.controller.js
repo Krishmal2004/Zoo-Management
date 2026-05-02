@@ -10,13 +10,7 @@ exports.uploadPhoto = asyncHandler(async (req, res) => {
   console.log('HEADERS:', req.headers['content-type']);
   console.log('BODY:', req.body);
   
-  const bookingId = req.body.booking;
-  if (!bookingId) {
-    return res.status(400).json({
-      success: false,
-      message: 'Booking ID is missing. Please select a visitor.',
-    });
-  }
+  const bookingId = req.body.booking || null;
 
   // Handle both req.files (array) and req.file (single) from multer
   let uploadedFiles = [];
@@ -47,7 +41,7 @@ exports.uploadPhoto = asyncHandler(async (req, res) => {
   }
 
   const docs = uploadedFiles.map((file) => ({
-    booking: bookingId,
+    ...(bookingId && { booking: bookingId }),
     imageUrl: `/uploads/photos/${file.filename}`,
     caption: req.body.caption || 'Zoo Memory',
     description: req.body.description || '',

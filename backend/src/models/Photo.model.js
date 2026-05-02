@@ -5,7 +5,7 @@ const photoSchema = new mongoose.Schema(
     booking: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PhotographyBooking',
-      required: [true, 'Booking reference is required'],
+      required: false,
     },
     imageUrl: {
       type: String,

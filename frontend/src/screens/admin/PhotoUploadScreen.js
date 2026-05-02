@@ -16,34 +16,35 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import apiClient from '../../api/client';
-import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+import { getApiBaseUrl, getStaticBaseUrl } from '../../api/getApiBaseUrl';
 import { getToken } from '../../services/tokenStorage';
 
 export default function PhotoUploadScreen({ route, navigation }) {
-  const [bookingId, setBookingId] = useState(route.params?.bookingId || '');
-  const [visitorName, setVisitorName] = useState(route.params?.visitorName || '');
-  const [bookings, setBookings] = useState([]);
-  const [loadingBookings, setLoadingBookings] = useState(false);
-  
   const [images, setImages] = useState([]);
   const [caption, setCaption] = useState('');
   const [description, setDescription] = useState('');
   const [bestMoment, setBestMoment] = useState('');
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    if (!bookingId) fetchBookings();
-  }, [bookingId]);
+  // Saved photos list
+  const [savedPhotos, setSavedPhotos] = useState([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
 
-  const fetchBookings = async () => {
+  const staticBase = getStaticBaseUrl();
+
+  useEffect(() => {
+    fetchSavedPhotos();
+  }, []);
+
+  const fetchSavedPhotos = async () => {
     try {
-      setLoadingBookings(true);
-      const response = await apiClient.get('/photography-bookings');
-      if (response.data.success) setBookings(response.data.data);
+      setLoadingPhotos(true);
+      const response = await apiClient.get('/photos');
+      if (response.data.success) setSavedPhotos(response.data.data);
     } catch (error) {
-      console.error(error);
+      console.error('Fetch photos error:', error);
     } finally {
-      setLoadingBookings(false);
+      setLoadingPhotos(false);
     }
   };
 
@@ -70,10 +71,6 @@ export default function PhotoUploadScreen({ route, navigation }) {
   };
 
   const handleUpload = async () => {
-    if (!bookingId) {
-      Alert.alert('Selection Missing', 'Please select a visitor first.');
-      return;
-    }
     if (images.length === 0) {
       Alert.alert('Photos Missing', 'Please select at least one photo.');
       return;
@@ -83,25 +80,17 @@ export default function PhotoUploadScreen({ route, navigation }) {
       setUploading(true);
       const formData = new FormData();
       
-      // 1. Add metadata
-      formData.append('booking', bookingId);
       formData.append('caption', caption || 'Zoo Memory');
       formData.append('description', description || '');
       formData.append('bestMoment', bestMoment || '');
 
-      // 2. CONVERT URIs TO BLOBS (The most reliable way for multipart)
-      console.log('Converting images to blobs...');
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
         try {
           const response = await fetch(image.uri);
           const blob = await response.blob();
-          
-          // Append as a file with a name and type
           formData.append('photos', blob, `photo_${Date.now()}_${i}.jpg`);
         } catch (blobError) {
-          console.error('Blob conversion failed for image', i, blobError);
-          // Fallback to standard URI method if blob fails
           formData.append('photos', {
             uri: image.uri,
             name: `photo_${i}.jpg`,
@@ -113,11 +102,8 @@ export default function PhotoUploadScreen({ route, navigation }) {
       const baseUrl = getApiBaseUrl();
       const token = await getToken();
 
-      console.log('Sending multipart request to:', `${baseUrl}/photos`);
-
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${baseUrl}/photos`);
-      
       xhr.setRequestHeader('Accept', 'application/json');
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
@@ -126,12 +112,14 @@ export default function PhotoUploadScreen({ route, navigation }) {
         try {
           const res = JSON.parse(xhr.responseText);
           if (xhr.status === 201 || xhr.status === 200 || res.success) {
-            Alert.alert('Success ✨', 'The memory has been shared!');
-            navigation.goBack();
+            Alert.alert('Success ✨', 'The memory has been saved!');
+            setImages([]);
+            setCaption('');
+            setDescription('');
+            setBestMoment('');
+            fetchSavedPhotos();
           } else {
-            // Show the detailed debug message from the server
             Alert.alert('Upload Error', res.message || 'The server rejected the photos.');
-            console.log('Server Error:', res);
           }
         } catch (e) {
           Alert.alert('Error', 'Server response was not readable.');
@@ -147,20 +135,55 @@ export default function PhotoUploadScreen({ route, navigation }) {
 
     } catch (error) {
       setUploading(false);
-      console.error('Upload Error:', error);
       Alert.alert('Error', 'Something went wrong during the upload process.');
     }
   };
 
-  const renderBooking = ({ item }) => (
-    <TouchableOpacity 
-      style={[styles.bookingCard, bookingId === item._id && styles.activeBooking]}
-      onPress={() => { setBookingId(item._id); setVisitorName(item.visitorName); }}
-    >
-      <Text style={[styles.bookingName, bookingId === item._id && styles.activeText]}>{item.visitorName}</Text>
-      <Text style={[styles.bookingDate, bookingId === item._id && styles.activeText]}>{item.date}</Text>
-    </TouchableOpacity>
-  );
+  const handleDelete = (photo) => {
+    if (Platform.OS === 'web') {
+      const ok = window.confirm(`Delete this memory "${photo.caption || 'Untitled'}"?`);
+      if (ok) processDelete(photo._id);
+    } else {
+      Alert.alert(
+        'Delete Memory',
+        `Are you sure you want to delete "${photo.caption || 'Untitled'}"?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => processDelete(photo._id) }
+        ]
+      );
+    }
+  };
+
+  const processDelete = async (id) => {
+    try {
+      setSavedPhotos(prev => prev.filter(p => p._id !== id));
+      await apiClient.delete(`/photos/${id}`);
+    } catch (error) {
+      Alert.alert('Error', 'Could not delete this memory.');
+      fetchSavedPhotos();
+    }
+  };
+
+  const renderSavedPhoto = ({ item }) => {
+    const firstImg = item.photos?.[0];
+    const imgUrl = firstImg
+      ? (firstImg.startsWith('http') ? firstImg : `${staticBase}${firstImg}`)
+      : null;
+
+    return (
+      <View style={styles.savedCard}>
+        {imgUrl && <Image source={{ uri: imgUrl }} style={styles.savedImg} />}
+        <View style={styles.savedInfo}>
+          <Text style={styles.savedCaption} numberOfLines={1}>{item.caption || 'Zoo Memory'}</Text>
+          {item.bestMoment ? <Text style={styles.savedMoment} numberOfLines={1}>⭐ {item.bestMoment}</Text> : null}
+        </View>
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
+          <Text style={styles.deleteBtnText}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -171,26 +194,9 @@ export default function PhotoUploadScreen({ route, navigation }) {
             <Text style={styles.subtitle}>Relive the zoo magic</Text>
           </View>
 
-          {!route.params?.bookingId && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>1. Select Visitor</Text>
-              {loadingBookings ? (
-                <ActivityIndicator color="#2196F3" />
-              ) : (
-                <FlatList
-                  horizontal
-                  data={bookings}
-                  keyExtractor={item => item._id}
-                  renderItem={renderBooking}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingVertical: 10 }}
-                />
-              )}
-            </View>
-          )}
-
+          {/* Choose Photos */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>2. Choose Photos</Text>
+            <Text style={styles.sectionTitle}>1. Choose Photos</Text>
             <TouchableOpacity style={styles.pickBtn} onPress={pickImages}>
               <Text style={styles.pickBtnText}>📷 Select Photos</Text>
             </TouchableOpacity>
@@ -207,8 +213,9 @@ export default function PhotoUploadScreen({ route, navigation }) {
             </ScrollView>
           </View>
 
+          {/* Memory Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>3. Memory Details</Text>
+            <Text style={styles.sectionTitle}>2. Memory Details</Text>
             <TextInput style={styles.input} value={caption} onChangeText={setCaption} placeholder="Title" />
             <TextInput style={styles.input} value={bestMoment} onChangeText={setBestMoment} placeholder="Highlight" />
             <TextInput 
@@ -221,9 +228,9 @@ export default function PhotoUploadScreen({ route, navigation }) {
           </View>
 
           <TouchableOpacity 
-            style={[styles.submitBtn, (uploading || !bookingId || images.length === 0) && styles.disabledBtn]} 
+            style={[styles.submitBtn, (uploading || images.length === 0) && styles.disabledBtn]} 
             onPress={handleUpload}
-            disabled={uploading || !bookingId || images.length === 0}
+            disabled={uploading || images.length === 0}
           >
             {uploading ? (
               <ActivityIndicator color="#FFF" />
@@ -231,6 +238,23 @@ export default function PhotoUploadScreen({ route, navigation }) {
               <Text style={styles.submitBtnText}>✨ Save & Share Memories</Text>
             )}
           </TouchableOpacity>
+
+          {/* Saved Memories */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Saved Memories</Text>
+            {loadingPhotos ? (
+              <ActivityIndicator color="#4CAF50" style={{ marginTop: 20 }} />
+            ) : savedPhotos.length === 0 ? (
+              <Text style={styles.emptyText}>No saved memories yet.</Text>
+            ) : (
+              savedPhotos.map(item => (
+                <View key={item._id}>
+                  {renderSavedPhoto({ item })}
+                </View>
+              ))
+            )}
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -245,13 +269,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 15, color: '#666', marginTop: 4 },
   section: { marginBottom: 30 },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: 15 },
-  bookingCard: { backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginRight: 12, borderWidth: 1, borderColor: '#EEE', width: 140 },
-  activeBooking: { backgroundColor: '#2196F3', borderColor: '#2196F3' },
-  bookingName: { fontWeight: 'bold', fontSize: 15, color: '#333' },
-  bookingDate: { fontSize: 11, color: '#666', marginTop: 4 },
-  activeText: { color: '#FFF' },
-  pickBtn: { backgroundColor: '#FFF', borderStyle: 'dashed', borderWidth: 2, borderColor: '#2196F3', padding: 20, borderRadius: 15, alignItems: 'center', marginBottom: 15 },
-  pickBtnText: { color: '#2196F3', fontWeight: 'bold', fontSize: 16 },
+  pickBtn: { backgroundColor: '#FFF', borderStyle: 'dashed', borderWidth: 2, borderColor: '#4CAF50', padding: 20, borderRadius: 15, alignItems: 'center', marginBottom: 15 },
+  pickBtnText: { color: '#4CAF50', fontWeight: 'bold', fontSize: 16 },
   previewScroll: { flexDirection: 'row' },
   previewWrapper: { width: 100, height: 100, marginRight: 10, borderRadius: 10, overflow: 'hidden', position: 'relative' },
   previewImg: { width: '100%', height: '100%' },
@@ -259,7 +278,15 @@ const styles = StyleSheet.create({
   removeBtnText: { color: '#FFF', fontWeight: 'bold' },
   input: { backgroundColor: '#FFF', borderRadius: 10, padding: 15, fontSize: 15, borderWidth: 1, borderColor: '#EEE', marginBottom: 10 },
   textArea: { height: 100, textAlignVertical: 'top' },
-  submitBtn: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 10 },
+  submitBtn: { backgroundColor: '#4CAF50', padding: 18, borderRadius: 15, alignItems: 'center', marginTop: 10, marginBottom: 30 },
   submitBtnText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
   disabledBtn: { backgroundColor: '#CCC' },
+  savedCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', borderRadius: 12, marginBottom: 12, overflow: 'hidden', elevation: 2 },
+  savedImg: { width: 70, height: 70 },
+  savedInfo: { flex: 1, padding: 10 },
+  savedCaption: { fontWeight: 'bold', fontSize: 15, color: '#1A1A1A' },
+  savedMoment: { fontSize: 12, color: '#666', marginTop: 3 },
+  deleteBtn: { padding: 15 },
+  deleteBtnText: { fontSize: 20 },
+  emptyText: { color: '#999', textAlign: 'center', marginTop: 10 },
 });
