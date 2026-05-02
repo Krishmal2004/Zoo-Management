@@ -15,14 +15,15 @@ const signToken = (userId, role) =>
   });
 
 const registerUser = async ({ fullName, email, phone, password }) => {
-  const existing = await User.findOne({ email });
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await User.findOne({ email: normalizedEmail });
   if (existing) {
     throw new AppError('An account with this email already exists', 409);
   }
   const hashed = await hashPassword(password);
   const user = await User.create({
     fullName,
-    email,
+    email: normalizedEmail,
     phone,
     password: hashed,
     role: 'visitor',
@@ -33,7 +34,8 @@ const registerUser = async ({ fullName, email, phone, password }) => {
 };
 
 const loginUser = async ({ email, password }) => {
-  const user = await User.findOne({ email }).select('+password');
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail }).select('+password');
   if (!user) {
     throw new AppError('Invalid email or password', 401);
   }
