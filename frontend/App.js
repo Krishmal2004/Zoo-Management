@@ -40,5 +40,6 @@ export default function App() {
           </NavigationContainer>
         </CartProvider>
       </AuthProvider>
+    </SafeAreaProvider>
   );
 }
