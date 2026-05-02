@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import axios from 'axios';
 import { getToken } from '../services/tokenStorage';
 import { getApiBaseUrl } from './getApiBaseUrl';
@@ -13,6 +14,16 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(async (config) => {
   config.baseURL = getApiBaseUrl();
+  // Let axios/runtime set multipart boundaries for FormData payloads.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData && config.headers) {
+    if (typeof config.headers.delete === 'function') {
+      config.headers.delete('Content-Type');
+      config.headers.delete('content-type');
+    } else {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+  }
   const token = await getToken();
   if (token) {
     // Axios v1 may use AxiosHeaders; set safely for both cases.
