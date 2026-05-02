@@ -512,24 +512,7 @@ export default function AdminAddEditEventScreen({ route, navigation }) {
           />
         </Field>
 
-        <Field label="Available Dates">
-          {availableDates.length > 0 && (
-            <View style={styles.datesList}>
-              {availableDates.map((d, i) => (
-                <View key={i} style={styles.datePill}>
-                  <Ionicons name="calendar-outline" size={13} color="#2D6A4F" />
-                  <Text style={styles.datePillText}>
-                    {d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                  </Text>
-                  <TouchableOpacity onPress={() => removeDate(i)}>
-                    <Ionicons name="close-circle" size={16} color="#E63946" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
-          
-        </Field>
+        
 
         <TouchableOpacity
           style={[styles.submitBtn, loading && { opacity: 0.7 }]}
