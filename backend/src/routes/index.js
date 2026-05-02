@@ -9,6 +9,9 @@ const encountersRoutes = require('./encounters.routes');
 const storeRoutes = require('./store.routes');
 const adminRoutes = require('./admin.routes');
 const educationRoutes = require('./education.routes');
+const quizRoutes = require('./quiz.routes');
+const lifeCycleRoutes = require('./lifecycle.routes');
+const didYouKnowRoutes = require('./didyouknow.routes');
 
 const router = express.Router();
 
@@ -33,5 +36,8 @@ router.use('/encounters', encountersRoutes);
 router.use('/store', storeRoutes);
 router.use('/admin', adminRoutes);
 router.use('/education', educationRoutes);
+router.use('/quiz', quizRoutes);
+router.use('/lifecycle', lifeCycleRoutes);
+router.use('/didyouknow', didYouKnowRoutes);
 
 module.exports = router;
