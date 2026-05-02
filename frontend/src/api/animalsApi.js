@@ -1,20 +1,38 @@
 import axios from 'axios';
 import apiClient from './client';
-import { getApiBaseUrl } from './getApiBaseUrl';
+import { getApiBaseUrl, resolveUploadsFileUri } from './getApiBaseUrl';
 
 const getBaseUrl = () => {
   return getApiBaseUrl();
 };
 
+/** Resolve a stored `/uploads/...` path or absolute URL for display.fetch */
 const resolveImageUrl = (path) => {
-  if (!path) return 'https://via.placeholder.com/400';
-  if (path.startsWith('http')) return path;
-  
-  const baseUrl = getBaseUrl();
-  // baseUrl is usually http://host:port/api
-  const origin = baseUrl.split('/api')[0];
-  return `${origin}${path}`;
+  if (path == null) return null;
+  const s = String(path).trim();
+  if (!s) return null;
+  if (s.startsWith('http://') || s.startsWith('https://')) return s;
+  return resolveUploadsFileUri(s);
 };
+
+/**
+ * Backend stores a single `imageUrl`; older clients may send `images` array.
+ * Public screens expect `images: string[]` of absolute URLs.
+ */
+function collectResolvedImages(animal) {
+  const rawPaths = [];
+  if (Array.isArray(animal.images)) {
+    animal.images.forEach((x) => {
+      if (x != null && String(x).trim()) rawPaths.push(String(x).trim());
+    });
+  }
+  if (animal.imageUrl && String(animal.imageUrl).trim()) {
+    const u = String(animal.imageUrl).trim();
+    if (!rawPaths.includes(u)) rawPaths.push(u);
+  }
+  const urls = rawPaths.map(resolveImageUrl).filter(Boolean);
+  return urls;
+}
 
 export const fetchAnimals = async (search = '', category = 'All') => {
   try {
@@ -26,12 +44,12 @@ export const fetchAnimals = async (search = '', category = 'All') => {
     const response = await axios.get(`${baseUrl}/animals?${params.toString()}`);
     const animals = response.data.data.map(animal => ({
       ...animal,
-      images: animal.images.map(resolveImageUrl),
+      images: collectResolvedImages(animal),
       educationContent: animal.educationContent?.map(content => ({
         ...content,
-        imageUrl: resolveImageUrl(content.imageUrl),
-        thumbnail: resolveImageUrl(content.thumbnail)
-      }))
+        imageUrl: resolveImageUrl(content.imageUrl) ?? content.imageUrl,
+        thumbnail: resolveImageUrl(content.thumbnail) ?? content.thumbnail,
+      })),
     }));
     return { ...response.data, data: animals };
   } catch (error) {
@@ -44,14 +62,15 @@ export const fetchAnimalById = async (id) => {
   try {
     const baseUrl = getBaseUrl();
     const response = await axios.get(`${baseUrl}/animals/${id}`);
+    const raw = response.data.data;
     const animal = {
-      ...response.data.data,
-      images: response.data.data.images.map(resolveImageUrl),
-      educationContent: response.data.data.educationContent?.map(content => ({
+      ...raw,
+      images: collectResolvedImages(raw),
+      educationContent: raw.educationContent?.map(content => ({
         ...content,
-        imageUrl: resolveImageUrl(content.imageUrl),
-        thumbnail: resolveImageUrl(content.thumbnail)
-      }))
+        imageUrl: resolveImageUrl(content.imageUrl) ?? content.imageUrl,
+        thumbnail: resolveImageUrl(content.thumbnail) ?? content.thumbnail,
+      })),
     };
     return { ...response.data, data: animal };
   } catch (error) {
@@ -77,7 +96,7 @@ export const createAnimal = async (animalData) => {
 };
 
 export const updateAnimal = async (id, animalData) => {
-  const response = await apiClient.put(`/animals/${id}`, animalData);
+  const response = await apiClient.patch(`/animals/${id}`, animalData);
   return response.data;
 };
 

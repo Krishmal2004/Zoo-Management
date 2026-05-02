@@ -3,13 +3,18 @@ const Animal = require('../models/Animal.model');
 const asyncHandler = require('../utils/asyncHandler');
 const AppError = require('../utils/AppError');
 
-exports.addAnimal = asyncHandler(async (req, res) => {
-  let fileName = '';
-  if (req.file) {
-    fileName = req.file.filename;
-  } else if (req.files && req.files.length > 0) {
-    fileName = req.files[0].filename;
+/** Multer: `.single('field')` sets `req.file`; `.any()` / `.array()` set `req.files`. */
+function getUploadedAnimalFile(req) {
+  if (req.file?.filename) return req.file.filename;
+  if (Array.isArray(req.files) && req.files.length > 0) {
+    const f = req.files.find((x) => x?.fieldname === 'image') || req.files[0];
+    return f.filename;
   }
+  return null;
+}
+
+exports.addAnimal = asyncHandler(async (req, res) => {
+  const fileName = getUploadedAnimalFile(req) || '';
 
   const animalData = {
     ...req.body,
@@ -78,7 +83,14 @@ exports.getAnimalById = asyncHandler(async (req, res) => {
 
 exports.updateAnimal = asyncHandler(async (req, res) => {
   const updateData = { ...req.body };
-  if (req.file) updateData.imageUrl = `/uploads/animals/${req.file.filename}`;
+  delete updateData.image;
+  const uploaded = getUploadedAnimalFile(req);
+  if (uploaded) updateData.imageUrl = `/uploads/animals/${uploaded}`;
+  const ageRaw = updateData.age;
+  if (ageRaw !== undefined && ageRaw !== '') {
+    const n = Number(ageRaw);
+    if (!Number.isNaN(n)) updateData.age = n;
+  }
 
   const updatedAnimal = await Animal.findByIdAndUpdate(req.params.id, updateData, {
     new: true,

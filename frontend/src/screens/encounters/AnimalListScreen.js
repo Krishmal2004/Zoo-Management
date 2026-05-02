@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import EncounterAnimalCard from '../../components/encounters/EncounterAnimalCard';
 import apiClient from '../../api/client';
-import { getStaticBaseUrl } from '../../api/getApiBaseUrl';
+import { resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 
 export default function AnimalListScreen({ navigation }) {
   const [animals, setAnimals] = useState([]);
@@ -74,16 +74,16 @@ export default function AnimalListScreen({ navigation }) {
           data={animals}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => {
-            const staticBase = getStaticBaseUrl();
-            const imageUrl = item.imageUrl?.startsWith('http') 
-              ? item.imageUrl 
-              : `${staticBase}${item.imageUrl}`;
-              
+            const raw = item.imageUrl && String(item.imageUrl).trim();
+            const imageUrl =
+              raw &&
+              (resolveUploadsFileUri(raw) || (raw.startsWith('http') ? raw : null));
+
             return (
               <EncounterAnimalCard
                 animal={{
                   ...item,
-                  image: imageUrl
+                  image: imageUrl || 'https://via.placeholder.com/600x400/cccccc/666666?text=Photo',
                 }}
                 onBookFeeding={() => handleBookFeeding(item)}
                 onBookPhotography={() => handleBookPhotography(item)}
