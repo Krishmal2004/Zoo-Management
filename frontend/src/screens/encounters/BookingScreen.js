@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,13 @@ import apiClient from '../../api/client';
 import { theme } from '../../constants/theme';
 import { resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 import { popOrParentGoBack } from '../../utils/popOrParentGoBack';
+import VisitDateCalendar from '../../components/booking/VisitDateCalendar';
+import {
+  getBookingDateBounds,
+  monthStartTs,
+  startOfDay,
+  toLocalDateKey,
+} from '../../utils/visitCalendar';
 
 export default function BookingScreen({ route, navigation }) {
   const { animal, type: initialType } = route.params || {};
@@ -26,7 +33,13 @@ export default function BookingScreen({ route, navigation }) {
   const [visitorName, setVisitorName] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const { min, max } = useMemo(() => getBookingDateBounds(), []);
+  const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [visibleYear, setVisibleYear] = useState(() => new Date().getFullYear());
+  const [visibleMonthIndex, setVisibleMonthIndex] = useState(() => new Date().getMonth());
+
+  const dateKey = useMemo(() => toLocalDateKey(selectedDate), [selectedDate]);
 
   const [allSlots, setAllSlots] = useState([]);
   const [photographers, setPhotographers] = useState([]);
@@ -40,6 +53,50 @@ export default function BookingScreen({ route, navigation }) {
   useEffect(() => {
     fetchData();
   }, [bookingType]);
+
+  const canGoPrevMonth =
+    monthStartTs(visibleYear, visibleMonthIndex) > monthStartTs(min.getFullYear(), min.getMonth());
+  const canGoNextMonth =
+    monthStartTs(visibleYear, visibleMonthIndex) < monthStartTs(max.getFullYear(), max.getMonth());
+
+  const onPrevMonth = useCallback(() => {
+    if (!canGoPrevMonth) return;
+    const d = new Date(visibleYear, visibleMonthIndex, 1);
+    d.setMonth(d.getMonth() - 1);
+    setVisibleYear(d.getFullYear());
+    setVisibleMonthIndex(d.getMonth());
+  }, [visibleYear, visibleMonthIndex, canGoPrevMonth]);
+
+  const onNextMonth = useCallback(() => {
+    if (!canGoNextMonth) return;
+    const d = new Date(visibleYear, visibleMonthIndex, 1);
+    d.setMonth(d.getMonth() + 1);
+    setVisibleYear(d.getFullYear());
+    setVisibleMonthIndex(d.getMonth());
+  }, [visibleYear, visibleMonthIndex, canGoNextMonth]);
+
+  const openCalendar = useCallback(() => {
+    setVisibleYear(selectedDate.getFullYear());
+    setVisibleMonthIndex(selectedDate.getMonth());
+    setIsCalendarOpen(true);
+  }, [selectedDate]);
+
+  const onSelectCalendarDate = useCallback((d) => {
+    setSelectedDate(startOfDay(d));
+    setSelectedSlotId('');
+    setIsCalendarOpen(false);
+  }, []);
+
+  const dateDisplayLabel = useMemo(
+    () =>
+      selectedDate.toLocaleDateString(undefined, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      }),
+    [selectedDate]
+  );
 
   const heroUri =
     animal?.imageUrl &&
@@ -69,7 +126,7 @@ export default function BookingScreen({ route, navigation }) {
     let slotDateStr = slot.date;
     if (typeof slotDateStr !== 'string') slotDateStr = new Date(slotDateStr).toISOString().split('T')[0];
 
-    if (slotDateStr !== date) return false;
+    if (slotDateStr !== dateKey) return false;
     if (slot.isBooked) return false;
 
     if (bookingType === 'Photography') {
@@ -230,7 +287,16 @@ export default function BookingScreen({ route, navigation }) {
             {phoneError ? <Text style={styles.phoneError}>{phoneError}</Text> : null}
 
             <Text style={styles.label}>Select Date</Text>
-            <TextInput style={styles.input} value={date} onChangeText={setDate} />
+            <TouchableOpacity
+              style={styles.datePickerBtn}
+              onPress={openCalendar}
+              accessibilityRole="button"
+              accessibilityLabel="Open calendar to choose session date"
+              activeOpacity={0.7}
+            >
+              <Text style={styles.datePickerText}>{dateDisplayLabel}</Text>
+              <Ionicons name="calendar-outline" size={22} color={theme.colors.linkGreen} />
+            </TouchableOpacity>
           </View>
 
           {bookingType === 'Photography' && (
@@ -340,6 +406,33 @@ export default function BookingScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
+      <Modal visible={isCalendarOpen} transparent animationType="fade" onRequestClose={() => setIsCalendarOpen(false)}>
+        <View style={styles.calendarModalBackdrop}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={styles.calendarModalDismissLayer}
+            onPress={() => setIsCalendarOpen(false)}
+            accessibilityLabel="Dismiss calendar"
+          />
+          <View style={styles.calendarModalCard}>
+            <VisitDateCalendar
+              showIntro={false}
+              visibleYear={visibleYear}
+              visibleMonthIndex={visibleMonthIndex}
+              onPrevMonth={onPrevMonth}
+              onNextMonth={onNextMonth}
+              canGoPrevMonth={canGoPrevMonth}
+              canGoNextMonth={canGoNextMonth}
+              selectedDate={selectedDate}
+              onSelectDate={onSelectCalendarDate}
+              onClose={() => setIsCalendarOpen(false)}
+              minDate={min}
+              maxDate={max}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -378,6 +471,43 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: theme.fontSize.body,
     marginBottom: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: theme.colors.welcomeBackground,
+    borderRadius: theme.radii.sm,
+    paddingVertical: 14,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  datePickerText: {
+    fontSize: theme.fontSize.body,
+    fontWeight: '600',
+    color: theme.colors.primaryText,
+    flex: 1,
+  },
+  calendarModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.md,
+  },
+  calendarModalDismissLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  calendarModalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: theme.colors.white,
+    borderRadius: theme.radii.lg,
+    padding: theme.spacing.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
