@@ -1,4 +1,5 @@
 const asyncHandler = require('../utils/asyncHandler');
+<<<<<<< HEAD
 const AppError = require('../utils/AppError');
 const Encounter = require('../models/Encounter.model');
 
@@ -36,4 +37,14 @@ exports.deleteEncounter = asyncHandler(async (req, res) => {
   const encounter = await Encounter.findByIdAndDelete(req.params.id);
   if (!encounter) throw new AppError('Encounter not found', 404);
   res.status(200).json({ success: true, data: {} });
+=======
+
+/** Prepared for Phase 2 — Animal Encounter & Photography */
+exports.getModuleInfo = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Encounters module — prepared for Phase 2',
+    data: { module: 'encounters' },
+  });
+>>>>>>> main
 });

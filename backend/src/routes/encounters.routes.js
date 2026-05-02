@@ -1,4 +1,5 @@
 const express = require('express');
+<<<<<<< HEAD
 const {
   getAllEncounters,
   getEncounterById,
@@ -23,5 +24,12 @@ router
   .get(getEncounterById)
   .put(protect, restrictTo('admin'), updateEncounter)
   .delete(protect, restrictTo('admin'), deleteEncounter);
+=======
+const encountersController = require('../controllers/encounters.controller');
+
+const router = express.Router();
+
+router.get('/', encountersController.getModuleInfo);
+>>>>>>> main
 
 module.exports = router;

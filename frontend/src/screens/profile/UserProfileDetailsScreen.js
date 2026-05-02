@@ -3,11 +3,7 @@ import { StyleSheet, Text, View, Pressable } from 'react-native';
 import AccountDrawerLayout, { useAccountDrawerActions } from '../../components/profile/AccountDrawerLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { theme } from '../../constants/theme';
-
-const drawerTitleStyle = {
-  fontSize: theme.fontSize.lg,
-  lineHeight: Math.round(theme.fontSize.lg * 1.35),
-};
+import { buildUserDrawerMenuItems } from './userDrawerMenu';
 
 function avatarLetter(fullName) {
   const c = fullName?.trim()?.[0];
@@ -64,6 +60,7 @@ export default function UserProfileDetailsScreen({ navigation }) {
   const displayName = useMemo(() => user?.fullName?.trim() || 'User', [user?.fullName]);
   const roleLabel = (user?.role || 'visitor').toUpperCase();
 
+<<<<<<< HEAD
   const drawerMenuItems = useMemo(
     () => [
       {
@@ -80,9 +77,19 @@ export default function UserProfileDetailsScreen({ navigation }) {
         titleStyle: drawerTitleStyle,
         onPress: () => navigation.navigate('UserProfileDetails'),
       },
+      {
+        key: 'my-bookings',
+        label: 'My Bookings',
+        accessibilityLabel: 'My bookings',
+        titleStyle: drawerTitleStyle,
+        onPress: () => navigation.navigate('MyBookings'),
+      }
     ],
     [navigation]
   );
+=======
+  const drawerMenuItems = useMemo(() => buildUserDrawerMenuItems(navigation), [navigation]);
+>>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
 
   return (
     <AccountDrawerLayout

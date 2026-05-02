@@ -3,16 +3,48 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DashboardScreen from '../screens/home/DashboardScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import UserProfileDetailsScreen from '../screens/profile/UserProfileDetailsScreen';
+import MyTicketsScreen from '../screens/profile/MyTicketsScreen';
 import TicketShowPlaceholder from '../screens/ticketShow/TicketShowPlaceholder';
+import EventsStack from './EventsStack';
+import TicketBookingScreen from '../screens/ticketShow/TicketBookingScreen';
+import TicketShowSelectionScreen from '../screens/ticketShow/TicketShowSelectionScreen';
+import TicketPaymentScreen from '../screens/ticketShow/TicketPaymentScreen';
+import TicketPaymentSuccessScreen from '../screens/ticketShow/TicketPaymentSuccessScreen';
+import GroupBookingRequestScreen from '../screens/ticketShow/GroupBookingRequestScreen';
+import GroupRequestSubmittedScreen from '../screens/ticketShow/GroupRequestSubmittedScreen';
+import MyGroupRequestsScreen from '../screens/ticketShow/MyGroupRequestsScreen';
+<<<<<<< HEAD
 import EventsPlaceholder from '../screens/events/EventsPlaceholder';
+import FeedbackModuleScreen from '../screens/feedback/FeedbackModuleScreen';
+import FeedbackListScreen from '../screens/feedback/FeedbackListScreen';
+import AddFeedbackScreen from '../screens/feedback/AddFeedbackScreen';
+import InquiryListScreen from '../screens/feedback/InquiryListScreen';
+import AddInquiryScreen from '../screens/feedback/AddInquiryScreen';
+import ReviewListScreen from '../screens/feedback/ReviewListScreen';
+import AddReviewScreen from '../screens/feedback/AddReviewScreen';
+=======
 import FeedbackPlaceholder from '../screens/feedback/FeedbackPlaceholder';
+<<<<<<< HEAD
 import AnimalsListScreen from '../screens/animals/AnimalsListScreen';
 import AnimalDetailScreen from '../screens/animals/AnimalDetailScreen';
 import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
 import QuizScreen from '../screens/animals/QuizScreen';
 import InfographicDetailScreen from '../screens/animals/InfographicDetailScreen';
 import EducationScreen from '../screens/animals/EducationScreen';
+=======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
+import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
+<<<<<<< HEAD
+import AnimalListScreen from '../screens/encounters/AnimalListScreen';
+import BookingScreen from '../screens/encounters/BookingScreen';
+import MyBookingsScreen from '../screens/encounters/MyBookingsScreen';
+import PhotoGalleryScreen from '../screens/encounters/PhotoGalleryScreen';
+>>>>>>> main
 import StorePlaceholder from '../screens/store/StorePlaceholder';
+=======
+import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
+import StoreStack from './StoreStack';
+>>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
 import { stackScreenOptions } from './screenOptions';
 
 const Stack = createNativeStackNavigator();
@@ -23,16 +55,49 @@ export default function AppStack() {
       <Stack.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false }} />
       <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
       <Stack.Screen name="UserProfileDetails" component={UserProfileDetailsScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ headerShown: false }} />
       <Stack.Screen name="TicketShow" component={TicketShowPlaceholder} options={{ title: 'Entry Tickets and Show Booking' }} />
+      <Stack.Screen name="Events" component={EventsStack} options={{ headerShown: false }} />
+      <Stack.Screen name="TicketBooking" component={TicketBookingScreen} options={{ title: 'Booking' }} />
+      <Stack.Screen name="TicketShowSelection" component={TicketShowSelectionScreen} options={{ title: 'Select shows' }} />
+      <Stack.Screen name="Payment" component={TicketPaymentScreen} options={{ title: 'Payment' }} />
+      <Stack.Screen name="PaymentSuccess" component={TicketPaymentSuccessScreen} options={{ title: 'Payment successful' }} />
+      <Stack.Screen name="GroupBookingRequest" component={GroupBookingRequestScreen} options={{ title: 'Group booking request' }} />
+      <Stack.Screen name="GroupRequestSubmitted" component={GroupRequestSubmittedScreen} options={{ title: 'Request submitted' }} />
+      <Stack.Screen name="MyGroupRequests" component={MyGroupRequestsScreen} options={{ headerShown: false }} />
+<<<<<<< HEAD
       <Stack.Screen name="Events" component={EventsPlaceholder} options={{ title: 'Event Booking' }} />
+      <Stack.Screen name="Feedback" component={FeedbackModuleScreen} options={{ title: 'Feedback & Inquiries' }} />
+      <Stack.Screen name="FeedbackList" component={FeedbackListScreen} options={{ title: 'My Feedbacks' }} />
+      <Stack.Screen name="AddFeedback" component={AddFeedbackScreen} options={{ title: 'Submit Feedback' }} />
+      <Stack.Screen name="InquiryList" component={InquiryListScreen} options={{ title: 'My Inquiries' }} />
+      <Stack.Screen name="AddInquiry" component={AddInquiryScreen} options={{ title: 'Submit Inquiry' }} />
+      <Stack.Screen name="ReviewList" component={ReviewListScreen} options={{ title: 'My Reviews' }} />
+      <Stack.Screen name="AddReview" component={AddReviewScreen} options={{ title: 'Submit Review' }} />
+=======
+      <Stack.Screen name="Events" component={EventsStack} options={{ headerShown: false }} />
       <Stack.Screen name="Feedback" component={FeedbackPlaceholder} options={{ title: 'Submit Feedbacks, Inquiries or Reviews' }} />
+<<<<<<< HEAD
       <Stack.Screen name="Animals" component={AnimalsListScreen} options={{ title: 'Animal Information and Education' }} />
       <Stack.Screen name="AnimalDetailScreen" component={AnimalDetailScreen} options={{ title: 'Animal Details' }} />
       <Stack.Screen name="QuizScreen" component={QuizScreen} options={{ title: 'Zoo Challenge', headerShown: false }} />
       <Stack.Screen name="InfographicDetail" component={InfographicDetailScreen} options={{ title: 'Animal Infographic', headerShown: false }} />
       <Stack.Screen name="Education" component={EducationScreen} options={{ title: 'Education Hub' }} />
       <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
+=======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
+      <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
+<<<<<<< HEAD
+      <Stack.Screen name="Encounters" component={AnimalListScreen} options={{ title: 'Animal Encounter and Photography' }} />
+      <Stack.Screen name="Booking" component={BookingScreen} options={({ route }) => ({ title: `${route.params?.type || 'Booking'} Session` })} />
+      <Stack.Screen name="MyBookings" component={MyBookingsScreen} options={{ title: 'My Bookings' }} />
+      <Stack.Screen name="PhotoGallery" component={PhotoGalleryScreen} options={{ title: 'Photo Gallery' }} />
+>>>>>>> main
       <Stack.Screen name="Store" component={StorePlaceholder} options={{ title: 'Online Store' }} />
+=======
+      <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
+      <Stack.Screen name="Store" component={StoreStack} options={{ headerShown: false }} />
+>>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
     </Stack.Navigator>
   );
 }

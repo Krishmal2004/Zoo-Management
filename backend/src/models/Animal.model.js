@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+<<<<<<< HEAD
 const educationSchema = new mongoose.Schema({
   type: {
     type: String,
@@ -23,19 +24,25 @@ const educationSchema = new mongoose.Schema({
   },
 });
 
+=======
+>>>>>>> main
 const animalSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       trim: true,
+<<<<<<< HEAD
       unique: true,
+=======
+>>>>>>> main
     },
     species: {
       type: String,
       required: true,
       trim: true,
     },
+<<<<<<< HEAD
     category: {
       type: String,
       required: true,
@@ -44,10 +51,32 @@ const animalSchema = new mongoose.Schema(
     images: {
       type: [String],
       default: [],
+=======
+    age: {
+      type: Number,
+      default: 0,
+    },
+    feedingSchedule: {
+      type: String,
+      default: 'Standard',
+    },
+    isAvailableForPhotography: {
+      type: Boolean,
+      default: true,
+    },
+    healthStatus: {
+      type: String,
+      default: 'healthy',
+    },
+    feedingRestrictions: {
+      type: String,
+      default: '',
+>>>>>>> main
     },
     description: {
       type: String,
       required: true,
+<<<<<<< HEAD
     },
     habitat: {
       type: String,
@@ -81,6 +110,17 @@ const animalSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+=======
+      trim: true,
+    },
+    imageUrl: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+>>>>>>> main
 );
 
 module.exports = mongoose.model('Animal', animalSchema);
