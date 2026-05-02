@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+const express = require('express');
+const storeController = require('../controllers/store.controller');
+
+const router = express.Router();
+
+router.get('/', storeController.getModuleInfo);
+
+module.exports = router;
+=======
 const express = require('express');
 const storeController = require('../controllers/store.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
@@ -17,3 +27,4 @@ router.put('/products/:id', protect, restrictTo('admin'), createUpload('products
 router.delete('/products/:id', protect, restrictTo('admin'), storeController.deleteProduct);
 
 module.exports = router;
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 const mongoose = require('mongoose');
 const Animal = require('../models/Animal.model');
 const asyncHandler = require('../utils/asyncHandler');
@@ -79,6 +81,7 @@ exports.markAnimalUnavailable = asyncHandler(async (req, res) => {
   const animal = await Animal.findByIdAndUpdate(req.params.id, { isAvailableForPhotography: false }, { new: true });
   res.status(200).json({ success: true, data: animal });
 =======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 const asyncHandler = require('../utils/asyncHandler');
 
 /** Prepared for Phase 2 — Animal Information & Education */
@@ -88,5 +91,8 @@ exports.getModuleInfo = asyncHandler(async (req, res) => {
     message: 'Animals module — prepared for Phase 2',
     data: { module: 'animals' },
   });
+<<<<<<< HEAD
+=======
 >>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 });

@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+const express = require('express');
+const eventsController = require('../controllers/events.controller');
+
+const router = express.Router();
+
+router.get('/', eventsController.getModuleInfo);
+
+module.exports = router;
+=======
 const express = require("express");
 const router = express.Router();
 
@@ -40,3 +50,4 @@ router.delete("/:id", protect, restrictTo("admin"), deleteEvent);
 router.post("/:id/book", protect, bookEvent);
 
 module.exports = router;
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

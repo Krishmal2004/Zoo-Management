@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./auth.routes');
@@ -49,6 +51,7 @@ router.use('/feeding-bookings', feedingBookingRoutes);
 
 module.exports = router;
 =======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./auth.routes');
@@ -58,7 +61,10 @@ const feedbackRoutes = require('./feedback.routes');
 const animalsRoutes = require('./animals.routes');
 const encountersRoutes = require('./encounters.routes');
 const storeRoutes = require('./store.routes');
+<<<<<<< HEAD
+=======
 const orderRoutes = require('./order.routes');
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 const adminRoutes = require('./admin.routes');
 
 const router = express.Router();
@@ -82,8 +88,14 @@ router.use('/feedback', feedbackRoutes);
 router.use('/animals', animalsRoutes);
 router.use('/encounters', encountersRoutes);
 router.use('/store', storeRoutes);
+<<<<<<< HEAD
+router.use('/admin', adminRoutes);
+
+module.exports = router;
+=======
 router.use('/orders', orderRoutes);
 router.use('/admin', adminRoutes);
 
 module.exports = router;
 >>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

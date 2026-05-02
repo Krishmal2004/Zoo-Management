@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
@@ -48,6 +50,7 @@ userSchema.methods.toJSON = function toJSON() {
 
 module.exports = mongoose.model('User', userSchema);
 =======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
@@ -92,4 +95,7 @@ userSchema.methods.toJSON = function toJSON() {
 };
 
 module.exports = mongoose.model('User', userSchema);
+<<<<<<< HEAD
+=======
 >>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

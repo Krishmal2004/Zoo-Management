@@ -1,3 +1,15 @@
+<<<<<<< HEAD
+const asyncHandler = require('../utils/asyncHandler');
+
+/** Prepared for Phase 2 — Online Store */
+exports.getModuleInfo = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Store module — prepared for Phase 2',
+    data: { module: 'store' },
+  });
+});
+=======
 const asyncHandler = require('../utils/asyncHandler');
 const storeService = require('../services/store.service');
 
@@ -74,3 +86,4 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
   await storeService.deleteProduct(req.params.id);
   res.status(200).json({ success: true, message: 'Product deleted successfully' });
 });
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

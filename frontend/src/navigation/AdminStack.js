@@ -3,6 +3,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 import UserManagementScreen from '../screens/admin/UserManagementScreen';
+import AdminFeedbackScreen from '../screens/admin/AdminFeedbackScreen';
 import AdminModulePlaceholderScreen from '../screens/admin/AdminModulePlaceholderScreen';
 <<<<<<< HEAD
 import PhotoUploadScreen from '../screens/admin/PhotoUploadScreen';
@@ -109,8 +110,8 @@ export default function AdminStack() {
       <Stack.Screen name="AdminOnlineStore" component={AdminStoreStack} options={adminModulePlaceholderOptions} />
       <Stack.Screen
         name="AdminFeedbackInquiryReview"
-        component={AdminModulePlaceholderScreen}
-        options={adminModulePlaceholderOptions}
+        component={AdminFeedbackScreen}
+        options={{ title: 'Feedback & Inquiries' }}
       />
     </Stack.Navigator>
   );

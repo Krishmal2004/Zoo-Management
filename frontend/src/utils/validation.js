@@ -1,4 +1,6 @@
 <<<<<<< HEAD
+=======
+<<<<<<< HEAD
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateEmail(email) {
@@ -71,6 +73,7 @@ export function validateLoginForm({ email, password }) {
   return errors;
 }
 =======
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateEmail(email) {
@@ -142,4 +145,7 @@ export function validateLoginForm({ email, password }) {
   if (!password) errors.password = 'Password is required';
   return errors;
 }
+<<<<<<< HEAD
+=======
 >>>>>>> c824c01f2ee0305888ee69dff77383ac43361c08
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035

@@ -13,7 +13,18 @@ import TicketPaymentSuccessScreen from '../screens/ticketShow/TicketPaymentSucce
 import GroupBookingRequestScreen from '../screens/ticketShow/GroupBookingRequestScreen';
 import GroupRequestSubmittedScreen from '../screens/ticketShow/GroupRequestSubmittedScreen';
 import MyGroupRequestsScreen from '../screens/ticketShow/MyGroupRequestsScreen';
+<<<<<<< HEAD
+import EventsPlaceholder from '../screens/events/EventsPlaceholder';
+import FeedbackModuleScreen from '../screens/feedback/FeedbackModuleScreen';
+import FeedbackListScreen from '../screens/feedback/FeedbackListScreen';
+import AddFeedbackScreen from '../screens/feedback/AddFeedbackScreen';
+import InquiryListScreen from '../screens/feedback/InquiryListScreen';
+import AddInquiryScreen from '../screens/feedback/AddInquiryScreen';
+import ReviewListScreen from '../screens/feedback/ReviewListScreen';
+import AddReviewScreen from '../screens/feedback/AddReviewScreen';
+=======
 import FeedbackPlaceholder from '../screens/feedback/FeedbackPlaceholder';
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
 <<<<<<< HEAD
 import AnimalListScreen from '../screens/encounters/AnimalListScreen';
@@ -45,8 +56,19 @@ export default function AppStack() {
       <Stack.Screen name="GroupBookingRequest" component={GroupBookingRequestScreen} options={{ title: 'Group booking request' }} />
       <Stack.Screen name="GroupRequestSubmitted" component={GroupRequestSubmittedScreen} options={{ title: 'Request submitted' }} />
       <Stack.Screen name="MyGroupRequests" component={MyGroupRequestsScreen} options={{ headerShown: false }} />
+<<<<<<< HEAD
+      <Stack.Screen name="Events" component={EventsPlaceholder} options={{ title: 'Event Booking' }} />
+      <Stack.Screen name="Feedback" component={FeedbackModuleScreen} options={{ title: 'Feedback & Inquiries' }} />
+      <Stack.Screen name="FeedbackList" component={FeedbackListScreen} options={{ title: 'My Feedbacks' }} />
+      <Stack.Screen name="AddFeedback" component={AddFeedbackScreen} options={{ title: 'Submit Feedback' }} />
+      <Stack.Screen name="InquiryList" component={InquiryListScreen} options={{ title: 'My Inquiries' }} />
+      <Stack.Screen name="AddInquiry" component={AddInquiryScreen} options={{ title: 'Submit Inquiry' }} />
+      <Stack.Screen name="ReviewList" component={ReviewListScreen} options={{ title: 'My Reviews' }} />
+      <Stack.Screen name="AddReview" component={AddReviewScreen} options={{ title: 'Submit Review' }} />
+=======
       <Stack.Screen name="Events" component={EventsStack} options={{ headerShown: false }} />
       <Stack.Screen name="Feedback" component={FeedbackPlaceholder} options={{ title: 'Submit Feedbacks, Inquiries or Reviews' }} />
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
       <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
 <<<<<<< HEAD
       <Stack.Screen name="Encounters" component={AnimalListScreen} options={{ title: 'Animal Encounter and Photography' }} />

@@ -1,3 +1,15 @@
+<<<<<<< HEAD
+const asyncHandler = require('../utils/asyncHandler');
+
+/** Prepared for Phase 2 — Event Management */
+exports.getModuleInfo = asyncHandler(async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Events module — prepared for Phase 2',
+    data: { module: 'events' },
+  });
+});
+=======
 const Event = require("../models/Event.model");
 const Booking = require("../models/EventBooking.model");
 const AppError = require("../utils/AppError");
@@ -258,3 +270,4 @@ module.exports = {
   getAllBookings,
   updateBookingStatus,
 };
+>>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
