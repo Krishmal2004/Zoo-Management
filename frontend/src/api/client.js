@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import axios from 'axios';
 import { getToken } from '../services/tokenStorage';
 import { getApiBaseUrl } from './getApiBaseUrl';
@@ -50,10 +49,10 @@ apiClient.interceptors.response.use(
     // Centralized logging so we always see real backend failures.
     const status = err?.response?.status;
     const data = err?.response?.data;
-    const base = err?.config?.baseURL || "";
-    const path = err?.config?.url || "";
-    const fullUrl = path.startsWith("http") ? path : `${base}${path}`;
-    console.error("[api] request failed", {
+    const base = err?.config?.baseURL || '';
+    const path = err?.config?.url || '';
+    const fullUrl = path.startsWith('http') ? path : `${base}${path}`;
+    console.error('[api] request failed', {
       status,
       baseURL: err?.config?.baseURL,
       fullUrl,
