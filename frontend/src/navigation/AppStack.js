@@ -24,6 +24,14 @@ import ReviewListScreen from '../screens/feedback/ReviewListScreen';
 import AddReviewScreen from '../screens/feedback/AddReviewScreen';
 =======
 import FeedbackPlaceholder from '../screens/feedback/FeedbackPlaceholder';
+<<<<<<< HEAD
+import AnimalsListScreen from '../screens/animals/AnimalsListScreen';
+import AnimalDetailScreen from '../screens/animals/AnimalDetailScreen';
+import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
+import QuizScreen from '../screens/animals/QuizScreen';
+import InfographicDetailScreen from '../screens/animals/InfographicDetailScreen';
+import EducationScreen from '../screens/animals/EducationScreen';
+=======
 >>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 import AnimalsPlaceholder from '../screens/animals/AnimalsPlaceholder';
 <<<<<<< HEAD
@@ -31,6 +39,7 @@ import AnimalListScreen from '../screens/encounters/AnimalListScreen';
 import BookingScreen from '../screens/encounters/BookingScreen';
 import MyBookingsScreen from '../screens/encounters/MyBookingsScreen';
 import PhotoGalleryScreen from '../screens/encounters/PhotoGalleryScreen';
+>>>>>>> main
 import StorePlaceholder from '../screens/store/StorePlaceholder';
 =======
 import EncountersPlaceholder from '../screens/encounters/EncountersPlaceholder';
@@ -68,6 +77,14 @@ export default function AppStack() {
 =======
       <Stack.Screen name="Events" component={EventsStack} options={{ headerShown: false }} />
       <Stack.Screen name="Feedback" component={FeedbackPlaceholder} options={{ title: 'Submit Feedbacks, Inquiries or Reviews' }} />
+<<<<<<< HEAD
+      <Stack.Screen name="Animals" component={AnimalsListScreen} options={{ title: 'Animal Information and Education' }} />
+      <Stack.Screen name="AnimalDetailScreen" component={AnimalDetailScreen} options={{ title: 'Animal Details' }} />
+      <Stack.Screen name="QuizScreen" component={QuizScreen} options={{ title: 'Zoo Challenge', headerShown: false }} />
+      <Stack.Screen name="InfographicDetail" component={InfographicDetailScreen} options={{ title: 'Animal Infographic', headerShown: false }} />
+      <Stack.Screen name="Education" component={EducationScreen} options={{ title: 'Education Hub' }} />
+      <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />
+=======
 >>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
       <Stack.Screen name="Animals" component={AnimalsPlaceholder} options={{ title: 'Animal Information and Education' }} />
 <<<<<<< HEAD
@@ -75,6 +92,7 @@ export default function AppStack() {
       <Stack.Screen name="Booking" component={BookingScreen} options={({ route }) => ({ title: `${route.params?.type || 'Booking'} Session` })} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} options={{ title: 'My Bookings' }} />
       <Stack.Screen name="PhotoGallery" component={PhotoGalleryScreen} options={{ title: 'Photo Gallery' }} />
+>>>>>>> main
       <Stack.Screen name="Store" component={StorePlaceholder} options={{ title: 'Online Store' }} />
 =======
       <Stack.Screen name="Encounters" component={EncountersPlaceholder} options={{ title: 'Animal Ecounter and Photography' }} />

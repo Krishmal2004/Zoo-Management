@@ -1,9 +1,29 @@
+<<<<<<< HEAD
+const mongoose = require('mongoose');
+=======
 const mongoose = require("mongoose");
+>>>>>>> main
 
 const eventSchema = new mongoose.Schema(
   {
     title: {
       type: String,
+<<<<<<< HEAD
+      required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      required: true,
+    },
+    eventDate: {
+      type: Date,
+      required: true,
+    },
+    location: {
+      type: String,
+      required: true,
+=======
       required: [true, "Event title is required"],
       trim: true,
       maxlength: [100, "Title cannot exceed 100 characters"],
@@ -21,10 +41,30 @@ const eventSchema = new mongoose.Schema(
     venue: {
       type: String,
       required: [true, "Venue is required"],
+>>>>>>> main
       trim: true,
     },
     capacity: {
       type: Number,
+<<<<<<< HEAD
+      required: true,
+      min: 1,
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    imageUrl: {
+      type: String,
+      default: '',
+    },
+    category: {
+      type: String,
+      required: true,
+      enum: ['conservation', 'education', 'entertainment', 'feeding', 'seasonal', 'other'],
+      default: 'other',
+=======
       required: [true, "Capacity is required"],
       min: [1, "Capacity must be at least 1"],
     },
@@ -52,6 +92,7 @@ const eventSchema = new mongoose.Schema(
     imageUrl: {
       type: String,
       default: null,
+>>>>>>> main
     },
     isActive: {
       type: Boolean,
@@ -61,4 +102,8 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+<<<<<<< HEAD
+module.exports = mongoose.model('Event', eventSchema);
+=======
 module.exports = mongoose.model("Event", eventSchema);
+>>>>>>> main

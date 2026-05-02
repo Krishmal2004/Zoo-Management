@@ -1,0 +1,11 @@
+const express = require('express');
+const { getLifeCyclesByAnimal, createLifeCycle, updateLifeCycle, deleteLifeCycle } = require('../controllers/lifecycle.controller');
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+const { requireDatabase } = require('../middleware/db.middleware');
+const router = express.Router();
+router.use(requireDatabase);
+router.get('/animal/:animalId', getLifeCyclesByAnimal);
+router.post('/', protect, restrictTo('admin'), createLifeCycle);
+router.put('/:id', protect, restrictTo('admin'), updateLifeCycle);
+router.delete('/:id', protect, restrictTo('admin'), deleteLifeCycle);
+module.exports = router;

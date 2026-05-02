@@ -1,3 +1,25 @@
+<<<<<<< HEAD
+const express = require('express');
+const {
+  getAllAnimals,
+  getRandomFact,
+  getAnimalById,
+  createAnimal,
+  updateAnimal,
+  deleteAnimal,
+} = require('../controllers/animals.controller');
+
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+
+const router = express.Router();
+
+router.route('/').get(getAllAnimals).post(protect, restrictTo('admin'), createAnimal);
+router.route('/random-fact').get(getRandomFact);
+
+router.route('/:id').get(getAnimalById).put(protect, restrictTo('admin'), updateAnimal).delete(protect, restrictTo('admin'), deleteAnimal);
+
+module.exports = router;
+=======
 const express = require('express');
 const animalsController = require('../controllers/animals.controller');
 <<<<<<< HEAD
@@ -33,3 +55,4 @@ router.get('/', animalsController.getModuleInfo);
 >>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
 
 module.exports = router;
+>>>>>>> main

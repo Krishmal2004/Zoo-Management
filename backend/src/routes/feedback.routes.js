@@ -1,11 +1,32 @@
 const express = require('express');
+<<<<<<< HEAD
+const {
+  getAllFeedback,
+  getFeedbackById,
+  createFeedback,
+  updateFeedbackStatus,
+  deleteFeedback,
+} = require('../controllers/feedback.controller');
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+=======
 const feedbackController = require('../controllers/feedback.controller');
 const { protect, restrictTo } = require('../middleware/auth.middleware');
 const { createUpload } = require('../middleware/upload.middleware');
+>>>>>>> main
 const { requireDatabase } = require('../middleware/db.middleware');
 
 const router = express.Router();
 
+<<<<<<< HEAD
+router.use(requireDatabase);
+
+// Public: visitors submit feedback
+router.route('/').get(protect, restrictTo('admin'), getAllFeedback).post(createFeedback);
+
+// Admin: view single, update status, or delete
+router.route('/:id').get(protect, restrictTo('admin'), getFeedbackById).delete(protect, restrictTo('admin'), deleteFeedback);
+router.patch('/:id/status', protect, restrictTo('admin'), updateFeedbackStatus);
+=======
 const inquiryUpload = createUpload('feedback', {
   allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -38,5 +59,6 @@ router.get('/reviews/all', restrictTo('admin'), feedbackController.getAllReviews
 router.post('/:id/reply', restrictTo('admin'), feedbackController.replyToFeedback);
 router.post('/inquiries/:id/reply', restrictTo('admin'), feedbackController.replyToInquiry);
 router.post('/reviews/:id/reply', restrictTo('admin'), feedbackController.replyToReview);
+>>>>>>> main
 
 module.exports = router;

@@ -1,0 +1,12 @@
+const express = require('express');
+const { getDidYouKnowByAnimal, getAllDidYouKnow, createDidYouKnow, updateDidYouKnow, deleteDidYouKnow } = require('../controllers/didyouknow.controller');
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+const { requireDatabase } = require('../middleware/db.middleware');
+const router = express.Router();
+router.use(requireDatabase);
+router.get('/', getAllDidYouKnow);
+router.get('/animal/:animalId', getDidYouKnowByAnimal);
+router.post('/', protect, restrictTo('admin'), createDidYouKnow);
+router.put('/:id', protect, restrictTo('admin'), updateDidYouKnow);
+router.delete('/:id', protect, restrictTo('admin'), deleteDidYouKnow);
+module.exports = router;

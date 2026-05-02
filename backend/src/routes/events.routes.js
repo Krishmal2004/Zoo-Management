@@ -1,5 +1,34 @@
 <<<<<<< HEAD
 const express = require('express');
+const {
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+} = require('../controllers/events.controller');
+const { protect, restrictTo } = require('../middleware/auth.middleware');
+const { requireDatabase } = require('../middleware/db.middleware');
+
+const router = express.Router();
+
+router.use(requireDatabase);
+
+router
+  .route('/')
+  .get(getAllEvents)
+  .post(protect, restrictTo('admin'), createEvent);
+
+router
+  .route('/:id')
+  .get(getEventById)
+  .put(protect, restrictTo('admin'), updateEvent)
+  .delete(protect, restrictTo('admin'), deleteEvent);
+
+module.exports = router;
+=======
+<<<<<<< HEAD
+const express = require('express');
 const eventsController = require('../controllers/events.controller');
 
 const router = express.Router();
@@ -51,3 +80,4 @@ router.post("/:id/book", protect, bookEvent);
 
 module.exports = router;
 >>>>>>> 0f8639197f93fefd9284caf0561929e9c2425035
+>>>>>>> main
