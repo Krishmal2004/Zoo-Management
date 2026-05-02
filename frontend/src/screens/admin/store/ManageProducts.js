@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import ScreenContainer from '../../../components/ui/ScreenContainer';
 import PrimaryButton from '../../../components/ui/PrimaryButton';
 import TextField from '../../../components/ui/TextField';
@@ -128,15 +128,49 @@ export default function ManageProducts() {
     }
   };
 
-  const handleDelete = (id) => {
-    Alert.alert('Delete', 'Are you sure?', [
-      { text: 'Cancel' },
-      {
-        text: 'Delete', onPress: async () => {
-          await deleteProduct(id);
-          fetchData();
-        }
+  /** Core RN Alert.alert does nothing on web — use confirm there (see PhotoUploadScreen). */
+  const performDeleteProduct = async (id) => {
+    try {
+      await deleteProduct(id);
+      fetchData();
+    } catch (error) {
+      const msg =
+        error?.response?.data?.message ||
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        'Could not delete product.';
+      const text = typeof msg === 'string' ? msg : 'Could not delete product.';
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert(text);
+      } else {
+        Alert.alert('Error', text);
       }
+    }
+  };
+
+  const handleDelete = (product) => {
+    const rawId = product?._id ?? product?.id;
+    const id = rawId != null ? String(rawId) : '';
+    if (!id) {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.alert('This product has no ID. Try reloading the screen.');
+      } else {
+        Alert.alert('Cannot delete', 'Missing product reference. Pull to reload or reopen this screen.');
+      }
+      return;
+    }
+    const message = `Remove "${product.name}" from the store? This cannot be undone.`;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.confirm(`Delete product\n\n${message}`)) {
+        performDeleteProduct(id);
+      }
+      return;
+    }
+
+    Alert.alert('Delete product', message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => performDeleteProduct(id) },
     ]);
   };
 
@@ -179,7 +213,7 @@ export default function ManageProducts() {
         <TouchableOpacity style={styles.editBtn} onPress={() => openModal(item)}>
           <Text style={styles.editBtnText}>Edit</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item._id)}>
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
           <Text style={styles.deleteBtnText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -199,7 +233,10 @@ export default function ManageProducts() {
       <Text style={styles.sectionHeading}>Our Products</Text>
 
       {loading ? <ActivityIndicator size="large" /> : (
-        <ScrollView contentContainerStyle={styles.list}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.list}
+        >
           {(Array.isArray(categories) ? categories : []).map((cat) => {
             const catProducts = products.filter((p) => p.category === cat._id);
             return (
