@@ -13,7 +13,7 @@ const FALLBACK_SHOW_IMAGE = require('../../../assets/images/show-reptile-encount
 const SHOW_IMAGE_PATH_MAP = {
   'assets/images/show-birds-of-prey.png': require('../../../assets/images/show-birds-of-prey.png'),
   'assets/images/show-elephant-care-bath.png': require('../../../assets/images/show-elephant-care-bath.png'),
-  'assets/images/show-sea-lion-splash.png': require('../../../assets/images/show-sea-lion-splash.png'),
+  'assets/images/show-sea-lion-splash.png': require('../../../assets/images/showsealionsplash.png'),
   'assets/images/show-reptile-encounter.png': require('../../../assets/images/show-reptile-encounter.png'),
 };
 const SHOW_IMAGES = {
@@ -26,7 +26,7 @@ const SHOW_IMAGES = {
     imageAccessibilityLabel: 'Ceremonial elephant bath with people in traditional dress holding silver bowls',
   },
   sea_lion_splash: {
-    image: require('../../../assets/images/show-sea-lion-splash.png'),
+    image: require('../../../assets/images/showsealionsplash.png'),
     imageAccessibilityLabel: 'Sea lion balancing a volleyball on its nose above blue water',
   },
   reptile_encounter: {
