@@ -11,16 +11,8 @@ import {
   hasValidationErrors,
   FEEDBACK_SUBJECT_MAX,
   FEEDBACK_MESSAGE_MAX,
+  FEEDBACK_TYPES,
 } from '../../utils/validation';
-
-const FEEDBACK_TYPES = [
-  'Entry Tickets and Show Booking',
-  'Event Booking',
-  'Animal Encounter and Photography',
-  'Animal Information and Education',
-  'Online Store',
-  'General',
-];
 
 export default function AddFeedbackScreen({ navigation, route }) {
   const existingFeedback = route.params?.feedback;
@@ -47,7 +39,6 @@ export default function AddFeedbackScreen({ navigation, route }) {
       type,
       subject,
       message,
-      allowedTypes: FEEDBACK_TYPES,
     });
     setErrors(nextErrors);
     if (hasValidationErrors(nextErrors)) {

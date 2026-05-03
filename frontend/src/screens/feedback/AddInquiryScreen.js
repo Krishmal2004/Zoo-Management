@@ -14,16 +14,8 @@ import {
   hasValidationErrors,
   FEEDBACK_SUBJECT_MAX,
   FEEDBACK_MESSAGE_MAX,
+  FEEDBACK_TYPES,
 } from '../../utils/validation';
-
-const INQUIRY_TYPES = [
-  'Entry Tickets and Show Booking',
-  'Event Booking',
-  'Animal Encounter and Photography',
-  'Animal Information and Education',
-  'Online Store',
-  'General',
-];
 
 export default function AddInquiryScreen({ navigation, route }) {
   const existingInquiry = route.params?.inquiry;
@@ -69,7 +61,7 @@ export default function AddInquiryScreen({ navigation, route }) {
       type,
       subject,
       message,
-      allowedTypes: INQUIRY_TYPES,
+      allowedTypes: FEEDBACK_TYPES,
     });
     setErrors(nextErrors);
     if (hasValidationErrors(nextErrors)) {
@@ -211,7 +203,7 @@ export default function AddInquiryScreen({ navigation, route }) {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select Inquiry Type</Text>
-            {INQUIRY_TYPES.map((t) => (
+            {FEEDBACK_TYPES.map((t) => (
               <TouchableOpacity
                 key={t}
                 style={styles.modalOption}

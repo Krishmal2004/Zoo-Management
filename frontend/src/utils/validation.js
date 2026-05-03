@@ -1,5 +1,15 @@
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+/** Keep in sync with `backend/src/validations/feedback.validation.js` FEEDBACK_TYPES. */
+export const FEEDBACK_TYPES = [
+  'Entry Tickets and Show Booking',
+  'Event Booking',
+  'Animal Encounter and Photography',
+  'Animal Information and Education',
+  'Online Store',
+  'General',
+];
+
 export function validateEmail(email) {
   if (!email || !email.trim()) return 'Email is required';
   if (!EMAIL_RE.test(email.trim())) return 'Enter a valid email';
@@ -80,7 +90,7 @@ export const FEEDBACK_MESSAGE_MAX = 8000;
  * @param {{ type: string; subject: string; message: string; allowedTypes?: string[] }} input
  * @returns {Record<string, string>} Field key → error message (empty object if valid).
  */
-export function validateTypeSubjectMessage({ type, subject, message, allowedTypes }) {
+export function validateTypeSubjectMessage({ type, subject, message, allowedTypes = FEEDBACK_TYPES }) {
   const errors = {};
   const t = String(type ?? '').trim();
   if (!t) errors.type = 'Please select a category.';
