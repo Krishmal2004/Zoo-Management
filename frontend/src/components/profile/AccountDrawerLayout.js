@@ -13,7 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { popOrParentGoBack, popOrParentCanGoBack } from '../../utils/popOrParentGoBack';
@@ -75,7 +75,8 @@ function AccountField({
  * @param {'drawer' | 'main'} [accountActionsPlacement] Layout variant for main-area account shortcuts (drawer = default; main = profile body + modal for edits).
  * @param {boolean} [accountActionsInline] When placement is main, parent renders links via {@link useAccountDrawerActions} (hides default bottom block).
  *
- * Admin: when back is shown, the drawer toggle is hidden so the header is not cluttered (use back to return, then menu on workspace).
+ * Header back uses {@link popOrParentCanGoBack} (local or parent). The drawer toggle uses the focused navigator’s
+ * `state.index === 0` — `canGoBack()` alone can stay true at the stack’s first screen in some nested setups, which hid the menu.
  */
 export default function AccountDrawerLayout({
   children,
@@ -89,8 +90,13 @@ export default function AccountDrawerLayout({
   scroll = true,
 }) {
   const navigation = useNavigation();
-  /** Align with header back + {@link popOrParentGoBack} (leaf stack may not pop while parent does). */
+  /** True when {@link popOrParentGoBack} can pop this screen or a parent (drives the header back affordance). */
   const canDismiss = popOrParentCanGoBack(navigation);
+  /** Index of the route in the navigator that owns this screen (not “any parent can pop”). */
+  const localNavigatorIndex = useNavigationState((state) =>
+    state && typeof state.index === 'number' ? state.index : 0
+  );
+  const isLocalNavigatorRoot = localNavigatorIndex === 0;
 
   /** When the header shows "back", hide drawer shortcuts that duplicate that affordance (visitor Explore + admin workspace). */
   const effectiveDrawerMenuItems = useMemo(() => {
@@ -105,9 +111,11 @@ export default function AccountDrawerLayout({
   }, [drawerMenuItems, canDismiss]);
 
   const { user, logout, updateProfile, changePassword } = useAuth();
-  const isAdmin = user?.role === 'admin';
-  /** Visitor keeps menu + back where needed for account drawer; admins only show back when navigating up from a stacked screen. */
-  const showDrawerToggle = !(isAdmin && canDismiss);
+  /**
+   * Hamburger (same drawer as visitor Explore): show at the root of the navigator that contains this screen.
+   * Hide when this stack has pushed another screen (inner admin / profile flows).
+   */
+  const showDrawerToggle = isLocalNavigatorRoot;
 
   const { width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
