@@ -8,7 +8,7 @@ export const TICKET_SHOW_MAX_PER_SHOW = 10;
 
 const IMG_BIRDS_OF_PREY = require('../../assets/images/show-birds-of-prey.png');
 const IMG_ELEPHANT_CARE = require('../../assets/images/show-elephant-care-bath.png');
-const IMG_SEA_LION = require('../../assets/images/show-sea-lion-splash.png');
+const IMG_SEA_LION = require('../../assets/images/showsealionsplash.png');
 const IMG_REPTILE = require('../../assets/images/show-reptile-encounter.png');
 
 export const TICKET_SHOW_CATALOG = [

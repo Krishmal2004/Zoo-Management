@@ -28,7 +28,7 @@ const DEFAULT_SHOW_IMAGE_PATHS = {
 const BUNDLE_IMAGE_BY_PATH = {
   'assets/images/show-birds-of-prey.png': require('../../../assets/images/show-birds-of-prey.png'),
   'assets/images/show-elephant-care-bath.png': require('../../../assets/images/show-elephant-care-bath.png'),
-  'assets/images/show-sea-lion-splash.png': require('../../../assets/images/showsealionsplash.png'),
+  'assets/images/showsealionsplash.png': require('../../../assets/images/showsealionsplash.png'),
   'assets/images/show-reptile-encounter.png': require('../../../assets/images/show-reptile-encounter.png'),
 };
 
