@@ -15,7 +15,7 @@ import ScreenContainer from '../../components/ui/ScreenContainer';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 
-const JUNGLE_BG = require('../../../assets/home-jungle-portrait-bg.png');
+const JUNGLE_BG = require('../../../assets/homejungleportraitbg.png');
 
 // Keep a fixed source aspect ratio to avoid web runtime issues with resolveAssetSource.
 const NATURAL_W = 1080;
