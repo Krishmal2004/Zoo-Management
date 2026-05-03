@@ -42,7 +42,7 @@ exports.uploadPhoto = asyncHandler(async (req, res) => {
 
   const docs = uploadedFiles.map((file) => ({
     ...(bookingId && { booking: bookingId }),
-    imageUrl: `/uploads/photos/${file.filename}`,
+    imageUrl: file.path && file.path.startsWith('http') ? file.path : `/uploads/photos/${file.filename}`,
     caption: req.body.caption || 'Zoo Memory',
     description: req.body.description || '',
     bestMoment: req.body.bestMoment || '',

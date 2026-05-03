@@ -40,7 +40,9 @@ const createEvent = asyncHandler(async (req, res) => {
   } = req.body;
 
   const uploaded = pickEventUploadFile(req);
-  const imageUrl = uploaded ? `/uploads/events/${uploaded.filename}` : req.body.imageUrl || null;
+  const imageUrl = uploaded 
+    ? (uploaded.path && uploaded.path.startsWith('http') ? uploaded.path : `/uploads/events/${uploaded.filename}`) 
+    : req.body.imageUrl || null;
 
   const event = await Event.create({
     title,
@@ -110,8 +112,13 @@ const updateEvent = asyncHandler(async (req, res) => {
   if (updates.pricePerPerson) updates.pricePerPerson = Number(updates.pricePerPerson);
 
   const uploaded = pickEventUploadFile(req);
-  if (uploaded) updates.imageUrl = `/uploads/events/${uploaded.filename}`;
-  else if (updates.imageUrl) updates.imageUrl = updates.imageUrl;
+  if (uploaded) {
+    updates.imageUrl = uploaded.path && uploaded.path.startsWith('http') 
+      ? uploaded.path 
+      : `/uploads/events/${uploaded.filename}`;
+  } else if (updates.imageUrl) {
+    updates.imageUrl = updates.imageUrl;
+  }
 
   const event = await Event.findByIdAndUpdate(req.params.id, updates, {
     new: true,

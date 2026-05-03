@@ -1,0 +1,25 @@
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const createCloudinaryStorage = (folder) => {
+  return new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: `zoo-management/${folder}`,
+      allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'pdf', 'doc', 'docx'],
+      resource_type: 'auto',
+      transformation: [{ width: 1000, height: 1000, crop: 'limit' }],
+    },
+  });
+};
+
+module.exports = {
+  cloudinary,
+  createCloudinaryStorage,
+};

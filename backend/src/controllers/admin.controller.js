@@ -329,7 +329,9 @@ const uploadShowPoster = asyncHandler(async (req, res) => {
   if (!req.file) {
     throw new AppError('No image file uploaded', 400);
   }
-  const imageUrl = `/uploads/ticket-show/${req.file.filename}`;
+  const imageUrl = req.file.path && req.file.path.startsWith('http') 
+    ? req.file.path 
+    : `/uploads/ticket-show/${req.file.filename}`;
   res.status(200).json({
     success: true,
     message: 'Show poster uploaded',
@@ -345,6 +347,11 @@ const downloadGroupBookingDocument = asyncHandler(async (req, res) => {
   const storedPath = request.supportingDocument?.storedPath;
   if (!storedPath) {
     throw new AppError('No submitted document for this request', 404);
+  }
+
+  // If it's a Cloudinary URL, redirect to it
+  if (storedPath.startsWith('http')) {
+    return res.redirect(storedPath);
   }
 
   const normalized = String(storedPath).replace(/^\/+/, '');

@@ -5,10 +5,10 @@ const AppError = require('../utils/AppError');
 
 /** Multer: `.single('field')` sets `req.file`; `.any()` / `.array()` set `req.files`. */
 function getUploadedAnimalFile(req) {
-  if (req.file?.filename) return req.file.filename;
+  if (req.file) return req.file.path && req.file.path.startsWith('http') ? req.file.path : req.file.filename;
   if (Array.isArray(req.files) && req.files.length > 0) {
     const f = req.files.find((x) => x?.fieldname === 'image') || req.files[0];
-    return f.filename;
+    return f.path && f.path.startsWith('http') ? f.path : f.filename;
   }
   return null;
 }
@@ -45,7 +45,9 @@ exports.addAnimal = asyncHandler(async (req, res) => {
 
   const animalData = {
     ...normalized,
-    imageUrl: fileName ? `/uploads/animals/${fileName}` : '/uploads/animals/default.jpg',
+    imageUrl: fileName 
+      ? (fileName.startsWith('http') ? fileName : `/uploads/animals/${fileName}`) 
+      : '/uploads/animals/default.jpg',
   };
 
   const animal = await Animal.create(animalData);
@@ -111,7 +113,9 @@ exports.getAnimalById = asyncHandler(async (req, res) => {
 exports.updateAnimal = asyncHandler(async (req, res) => {
   const updateData = normalizeAnimalPayload(req.body);
   const uploaded = getUploadedAnimalFile(req);
-  if (uploaded) updateData.imageUrl = `/uploads/animals/${uploaded}`;
+  if (uploaded) {
+    updateData.imageUrl = uploaded.startsWith('http') ? uploaded : `/uploads/animals/${uploaded}`;
+  }
   const ageRaw = updateData.age;
   if (ageRaw !== undefined && ageRaw !== '') {
     const n = Number(ageRaw);

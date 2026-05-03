@@ -37,7 +37,9 @@ exports.getProductById = asyncHandler(async (req, res) => {
 
 exports.createProduct = asyncHandler(async (req, res) => {
   if (req.file) {
-    const imageUrl = `/uploads/products/${req.file.filename}`;
+    const imageUrl = req.file.path && req.file.path.startsWith('http') 
+      ? req.file.path 
+      : `/uploads/products/${req.file.filename}`;
     req.body.images = [imageUrl];
   } else if (req.body.images && typeof req.body.images === 'string') {
     req.body.images = req.body.images ? [req.body.images] : [];
@@ -55,7 +57,9 @@ exports.createProduct = asyncHandler(async (req, res) => {
 
 exports.updateProduct = asyncHandler(async (req, res) => {
   if (req.file) {
-    const imageUrl = `/uploads/products/${req.file.filename}`;
+    const imageUrl = req.file.path && req.file.path.startsWith('http')
+      ? req.file.path
+      : `/uploads/products/${req.file.filename}`;
     req.body.images = [imageUrl];
   } else if (req.body.images && typeof req.body.images === 'string') {
     req.body.images = req.body.images ? [req.body.images] : [];

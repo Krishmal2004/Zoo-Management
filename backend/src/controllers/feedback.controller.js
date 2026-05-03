@@ -74,7 +74,9 @@ exports.getAllFeedbacks = asyncHandler(async (req, res) => {
 
 exports.createInquiry = asyncHandler(async (req, res) => {
   const { type, subject, message } = req.body;
-  const imageUrl = req.file ? `/uploads/feedback/${req.file.filename}` : undefined;
+  const imageUrl = req.file 
+    ? (req.file.path && req.file.path.startsWith('http') ? req.file.path : `/uploads/feedback/${req.file.filename}`) 
+    : undefined;
 
   if (!type || !subject || !message) {
     throw new AppError('Type, subject, and message are required', 400);
@@ -116,11 +118,13 @@ exports.updateInquiry = asyncHandler(async (req, res, next) => {
   inquiry.message = req.body.message || inquiry.message;
 
   if (req.file) {
-    if (inquiry.imageUrl) {
-      const oldPath = path.join(__dirname, `../../public${inquiry.imageUrl}`);
+    if (inquiry.imageUrl && !inquiry.imageUrl.startsWith('http')) {
+      const oldPath = path.join(__dirname, '..', inquiry.imageUrl);
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
     }
-    inquiry.imageUrl = `/uploads/feedback/${req.file.filename}`;
+    inquiry.imageUrl = req.file.path && req.file.path.startsWith('http') 
+      ? req.file.path 
+      : `/uploads/feedback/${req.file.filename}`;
   }
 
   await inquiry.save();
@@ -137,8 +141,8 @@ exports.deleteInquiry = asyncHandler(async (req, res, next) => {
   if (!inquiry)
     return next(new AppError('No inquiry found with that ID or you do not have permission', 404));
 
-  if (inquiry.imageUrl) {
-    const filePath = path.join(__dirname, `../../public${inquiry.imageUrl}`);
+  if (inquiry.imageUrl && !inquiry.imageUrl.startsWith('http')) {
+    const filePath = path.join(__dirname, '..', inquiry.imageUrl);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
 

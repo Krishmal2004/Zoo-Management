@@ -12,7 +12,7 @@ function createRequestCode() {
 }
 
 function tryRemoveUploadedFile(file) {
-  if (!file?.path) return;
+  if (!file?.path || file.path.startsWith('http')) return;
   fs.unlink(file.path, () => {});
 }
 
@@ -34,7 +34,9 @@ exports.createGroupRequest = asyncHandler(async (req, res) => {
     const supportingDocument = req.file
       ? {
         fileName: req.file.originalname,
-        storedPath: `/uploads/${UPLOAD_SUBFOLDER}/${path.basename(req.file.path)}`,
+        storedPath: req.file.path && req.file.path.startsWith('http') 
+          ? req.file.path 
+          : `/uploads/${UPLOAD_SUBFOLDER}/${path.basename(req.file.path)}`,
         mimeType: req.file.mimetype,
         sizeBytes: req.file.size,
       }
