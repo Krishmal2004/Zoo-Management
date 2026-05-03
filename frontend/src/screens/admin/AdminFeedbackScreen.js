@@ -18,7 +18,7 @@ import AdminModuleHero from '../../components/admin/AdminModuleHero';
 import { theme } from '../../constants/theme';
 import { getAdminDrawerMenuItems, getAdminModuleHeroByRouteName } from './adminNavigation';
 import * as feedbackApi from '../../api/feedback.api';
-import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+import { getApiBaseUrl, resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 
 const TYPES = [
   'All',
@@ -235,13 +235,13 @@ export default function AdminFeedbackScreen({ navigation }) {
       </View>
       <Text style={styles.subject}>{item.subject}</Text>
       <Text style={styles.message}>{item.message}</Text>
-      {item.imageUrl && (
+      {(item.imageUrl || item.image) ? (
         <Image
-          source={{ uri: `${getApiBaseUrl().replace(/\/api\/?$/i, '')}${item.imageUrl}` }}
+          source={{ uri: resolveUploadsFileUri(item.imageUrl || item.image) }}
           style={styles.image}
           resizeMode="cover"
         />
-      )}
+      ) : null}
       {renderReplySection(item.adminReply)}
       {renderActions(item)}
     </View>

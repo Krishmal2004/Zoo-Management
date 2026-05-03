@@ -6,7 +6,7 @@ import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
 import { useAuth } from '../../hooks/useAuth';
-import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+import { getApiBaseUrl, resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 
 export default function InquiryListScreen({ navigation }) {
   const { user } = useAuth();
@@ -92,13 +92,13 @@ export default function InquiryListScreen({ navigation }) {
       <Text style={styles.subject}>{item.subject}</Text>
       <Text style={styles.message}>{item.message}</Text>
       
-      {item.imageUrl && (
+      {(item.imageUrl || item.image) ? (
         <Image
-          source={{ uri: `${getApiBaseUrl().replace('/api', '')}${item.imageUrl}` }}
+          source={{ uri: resolveUploadsFileUri(item.imageUrl || item.image) }}
           style={styles.image}
           resizeMode="cover"
         />
-      )}
+      ) : null}
 
       {item.adminReply && (
         <View style={styles.replyBox}>

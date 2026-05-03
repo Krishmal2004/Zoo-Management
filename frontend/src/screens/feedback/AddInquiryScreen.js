@@ -8,7 +8,7 @@ import TextField from '../../components/ui/TextField';
 import PrimaryButton from '../../components/ui/PrimaryButton';
 import { theme } from '../../constants/theme';
 import * as feedbackApi from '../../api/feedback.api';
-import { getApiBaseUrl } from '../../api/getApiBaseUrl';
+import { getApiBaseUrl, resolveUploadsFileUri } from '../../api/getApiBaseUrl';
 import {
   validateTypeSubjectMessage,
   hasValidationErrors,
@@ -24,7 +24,7 @@ export default function AddInquiryScreen({ navigation, route }) {
   const [type, setType] = useState(existingInquiry?.type || '');
   const [subject, setSubject] = useState(existingInquiry?.subject || '');
   const [message, setMessage] = useState(existingInquiry?.message || '');
-  const [image, setImage] = useState(existingInquiry?.imageUrl ? { uri: `${getApiBaseUrl().replace('/api', '')}${existingInquiry.imageUrl}` } : null);
+  const [image, setImage] = useState((existingInquiry?.imageUrl || existingInquiry?.image) ? { uri: resolveUploadsFileUri(existingInquiry.imageUrl || existingInquiry.image) } : null);
   const [loading, setLoading] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [errors, setErrors] = useState({});
